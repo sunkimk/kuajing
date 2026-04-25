@@ -1,0 +1,30 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="18" fill="url(#bg)"/>
+  <rect x="12" y="14" width="14" height="36" rx="7" fill="url(#bar1)"/>
+  <rect x="25" y="22" width="12" height="28" rx="6" fill="url(#bar2)"/>
+  <path d="M38.5 16C38.5 14.8954 39.3954 14 40.5 14H43.7768C44.5278 14 45.2276 14.3753 45.641 15L52.6863 25.568C53.1218 26.2213 53.1218 27.0727 52.6863 27.726L45.641 38.294C45.2276 38.9137 44.5278 39.289 43.7768 39.289H40.5C39.3954 39.289 38.5 38.3935 38.5 37.289V16Z" fill="url(#arrow)"/>
+  <path d="M15 43.5C20.8717 37.8423 28.1793 35.0134 36.9229 35.0134C42.4545 35.0134 47.4802 36.4842 52 39.4259" stroke="url(#orbit)" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="51.5" cy="39.5" r="3.5" fill="#DDF5FF"/>
+  <defs>
+    <linearGradient id="bg" x1="8" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#165DFF"/>
+      <stop offset="1" stop-color="#00B42A"/>
+    </linearGradient>
+    <linearGradient id="bar1" x1="19" y1="14" x2="19" y2="50" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EAF4FF"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+    <linearGradient id="bar2" x1="31" y1="22" x2="31" y2="50" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D7FFEA"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+    <linearGradient id="arrow" x1="45.7946" y1="14" x2="45.7946" y2="39.289" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8FFF3"/>
+      <stop offset="1" stop-color="#D4EEFF"/>
+    </linearGradient>
+    <linearGradient id="orbit" x1="15" y1="39.5" x2="52" y2="39.5" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D7ECFF"/>
+      <stop offset="1" stop-color="#F3FFFB"/>
+    </linearGradient>
+  </defs>
+</svg>
