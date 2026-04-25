@@ -235,8 +235,8 @@ const resetFilters = () => {
     <section class="page-head">
       <div class="page-title">
         <span>库存管理</span>
-        <p>统一查看产品库存、仓库库存和批次库存状态，按店铺、仓库、配送类型和品牌快速筛选，作为仓储库存模块的核心工作台。</p>
       </div>
+      <p class="page-description">统一查看产品库存、仓库库存和批次库存状态，按店铺、仓库、配送类型和品牌快速筛选，作为仓储库存模块的核心工作台。</p>
     </section>
     <div class="inventory-tabs-shell arco-tabs arco-tabs-horizontal arco-tabs-card-gutter arco-tabs-top arco-tabs-size-default finance-page-tabs">
       <div
@@ -466,16 +466,15 @@ const resetFilters = () => {
 .page-head {
   display: flex;
   min-height: 68px;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  justify-content: center;
   padding: 0 2px;
 }
 
 .page-title {
   display: flex;
   min-width: 0;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
 }
 
 .page-title span {
@@ -485,7 +484,7 @@ const resetFilters = () => {
   line-height: 28px;
 }
 
-.page-title p {
+.page-description {
   margin: 4px 0 0;
   color: var(--inventory-color-text-secondary);
   font-size: 13px;
@@ -674,16 +673,16 @@ const resetFilters = () => {
 }
 
 .filter-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 12px 16px;
 }
 
 .volc-design-search-item-wrap {
   display: flex;
-  width: 320px;
-  max-width: 320px;
+  width: 100%;
+  max-width: none;
   align-items: stretch;
 }
 
@@ -734,9 +733,10 @@ const resetFilters = () => {
 
 .filter-actions-bar {
   display: flex;
+  grid-column: 3;
   align-items: center;
+  justify-self: end;
   gap: 8px;
-  margin-left: auto;
 }
 
 .volc-design-button {
@@ -973,11 +973,20 @@ const resetFilters = () => {
   }
 
   .toolbar-actions,
-  .filter-row,
   .filter-actions {
     align-items: stretch;
     flex-direction: column;
     width: 100%;
+  }
+
+  .filter-row {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .filter-actions-bar {
+    grid-column: auto;
+    justify-self: stretch;
   }
 
   .filter-row :deep(.arco-select),
