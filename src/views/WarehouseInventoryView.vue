@@ -233,11 +233,9 @@ const resetFilters = () => {
 <template>
   <div class="inventory-page">
     <section class="page-head">
-      <div class="page-copy">
-        <h1>库存管理</h1>
-        <p class="page-text">
-          统一查看产品库存、仓库库存和批次库存状态，按店铺、仓库、配送类型和品牌快速筛选，作为仓储库存模块的核心工作台。
-        </p>
+      <div class="page-title">
+        <span>库存管理</span>
+        <p>统一查看产品库存、仓库库存和批次库存状态，按店铺、仓库、配送类型和品牌快速筛选，作为仓储库存模块的核心工作台。</p>
       </div>
     </section>
     <div class="inventory-tabs-shell arco-tabs arco-tabs-horizontal arco-tabs-card-gutter arco-tabs-top arco-tabs-size-default finance-page-tabs">
@@ -467,39 +465,31 @@ const resetFilters = () => {
 
 .page-head {
   display: flex;
-  align-items: flex-start;
+  min-height: 68px;
+  align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding: 4px 2px 0;
+  padding: 0 2px;
 }
 
-.page-copy {
-  flex: 1;
+.page-title {
+  display: flex;
   min-width: 0;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.eyebrow {
-  margin: 0 0 8px;
-  color: var(--inventory-color-primary);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.page-head h1 {
-  margin: 0 0 8px;
+.page-title span {
   color: var(--inventory-color-text);
-  font-size: 30px;
-  line-height: 1.2;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
 }
 
-.page-text {
-  max-width: 860px;
-  margin: 0;
+.page-title p {
+  margin: 4px 0 0;
   color: var(--inventory-color-text-secondary);
-  font-size: 14px;
-  line-height: 1.7;
+  font-size: 13px;
+  line-height: 20px;
 }
 
 .summary-strip,
@@ -643,7 +633,7 @@ const resetFilters = () => {
   z-index: 2;
   color: var(--inventory-color-primary);
   box-shadow:
-    inset 0 2px 0 var(--inventory-color-primary-strong),
+    inset 0 2px 0 var(--inventory-color-primary),
     inset -1px 0 0 var(--inventory-color-border),
     inset 1px 0 0 var(--inventory-color-border);
   background: var(--inventory-color-bg);
