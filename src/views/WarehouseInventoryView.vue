@@ -1,9 +1,22 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { TableColumnData } from '@arco-design/web-vue'
-import { IconRefresh, IconSettings } from '@arco-design/web-vue/es/icon'
+import { IconDragDotVertical, IconRefresh, IconSettings } from '@arco-design/web-vue/es/icon'
 
 type InventoryTab = 'product' | 'warehouse' | 'batch'
+type ColumnPanelMode = 'selected' | 'unselected'
+type InventoryColumnKey =
+  | 'warehouse'
+  | 'thumb'
+  | 'product'
+  | 'store'
+  | 'brand'
+  | 'stock'
+  | 'deliveryType'
+  | 'sellerCode'
+  | 'barcode'
+  | 'updatedAt'
+  | 'nextUpdate'
 
 type InventoryRow = {
   id: string
@@ -20,6 +33,7 @@ type InventoryRow = {
   barcode: string
   updatedAt: string
   nextUpdateAt: string
+  thumbUrl: string
   thumbText: string
   thumbTone: string
 }
@@ -49,6 +63,59 @@ const summaryCards = [
   { label: '下次同步', value: '10:30', note: '库存任务每 30 分钟刷新一次' },
 ]
 
+const createThumbUrl = (label: string, colors: [string, string], shape: 'keyboard' | 'ssd' | 'drawer' | 'blender') => {
+  const [from, to] = colors
+  const shapeMarkup = {
+    keyboard: `
+      <rect x="13" y="22" width="54" height="32" rx="7" fill="rgba(255,255,255,.92)"/>
+      <g fill="rgba(30,41,59,.34)">
+        <rect x="19" y="28" width="6" height="5" rx="1"/>
+        <rect x="28" y="28" width="6" height="5" rx="1"/>
+        <rect x="37" y="28" width="6" height="5" rx="1"/>
+        <rect x="46" y="28" width="6" height="5" rx="1"/>
+        <rect x="55" y="28" width="6" height="5" rx="1"/>
+        <rect x="19" y="37" width="36" height="5" rx="1"/>
+        <rect x="58" y="37" width="6" height="5" rx="1"/>
+      </g>
+    `,
+    ssd: `
+      <rect x="19" y="13" width="42" height="54" rx="7" fill="rgba(255,255,255,.92)"/>
+      <rect x="27" y="23" width="26" height="8" rx="2" fill="rgba(30,41,59,.34)"/>
+      <circle cx="31" cy="54" r="3" fill="rgba(30,41,59,.28)"/>
+      <circle cx="49" cy="54" r="3" fill="rgba(30,41,59,.28)"/>
+    `,
+    drawer: `
+      <rect x="17" y="18" width="46" height="45" rx="8" fill="rgba(255,255,255,.92)"/>
+      <rect x="23" y="26" width="34" height="8" rx="2" fill="rgba(30,41,59,.24)"/>
+      <rect x="23" y="39" width="34" height="8" rx="2" fill="rgba(30,41,59,.2)"/>
+      <rect x="23" y="52" width="34" height="5" rx="2" fill="rgba(30,41,59,.18)"/>
+    `,
+    blender: `
+      <path d="M29 18h22l-3 30H32L29 18Z" fill="rgba(255,255,255,.92)"/>
+      <rect x="31" y="49" width="18" height="11" rx="3" fill="rgba(255,255,255,.88)"/>
+      <path d="M35 37c4-4 8 4 12-1" stroke="rgba(30,41,59,.28)" stroke-width="3" stroke-linecap="round"/>
+    `,
+  }[shape]
+
+  const svg = `
+    <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="80" height="80" rx="16" fill="url(#bg)"/>
+      <circle cx="66" cy="15" r="18" fill="rgba(255,255,255,.16)"/>
+      <circle cx="14" cy="68" r="20" fill="rgba(255,255,255,.12)"/>
+      ${shapeMarkup}
+      <text x="40" y="75" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="700" fill="rgba(255,255,255,.76)">${label}</text>
+      <defs>
+        <linearGradient id="bg" x1="8" y1="8" x2="74" y2="76" gradientUnits="userSpaceOnUse">
+          <stop stop-color="${from}"/>
+          <stop offset="1" stop-color="${to}"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  `
+
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+}
+
 const inventoryRows = ref<InventoryRow[]>([
   {
     id: '2050751433310',
@@ -65,6 +132,7 @@ const inventoryRows = ref<InventoryRow[]>([
     barcode: '2050751433310',
     updatedAt: '2026/04/25 10:00:20',
     nextUpdateAt: '2026/04/25 10:30',
+    thumbUrl: createThumbUrl('AS', ['#ff8a3d', '#ef4444'], 'keyboard'),
     thumbText: 'AS',
     thumbTone: 'sunset',
   },
@@ -83,6 +151,7 @@ const inventoryRows = ref<InventoryRow[]>([
     barcode: '2050751433280',
     updatedAt: '2026/04/25 10:00:20',
     nextUpdateAt: '2026/04/25 10:30',
+    thumbUrl: createThumbUrl('RE', ['#3c7eff', '#00b2ff'], 'keyboard'),
     thumbText: 'RE',
     thumbTone: 'ice',
   },
@@ -101,6 +170,7 @@ const inventoryRows = ref<InventoryRow[]>([
     barcode: '2050751433242',
     updatedAt: '2026/04/25 10:00:20',
     nextUpdateAt: '2026/04/25 10:30',
+    thumbUrl: createThumbUrl('EV', ['#7b61ff', '#9f7aea'], 'keyboard'),
     thumbText: 'EV',
     thumbTone: 'violet',
   },
@@ -119,6 +189,7 @@ const inventoryRows = ref<InventoryRow[]>([
     barcode: '020050000136',
     updatedAt: '2026/04/25 10:01:10',
     nextUpdateAt: '2026/04/25 10:30',
+    thumbUrl: createThumbUrl('SD', ['#64748b', '#334155'], 'ssd'),
     thumbText: 'SD',
     thumbTone: 'slate',
   },
@@ -137,6 +208,7 @@ const inventoryRows = ref<InventoryRow[]>([
     barcode: '2050691449136',
     updatedAt: '2026/04/25 09:40:12',
     nextUpdateAt: '2026/04/25 10:30',
+    thumbUrl: createThumbUrl('HB', ['#22c55e', '#65a30d'], 'drawer'),
     thumbText: 'HB',
     thumbTone: 'mint',
   },
@@ -155,24 +227,174 @@ const inventoryRows = ref<InventoryRow[]>([
     barcode: '2050691318661',
     updatedAt: '2026/04/25 09:18:33',
     nextUpdateAt: '2026/04/25 10:30',
+    thumbUrl: createThumbUrl('BL', ['#ff7a45', '#f43f5e'], 'blender'),
     thumbText: 'BL',
     thumbTone: 'coral',
   },
 ])
 
-const columns: TableColumnData[] = [
-  { title: '仓库', slotName: 'warehouse', width: 176, fixed: 'left' },
-  { title: '图片', slotName: 'thumb', width: 86 },
-  { title: '产品名称/SKU', slotName: 'product', width: 280 },
-  { title: '店铺名称', slotName: 'store', width: 180 },
-  { title: '品牌', dataIndex: 'brand', width: 120 },
-  { title: '在库库存', slotName: 'stock', width: 120, sortable: { sortDirections: ['ascend', 'descend'] } },
-  { title: '配送类型', dataIndex: 'deliveryType', width: 120 },
-  { title: '卖家编码', dataIndex: 'sellerCode', width: 140 },
-  { title: '条形码', dataIndex: 'barcode', width: 150 },
-  { title: '更新时间', dataIndex: 'updatedAt', width: 168 },
-  { title: '下次预计更新时间', slotName: 'nextUpdate', width: 176 },
+const defaultVisibleColumnKeys: InventoryColumnKey[] = [
+  'warehouse',
+  'thumb',
+  'product',
+  'store',
+  'brand',
+  'stock',
+  'deliveryType',
+  'sellerCode',
+  'barcode',
+  'updatedAt',
+  'nextUpdate',
 ]
+
+const requiredColumnKeys: InventoryColumnKey[] = ['warehouse', 'product']
+const visibleColumnKeys = ref<InventoryColumnKey[]>([...defaultVisibleColumnKeys])
+const columnSearchKeyword = ref('')
+const tableAutoWrap = ref(false)
+const freezeFirstRow = ref(true)
+const freezeFirstColumn = ref(true)
+const freezeLastColumn = ref(true)
+const columnSettingsVisible = ref(false)
+const columnPanelMode = ref<ColumnPanelMode>('selected')
+const draftVisibleColumnKeys = ref<InventoryColumnKey[]>([...defaultVisibleColumnKeys])
+const draftTableAutoWrap = ref(tableAutoWrap.value)
+const draftFreezeFirstRow = ref(freezeFirstRow.value)
+const draftFreezeFirstColumn = ref(freezeFirstColumn.value)
+const draftFreezeLastColumn = ref(freezeLastColumn.value)
+const draggedColumnKey = ref<InventoryColumnKey>()
+
+const setColumnPanelMode = (key: string | number) => {
+  if (key === 'selected' || key === 'unselected') {
+    columnPanelMode.value = key
+  }
+}
+
+const allColumns: Array<TableColumnData & { key: InventoryColumnKey; title: string }> = [
+  { key: 'warehouse', title: '仓库', slotName: 'warehouse', width: 176 },
+  { key: 'thumb', title: '图片', slotName: 'thumb', width: 86 },
+  { key: 'product', title: '产品名称/SKU', slotName: 'product', width: 280 },
+  { key: 'store', title: '店铺名称', slotName: 'store', width: 180 },
+  { key: 'brand', title: '品牌', dataIndex: 'brand', width: 120 },
+  { key: 'stock', title: '在库库存', slotName: 'stock', width: 120, align: 'right', sortable: { sortDirections: ['ascend', 'descend'] } },
+  { key: 'deliveryType', title: '配送类型', dataIndex: 'deliveryType', width: 120 },
+  { key: 'sellerCode', title: '卖家编码', dataIndex: 'sellerCode', width: 140 },
+  { key: 'barcode', title: '条形码', dataIndex: 'barcode', width: 150 },
+  { key: 'updatedAt', title: '更新时间', dataIndex: 'updatedAt', width: 168 },
+  { key: 'nextUpdate', title: '下次预计更新时间', slotName: 'nextUpdate', width: 176 },
+]
+
+const allColumnMap = new Map(allColumns.map((column) => [column.key, column]))
+
+const draftVisibleColumnCount = computed(() => draftVisibleColumnKeys.value.length)
+const draftHiddenColumnCount = computed(() => allColumns.length - draftVisibleColumnKeys.value.length)
+
+const filteredColumnOptions = computed(() => {
+  const keyword = columnSearchKeyword.value.trim().toLowerCase()
+  const panelColumns =
+    columnPanelMode.value === 'selected'
+      ? draftVisibleColumnKeys.value
+          .map((key) => allColumnMap.get(key))
+          .filter((column): column is TableColumnData & { key: InventoryColumnKey; title: string } => Boolean(column))
+      : allColumns.filter((column) => !draftVisibleColumnKeys.value.includes(column.key))
+
+  if (!keyword) return panelColumns
+  return panelColumns.filter((column) => column.title.toLowerCase().includes(keyword))
+})
+
+const columns = computed<TableColumnData[]>(() => {
+  const visibleColumns = visibleColumnKeys.value
+    .map((key) => allColumnMap.get(key))
+    .filter((column): column is TableColumnData & { key: InventoryColumnKey; title: string } => Boolean(column))
+
+  return visibleColumns.map((column, index) => {
+    const nextColumn: TableColumnData = { ...column }
+    const isFirstColumn = index === 0
+    const isLastColumn = index === visibleColumns.length - 1
+
+    if (freezeFirstColumn.value && isFirstColumn) {
+      nextColumn.fixed = 'left'
+    }
+
+    if (freezeLastColumn.value && isLastColumn) {
+      nextColumn.fixed = 'right'
+    }
+
+    return nextColumn
+  })
+})
+
+const toggleColumnVisibility = (key: InventoryColumnKey, checked: boolean | (string | number | boolean)[]) => {
+  if (requiredColumnKeys.includes(key)) return
+
+  const isChecked = Array.isArray(checked) ? checked.includes(key) : checked
+  if (isChecked && !draftVisibleColumnKeys.value.includes(key)) {
+    draftVisibleColumnKeys.value = [...draftVisibleColumnKeys.value, key]
+    return
+  }
+
+  if (!isChecked) {
+    draftVisibleColumnKeys.value = draftVisibleColumnKeys.value.filter((item) => item !== key)
+  }
+}
+
+const openColumnSettings = () => {
+  draftVisibleColumnKeys.value = [...visibleColumnKeys.value]
+  draftTableAutoWrap.value = tableAutoWrap.value
+  draftFreezeFirstRow.value = freezeFirstRow.value
+  draftFreezeFirstColumn.value = freezeFirstColumn.value
+  draftFreezeLastColumn.value = freezeLastColumn.value
+  columnSearchKeyword.value = ''
+  columnPanelMode.value = 'selected'
+  columnSettingsVisible.value = true
+}
+
+const cancelColumnSettings = () => {
+  columnSettingsVisible.value = false
+}
+
+const confirmColumnSettings = () => {
+  visibleColumnKeys.value = [...draftVisibleColumnKeys.value]
+  tableAutoWrap.value = draftTableAutoWrap.value
+  freezeFirstRow.value = draftFreezeFirstRow.value
+  freezeFirstColumn.value = draftFreezeFirstColumn.value
+  freezeLastColumn.value = draftFreezeLastColumn.value
+  columnSettingsVisible.value = false
+}
+
+const resetColumnSettings = () => {
+  draftVisibleColumnKeys.value = [...defaultVisibleColumnKeys]
+  columnSearchKeyword.value = ''
+  columnPanelMode.value = 'selected'
+  draftTableAutoWrap.value = false
+  draftFreezeFirstRow.value = true
+  draftFreezeFirstColumn.value = true
+  draftFreezeLastColumn.value = true
+}
+
+const startColumnDrag = (key: InventoryColumnKey, event: DragEvent) => {
+  if (columnPanelMode.value !== 'selected') return
+  draggedColumnKey.value = key
+  event.dataTransfer?.setData('text/plain', key)
+  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'
+}
+
+const moveDraftColumn = (targetKey: InventoryColumnKey) => {
+  const sourceKey = draggedColumnKey.value
+  if (!sourceKey || sourceKey === targetKey || columnPanelMode.value !== 'selected') return
+
+  const nextKeys = [...draftVisibleColumnKeys.value]
+  const sourceIndex = nextKeys.indexOf(sourceKey)
+  const targetIndex = nextKeys.indexOf(targetKey)
+  if (sourceIndex < 0 || targetIndex < 0) return
+
+  nextKeys.splice(sourceIndex, 1)
+  nextKeys.splice(targetIndex, 0, sourceKey)
+  draftVisibleColumnKeys.value = nextKeys
+}
+
+const endColumnDrag = () => {
+  draggedColumnKey.value = undefined
+}
 
 const filteredRows = computed(() => {
   let rows = [...inventoryRows.value]
@@ -372,16 +594,20 @@ const resetFilters = () => {
                       <div class="filter-actions-bar">
                         <a-button type="primary" class="volc-design-button">查询</a-button>
                         <a-button class="volc-design-button" @click="resetFilters">重置</a-button>
-                        <a-button size="small" class="filter-icon-button" aria-label="筛选字段">
-                          <template #icon>
-                            <icon-settings />
-                          </template>
-                        </a-button>
-                        <a-button size="small" class="filter-icon-button" aria-label="刷新">
-                          <template #icon>
-                            <icon-refresh />
-                          </template>
-                        </a-button>
+                        <a-tooltip content="定制列">
+                          <a-button size="small" class="filter-icon-button" aria-label="定制列" @click="openColumnSettings">
+                            <template #icon>
+                              <icon-settings />
+                            </template>
+                          </a-button>
+                        </a-tooltip>
+                        <a-tooltip content="刷新">
+                          <a-button size="small" class="filter-icon-button" aria-label="刷新">
+                            <template #icon>
+                              <icon-refresh />
+                            </template>
+                          </a-button>
+                        </a-tooltip>
                       </div>
                     </div>
                   </div>
@@ -394,7 +620,8 @@ const resetFilters = () => {
         row-key="id"
         :pagination="{ total: 2836, pageSize: 10, showTotal: true, showJumper: true, showPageSize: true }"
         :scroll="{ x: 1660 }"
-        class="inventory-table"
+        :sticky-header="freezeFirstRow"
+        :class="['inventory-table', { 'is-auto-wrap': tableAutoWrap }]"
       >
         <template #warehouse="{ record }">
           <div class="warehouse-cell">
@@ -404,7 +631,17 @@ const resetFilters = () => {
         </template>
 
         <template #thumb="{ record }">
-          <div class="thumb-card" :class="`tone-${record.thumbTone}`">{{ record.thumbText }}</div>
+          <div class="thumb-card" :class="`tone-${record.thumbTone}`">
+            <img
+              v-if="record.thumbUrl"
+              class="thumb-image"
+              :src="record.thumbUrl"
+              :alt="record.productName"
+              loading="lazy"
+              @error="record.thumbUrl = ''"
+            />
+            <span v-else>{{ record.thumbText }}</span>
+          </div>
         </template>
 
         <template #product="{ record }">
@@ -441,6 +678,102 @@ const resetFilters = () => {
         </div>
       </div>
     </div>
+
+    <a-modal
+      v-model:visible="columnSettingsVisible"
+      :width="560"
+      title="表格设置"
+      modal-class="column-settings-modal"
+    >
+      <div class="column-settings">
+        <div class="settings-side">
+          <div class="settings-section-title">基础设置</div>
+          <div class="settings-switch-row">
+            <a-switch v-model="draftTableAutoWrap" size="small" />
+            <span>自动换行</span>
+          </div>
+          <div class="settings-section-title">冻结设置</div>
+          <div class="settings-switch-row">
+            <a-switch v-model="draftFreezeFirstRow" size="small" />
+            <span>首行</span>
+          </div>
+          <div class="settings-switch-row">
+            <a-switch v-model="draftFreezeFirstColumn" size="small" />
+            <span>首列</span>
+          </div>
+          <div class="settings-switch-row">
+            <a-switch v-model="draftFreezeLastColumn" size="small" />
+            <span>末列</span>
+          </div>
+        </div>
+
+        <div class="settings-divider" />
+
+        <div class="settings-main">
+          <div class="settings-section-title">选择可见列</div>
+          <a-tabs
+            :active-key="columnPanelMode"
+            type="capsule"
+            size="small"
+            hide-content
+            class="settings-capsule-tabs"
+            @change="setColumnPanelMode"
+          >
+            <a-tab-pane key="selected">
+              <template #title>
+                <span class="settings-tab-title">
+                  已选列
+                  <span class="settings-tab-count">{{ draftVisibleColumnCount }}</span>
+                </span>
+              </template>
+            </a-tab-pane>
+            <a-tab-pane key="unselected">
+              <template #title>
+                <span class="settings-tab-title">
+                  未选列
+                  <span class="settings-tab-count">{{ draftHiddenColumnCount }}</span>
+                </span>
+              </template>
+            </a-tab-pane>
+          </a-tabs>
+          <a-input-search v-model="columnSearchKeyword" placeholder="请输入" allow-clear class="settings-search" />
+          <div class="settings-column-list">
+            <label
+              v-for="column in filteredColumnOptions"
+              :key="column.key"
+              class="settings-column-item"
+              :class="{
+                'is-disabled': requiredColumnKeys.includes(column.key),
+                'is-dragging': draggedColumnKey === column.key,
+              }"
+              :draggable="columnPanelMode === 'selected'"
+              @dragstart="startColumnDrag(column.key, $event)"
+              @dragover.prevent="moveDraftColumn(column.key)"
+              @dragend="endColumnDrag"
+            >
+              <a-checkbox
+                :model-value="draftVisibleColumnKeys.includes(column.key)"
+                :disabled="requiredColumnKeys.includes(column.key)"
+                @change="(checked) => toggleColumnVisibility(column.key, checked)"
+              />
+              <span class="settings-column-name">{{ column.title }}</span>
+              <span v-if="columnPanelMode === 'selected'" class="settings-drag-handle" aria-hidden="true">
+                <icon-drag-dot-vertical />
+              </span>
+            </label>
+            <div v-if="filteredColumnOptions.length === 0" class="settings-empty">暂无列</div>
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="column-settings-footer">
+          <a-button class="settings-restore-button" @click="resetColumnSettings">恢复默认</a-button>
+          <a-button @click="cancelColumnSettings">取消</a-button>
+          <a-button type="primary" @click="confirmColumnSettings">确定</a-button>
+        </div>
+      </template>
+    </a-modal>
   </div>
 </template>
 
@@ -460,15 +793,14 @@ const resetFilters = () => {
   --inventory-radius-small: var(--border-radius-small);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 0;
 }
 
 .page-head {
   display: flex;
-  min-height: 68px;
   flex-direction: column;
-  justify-content: center;
-  padding: 0 2px;
+  justify-content: flex-start;
+  padding: 16px 2px 10px;
 }
 
 .page-title {
@@ -480,12 +812,12 @@ const resetFilters = () => {
 .page-title span {
   color: var(--inventory-color-text);
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 28px;
 }
 
 .page-description {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   color: var(--inventory-color-text-secondary);
   font-size: 13px;
   line-height: 20px;
@@ -650,10 +982,8 @@ const resetFilters = () => {
 }
 
 .filter-panel-shell {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   margin-bottom: 16px;
+  padding-top: 2px;
 }
 
 .inventory-card {
@@ -668,21 +998,21 @@ const resetFilters = () => {
 }
 
 .filter-panel {
-  padding: 4px 0 0;
+  padding: 0;
   background: var(--inventory-color-bg);
 }
 
 .filter-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
   align-items: flex-start;
   gap: 12px 16px;
+  flex-wrap: wrap;
 }
 
 .volc-design-search-item-wrap {
   display: flex;
-  width: 100%;
-  max-width: none;
+  width: 300px;
+  max-width: 300px;
   align-items: stretch;
 }
 
@@ -733,10 +1063,16 @@ const resetFilters = () => {
 
 .filter-actions-bar {
   display: flex;
-  grid-column: 3;
+  min-width: max-content;
+  flex: 1 0 240px;
   align-items: center;
-  justify-self: end;
+  justify-content: flex-end;
   gap: 8px;
+  margin-left: auto;
+}
+
+.filter-actions-bar :deep(.arco-btn) {
+  border-radius: 4px;
 }
 
 .volc-design-button {
@@ -748,7 +1084,6 @@ const resetFilters = () => {
   height: var(--inventory-control-height);
   padding: 0;
   border-color: var(--inventory-color-control-border);
-  border-radius: var(--inventory-radius);
   background: var(--inventory-color-bg);
   color: var(--inventory-color-text-secondary);
   box-shadow: none;
@@ -885,6 +1220,18 @@ const resetFilters = () => {
   background: #fbfcff;
 }
 
+.inventory-table:not(.is-auto-wrap) :deep(.arco-table-td) {
+  white-space: nowrap;
+}
+
+.inventory-table:not(.is-auto-wrap) :deep(.product-cell a),
+.inventory-table:not(.is-auto-wrap) :deep(.product-cell span) {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .inventory-table :deep(.arco-pagination) {
   padding: 16px 18px 18px;
 }
@@ -912,14 +1259,23 @@ const resetFilters = () => {
 }
 
 .thumb-card {
-  display: grid;
+  display: flex;
   width: 36px;
   height: 36px;
-  place-items: center;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
   border-radius: 10px;
   color: var(--inventory-color-bg);
   font-size: 12px;
   font-weight: 700;
+}
+
+.thumb-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .tone-sunset {
@@ -946,15 +1302,177 @@ const resetFilters = () => {
   background: linear-gradient(135deg, #ff5722, #ff9a62);
 }
 
-.stock-cell {
+
+.column-settings {
+  display: flex;
+  height: 372px;
+  overflow: hidden;
+}
+
+.settings-side {
+  flex: 0 0 124px;
+  padding-top: 2px;
+}
+
+.settings-divider {
+  width: 1px;
+  flex: 0 0 1px;
+  margin: 0 20px;
+  background: var(--inventory-color-border);
+}
+
+.settings-section-title {
+  margin-bottom: 12px;
+  color: var(--inventory-color-text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.settings-switch-row {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 12px;
+  color: var(--inventory-color-text-secondary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.settings-capsule-tabs {
+  width: fit-content;
+  margin-bottom: 16px;
+}
+
+.settings-main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.settings-capsule-tabs :deep(.arco-tabs-nav-type-capsule .arco-tabs-nav-tab:not(.arco-tabs-nav-tab-scroll)) {
+  justify-content: flex-start;
+}
+
+.settings-capsule-tabs :deep(.arco-tabs-content-hide) {
+  display: none;
+}
+
+.settings-tab-title {
+  display: flex;
+  align-items: center;
+}
+
+.settings-tab-count {
+  display: inline-flex;
+  height: 14px;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: 42px;
+  background: rgb(250, 251, 252);
+  color: var(--inventory-color-text-secondary);
+  font-size: 10px;
+  font-weight: inherit;
+  line-height: 14px;
+}
+
+.settings-capsule-tabs :deep(.arco-tabs-tab-active) .settings-tab-count {
+  background: rgb(235, 241, 255);
+  color: var(--inventory-color-primary);
+}
+
+.settings-search {
+  margin-bottom: 8px;
+}
+
+.settings-column-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.settings-column-item {
+  display: flex;
+  height: 32px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px 0 4px;
+  border-radius: 4px;
+  color: var(--inventory-color-text);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.settings-column-item:hover {
+  background: var(--inventory-color-fill);
+}
+
+.settings-column-item.is-dragging {
+  background: rgba(var(--primary-6), 0.08);
+  opacity: 0.72;
+}
+
+.settings-column-item.is-disabled {
+  color: var(--inventory-color-text-tertiary);
+  cursor: not-allowed;
+}
+
+.settings-column-name {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  color: var(--inventory-color-text-tertiary);
+  cursor: grab;
+  font-size: 14px;
+}
+
+.settings-empty {
+  display: grid;
+  height: 100%;
+  min-height: 96px;
+  place-items: center;
+  color: var(--inventory-color-text-tertiary);
+  font-size: 13px;
+}
+
+.column-settings-footer {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.settings-restore-button {
+  margin-right: auto;
+}
+
+.stock-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  text-align: right;
 }
 
 .stock-cell strong {
   color: var(--inventory-color-text);
   font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  min-width: 32px;
+  text-align: right;
 }
 
 .next-update {
@@ -980,13 +1498,12 @@ const resetFilters = () => {
   }
 
   .filter-row {
-    grid-template-columns: 1fr;
     width: 100%;
   }
 
   .filter-actions-bar {
-    grid-column: auto;
-    justify-self: stretch;
+    width: 100%;
+    margin-left: 0;
   }
 
   .filter-row :deep(.arco-select),
