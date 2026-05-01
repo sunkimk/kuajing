@@ -51,3 +51,18 @@ export const isConfigurableTableColumnReorderable = <Key extends string>(
   columnKey: Key | undefined,
   pinnedColumnKeys: Set<Key>,
 ) => Boolean(columnKey && !pinnedColumnKeys.has(columnKey))
+
+export const getConfigurableTableColumnFixedSide = (
+  columnIndex: number,
+  columnCount: number,
+  options: {
+    freezeFirstColumn: boolean
+    freezeLastColumn: boolean
+    hasOperationColumn: boolean
+  },
+) => {
+  if (options.freezeFirstColumn && columnIndex === 0) return 'left' as const
+  if (options.freezeLastColumn && !options.hasOperationColumn && columnIndex === columnCount - 1) return 'right' as const
+
+  return undefined
+}

@@ -1,0 +1,245 @@
+<style>
+  .cards {
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
+    align-items: start;
+  }
+
+  .approach-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .approach-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .approach-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .badge-recommend {
+    background: rgba(52, 199, 89, 0.14);
+    color: #248a3d;
+  }
+
+  .badge-light {
+    background: rgba(0, 113, 227, 0.12);
+    color: var(--accent);
+  }
+
+  .badge-dense {
+    background: rgba(255, 159, 10, 0.16);
+    color: #b86a00;
+  }
+
+  .wireframe {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    min-height: 260px;
+    padding: 14px;
+    background: linear-gradient(180deg, rgba(0, 113, 227, 0.04), rgba(0, 113, 227, 0.01));
+  }
+
+  .wf-row {
+    display: grid;
+    gap: 8px;
+  }
+
+  .wf-row.cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .wf-row.cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .wf-row.cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wf-block {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-secondary);
+  }
+
+  .wf-header {
+    height: 48px;
+  }
+
+  .wf-metric {
+    height: 64px;
+  }
+
+  .wf-filter {
+    height: 44px;
+  }
+
+  .wf-table {
+    height: 132px;
+  }
+
+  .wf-side-card {
+    height: 98px;
+  }
+
+  .wf-tab {
+    height: 38px;
+  }
+
+  .wf-small {
+    height: 30px;
+  }
+
+  .approach-list {
+    margin-left: 18px;
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+
+  .approach-list li {
+    margin-bottom: 6px;
+  }
+
+  .bottom-note {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+
+  @media (max-width: 1024px) {
+    .cards {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<h2>销售管理模块重构方向</h2>
+<p class="subtitle">范围只包含销售模块：入口页、销售订单、二次销售、退货管理。目标是统一到“批次库存”的工作台语言，同时保留每个业务页自己的信息密度。</p>
+
+<div class="cards">
+  <div class="card selected" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="wireframe">
+        <div class="approach-meta">
+          <span class="approach-badge badge-recommend">推荐</span>
+          <span class="label">A</span>
+        </div>
+        <div class="wf-block wf-header"></div>
+        <div class="wf-row cols-4">
+          <div class="wf-block wf-metric"></div>
+          <div class="wf-block wf-metric"></div>
+          <div class="wf-block wf-metric"></div>
+          <div class="wf-block wf-metric"></div>
+        </div>
+        <div class="wf-row cols-2">
+          <div class="wf-block wf-side-card"></div>
+          <div class="wf-block wf-side-card"></div>
+        </div>
+        <div class="wf-block wf-table"></div>
+      </div>
+    </div>
+    <div class="card-body approach-card">
+      <h3>方案 A: 模块入口 + 三个独立工作台</h3>
+      <p>先做一个销售管理入口页，再分别落销售订单、二次销售、退货管理三个独立页面。</p>
+      <ul class="approach-list">
+        <li>入口页负责总览、待办分流、指标摘要，降低用户第一次进入的迷失感。</li>
+        <li>三个业务页共用同一骨架：页头、指标条、筛选区、可配置表格、详情抽屉。</li>
+        <li>退货页单独强化“异常/售后”语义，避免和订单页混在一起。</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="wireframe">
+        <div class="approach-meta">
+          <span class="approach-badge badge-light">最省页面</span>
+          <span class="label">B</span>
+        </div>
+        <div class="wf-block wf-header"></div>
+        <div class="wf-row cols-4">
+          <div class="wf-block wf-metric"></div>
+          <div class="wf-block wf-metric"></div>
+          <div class="wf-block wf-metric"></div>
+          <div class="wf-block wf-metric"></div>
+        </div>
+        <div class="wf-row cols-3">
+          <div class="wf-block wf-filter"></div>
+          <div class="wf-block wf-filter"></div>
+          <div class="wf-block wf-filter"></div>
+        </div>
+        <div class="wf-block wf-table"></div>
+      </div>
+    </div>
+    <div class="card-body approach-card">
+      <h3>方案 B: 不做入口，直接三个业务页</h3>
+      <p>销售模块菜单直接进入销售订单、二次销售、退货管理，不单独做销售管理首页。</p>
+      <ul class="approach-list">
+        <li>交付最快，页面数最少，适合“先补齐功能空白”。</li>
+        <li>视觉会更统一，但模块层级感较弱，销售菜单像一组平铺清单。</li>
+        <li>后面如果销售模块继续扩展，还得补回入口页或导航聚合页。</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="wireframe">
+        <div class="approach-meta">
+          <span class="approach-badge badge-dense">信息最密</span>
+          <span class="label">C</span>
+        </div>
+        <div class="wf-block wf-header"></div>
+        <div class="wf-row cols-3">
+          <div class="wf-block wf-tab"></div>
+          <div class="wf-block wf-tab"></div>
+          <div class="wf-block wf-tab"></div>
+        </div>
+        <div class="wf-row cols-4">
+          <div class="wf-block wf-small"></div>
+          <div class="wf-block wf-small"></div>
+          <div class="wf-block wf-small"></div>
+          <div class="wf-block wf-small"></div>
+        </div>
+        <div class="wf-row cols-3">
+          <div class="wf-block wf-filter"></div>
+          <div class="wf-block wf-filter"></div>
+          <div class="wf-block wf-filter"></div>
+        </div>
+        <div class="wf-block wf-table"></div>
+      </div>
+    </div>
+    <div class="card-body approach-card">
+      <h3>方案 C: 单一销售总工作台 + 标签切换</h3>
+      <p>把订单、二次销售、退货管理做进一个大页面，通过顶部标签切换不同业务视角。</p>
+      <ul class="approach-list">
+        <li>管理者连续浏览会更快，模块感很强。</li>
+        <li>但实现复杂，状态管理和表格配置会互相干扰，后续维护成本高。</li>
+        <li>和“批次库存”那种单页单职责基线不完全一致。</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-note">
+  我的推荐是 <strong>方案 A</strong>：既保留模块入口的层次感，又让三个业务页都能最大程度贴近“批次库存”的页面范式。<br />
+  你可以直接点一个方案，也可以回复类似“选 A，但入口页做轻一点”这种混合意见。
+</div>

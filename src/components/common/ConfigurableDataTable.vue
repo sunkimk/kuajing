@@ -6,6 +6,7 @@ import ColumnSettingsModal from './ColumnSettingsModal.vue'
 import type { ColumnSettingsPayload } from '../../data/columnSettings'
 import {
   createTableColumnSettingsOptions,
+  getConfigurableTableColumnFixedSide,
   getConfigurableTableColumnKey,
   isConfigurableTableColumnReorderable,
   mergeConfirmedColumnOrder,
@@ -167,13 +168,19 @@ const addInteractiveColumnState = (column: ConfigurableTableColumn): Configurabl
 const resolvedColumns = computed<TableColumnData[]>(() => {
   const utilityColumns = props.columns.filter((column) => !getColumnKey(column) && column.slotName !== props.operationSlotName)
   const operationColumns = props.columns.filter((column) => column.slotName === props.operationSlotName)
-  const dataColumns = columnOrder.value
+  const hasOperationColumn = operationColumns.length > 0
+  const visibleDataColumns = columnOrder.value
     .filter((columnKey) => visibleColumnKeys.value.includes(columnKey))
     .map((columnKey) => columnByKey.value.get(columnKey))
     .filter((column): column is ConfigurableTableColumn => Boolean(column))
+  const dataColumns = visibleDataColumns
     .map((column, index) => ({
       ...column,
-      fixed: freezeFirstColumn.value && index === 0 ? 'left' as const : undefined,
+      fixed: getConfigurableTableColumnFixedSide(index, visibleDataColumns.length, {
+        freezeFirstColumn: freezeFirstColumn.value,
+        freezeLastColumn: freezeLastColumn.value,
+        hasOperationColumn,
+      }),
     }))
     .map(addInteractiveColumnState)
 

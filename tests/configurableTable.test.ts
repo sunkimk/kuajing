@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   createTableColumnSettingsOptions,
   getConfigurableTableColumnKey,
+  getConfigurableTableColumnFixedSide,
   isConfigurableTableColumnReorderable,
   mergeConfirmedColumnOrder,
   type ConfigurableTableColumn,
@@ -41,5 +42,29 @@ describe('configurable table helpers', () => {
   it('does not allow pinned columns to be reordered', () => {
     expect(isConfigurableTableColumnReorderable('warehouse', new Set(['warehouse']))).toBe(false)
     expect(isConfigurableTableColumnReorderable('product', new Set(['warehouse']))).toBe(true)
+  })
+
+  it('fixes the last visible data column when there is no operation column', () => {
+    expect(getConfigurableTableColumnFixedSide(2, 3, {
+      freezeFirstColumn: true,
+      freezeLastColumn: true,
+      hasOperationColumn: false,
+    })).toBe('right')
+  })
+
+  it('keeps the first visible data column fixed to the left independently', () => {
+    expect(getConfigurableTableColumnFixedSide(0, 3, {
+      freezeFirstColumn: true,
+      freezeLastColumn: true,
+      hasOperationColumn: false,
+    })).toBe('left')
+  })
+
+  it('does not fix the last data column when a trailing operation column will be fixed', () => {
+    expect(getConfigurableTableColumnFixedSide(2, 3, {
+      freezeFirstColumn: true,
+      freezeLastColumn: true,
+      hasOperationColumn: true,
+    })).toBeUndefined()
   })
 })

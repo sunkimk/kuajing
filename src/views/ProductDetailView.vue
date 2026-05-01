@@ -2,8 +2,9 @@
 import { computed, ref, watch } from 'vue'
 import type { TableColumnData } from '@arco-design/web-vue'
 import { Message } from '@arco-design/web-vue'
-import { IconArrowLeft, IconDelete, IconPlus } from '@arco-design/web-vue/es/icon'
+import { IconDelete, IconPlus } from '@arco-design/web-vue/es/icon'
 import { useRoute, useRouter } from 'vue-router'
+import SecondaryPageHeader from '../components/common/SecondaryPageHeader.vue'
 import ProductSectionCard from '../components/products/ProductSectionCard.vue'
 import {
   categoryOptions,
@@ -233,20 +234,12 @@ watch([() => route.params.sku, () => route.path], loadDraft, { immediate: true }
 <template>
   <div class="product-detail-page">
     <template v-if="!missingProduct">
-      <section class="page-head">
-        <div class="page-copy">
-          <div class="title-row">
-            <a-button class="back-button" @click="goBackToList">
-              <template #icon>
-                <icon-arrow-left />
-              </template>
-              返回列表
-            </a-button>
-            <div class="page-title">{{ pageTitle }}</div>
-          </div>
-          <p class="page-description">{{ pageDescription }}</p>
-        </div>
-      </section>
+      <SecondaryPageHeader
+        :title="pageTitle"
+        :description="pageDescription"
+        :breadcrumbs="['商品管理', '商品列表', pageTitle]"
+        @back="goBackToList"
+      />
 
       <section class="overview-card">
         <div class="overview-left">
@@ -587,55 +580,17 @@ watch([() => route.params.sku, () => route.path], loadDraft, { immediate: true }
   --product-color-control-border: var(--color-border-2);
   --product-control-height: var(--size-default, 32px);
   --product-radius: var(--border-radius-medium);
+  --workspace-color-primary: var(--product-color-primary);
+  --workspace-color-text: var(--product-color-text);
+  --workspace-color-text-secondary: var(--product-color-text-secondary);
+  --workspace-color-text-tertiary: var(--product-color-text-tertiary);
+  --workspace-color-bg: var(--product-color-bg);
+  --workspace-color-border: var(--product-color-border);
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding-top: 16px;
   padding-bottom: 24px;
-}
-
-.page-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 0 2px;
-}
-
-.page-copy {
-  min-width: 0;
-}
-
-.title-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.back-button {
-  border-color: var(--product-color-border);
-  background: var(--product-color-bg);
-}
-
-.back-button:hover,
-.back-button:focus-visible {
-  border-color: var(--product-color-primary);
-  box-shadow: 0 4px 10px rgba(var(--primary-6), 0.12);
-}
-
-.page-title {
-  color: var(--product-color-text);
-  font-size: 20px;
-  font-weight: 500;
-  line-height: 28px;
-}
-
-.page-description {
-  max-width: 820px;
-  margin: 8px 0 0;
-  color: var(--product-color-text-secondary);
-  font-size: 13px;
-  line-height: 20px;
 }
 
 .overview-card {
@@ -851,7 +806,6 @@ watch([() => route.params.sku, () => route.path], loadDraft, { immediate: true }
 }
 
 @media (max-width: 768px) {
-  .title-row,
   .overview-left {
     flex-direction: column;
     align-items: flex-start;
