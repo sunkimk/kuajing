@@ -2,9 +2,10 @@ import { createRouter, createWebHistory } from 'vue-router'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 import DashboardView from '../views/DashboardView.vue'
-import QueryTableView from '../views/QueryTableView.vue'
 import WarehouseInventoryView from '../views/WarehouseInventoryView.vue'
 import BatchInventoryView from '../views/BatchInventoryView.vue'
+import ProductListView from '../views/ProductListView.vue'
+import ProductDetailView from '../views/ProductDetailView.vue'
 import { flattenNavigation } from '../data/navigation'
 
 const placeholderRoutes = flattenNavigation()
@@ -38,11 +39,32 @@ const router = createRouter({
         },
         {
           path: 'products/core-library',
-          component: QueryTableView,
+          component: ProductListView,
           meta: {
-            title: '核心产品库',
+            title: '商品列表',
             sectionKey: 'products',
             sectionTitle: '商品管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'products/core-library/create',
+          component: ProductDetailView,
+          meta: {
+            title: '新建商品',
+            sectionKey: 'products',
+            sectionTitle: '商品管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'products/core-library/:sku/edit',
+          component: ProductDetailView,
+          meta: {
+            title: '编辑商品',
+            sectionKey: 'products',
+            sectionTitle: '商品管理',
+            hideBreadcrumb: true,
           },
         },
         {

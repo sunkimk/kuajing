@@ -42,10 +42,7 @@ export const navigationSections: NavSectionItem[] = [
     key: 'products',
     title: '商品管理',
     children: [
-      { key: 'core-library', title: '核心产品库', path: '/products/core-library', icon: IconApps },
-      { key: 'brand-category', title: '品牌品类', path: '/products/brand-category', icon: IconCommon },
-      { key: 'sku-mapping', title: 'SKU 映射', path: '/products/sku-mapping', icon: IconDashboard },
-      { key: 'barcode', title: '条码管理', path: '/products/barcode', icon: IconNotification },
+      { key: 'product-list', title: '商品列表', path: '/products/core-library', icon: IconApps },
     ],
   },
   {
