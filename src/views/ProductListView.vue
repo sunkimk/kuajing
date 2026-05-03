@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
-import type { TableColumnData } from '@arco-design/web-vue'
-import { IconPlus, IconRefresh } from '@arco-design/web-vue/es/icon'
+import { IconPlus, IconRefresh, IconSettings } from '@arco-design/web-vue/es/icon'
 import { useRouter } from 'vue-router'
-import AppDataTable from '../components/common/AppDataTable.vue'
+import ConfigurableDataTable from '../components/common/ConfigurableDataTable.vue'
 import {
   categoryOptions,
   filterProducts,
@@ -14,6 +13,19 @@ import {
   type ProductRecord,
   type ProductStatus,
 } from '../data/productCatalog'
+import type { ConfigurableTableColumn } from '../data/configurableTable'
+
+type ProductListColumnKey =
+  | 'sku'
+  | 'image'
+  | 'name'
+  | 'category'
+  | 'status'
+  | 'purchasable'
+  | 'mappingCount'
+  | 'updatedAt'
+
+type ProductListTableColumnData = ConfigurableTableColumn<ProductListColumnKey> & { title: string }
 
 type FilterFormState = {
   sku: string
@@ -36,6 +48,9 @@ const createDefaultFilters = (): FilterFormState => ({
 
 const filters = reactive<FilterFormState>(createDefaultFilters())
 const appliedFilters = ref<ProductFilters>(createDefaultFilters())
+const columnSettingsVisible = ref(false)
+const currentPage = ref(1)
+const pageSize = ref(8)
 
 const statusLabelMap: Record<ProductStatus, string> = {
   normal: '正常',
@@ -62,20 +77,35 @@ const tableRows = computed(() => filteredRows.value.map((product) => ({
   ...product,
   id: product.basicInfo.sku,
 })))
+const pagedRows = computed(() => tableRows.value.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value))
 
-const columns: TableColumnData[] = [
-  { title: 'SKU', slotName: 'sku', width: 160, fixed: 'left' },
-  { title: '商品主图', slotName: 'image', width: 110 },
-  { title: '商品中文名', slotName: 'name', width: 260 },
-  { title: '类目', slotName: 'category', width: 140 },
-  { title: '商品状态', slotName: 'status', width: 120 },
-  { title: '是否可采购', slotName: 'purchasable', width: 120 },
-  { title: '已绑定平台店铺数量', slotName: 'mappingCount', width: 180, align: 'center' },
-  { title: '更新时间', dataIndex: 'updatedAt', width: 168 },
-  { title: '操作', slotName: 'actions', width: 140, fixed: 'right' },
+const defaultVisibleColumnKeys: ProductListColumnKey[] = [
+  'sku',
+  'image',
+  'name',
+  'category',
+  'status',
+  'purchasable',
+  'mappingCount',
+  'updatedAt',
+]
+const requiredColumnKeys: ProductListColumnKey[] = ['sku', 'name']
+const pinnedColumnKeys: ProductListColumnKey[] = ['sku']
+
+const allColumns: ProductListTableColumnData[] = [
+  { settingsKey: 'sku', title: 'SKU', slotName: 'sku', width: 180, minWidth: 150 },
+  { settingsKey: 'image', title: '图片', slotName: 'image', width: 86, minWidth: 72 },
+  { settingsKey: 'name', title: '商品中文名', slotName: 'name', width: 320, minWidth: 220 },
+  { settingsKey: 'category', title: '类目', slotName: 'category', width: 180, minWidth: 108 },
+  { settingsKey: 'status', title: '商品状态', slotName: 'status', width: 140, minWidth: 96, align: 'center' },
+  { settingsKey: 'purchasable', title: '是否可采购', slotName: 'purchasable', width: 140, minWidth: 96, align: 'center' },
+  { settingsKey: 'mappingCount', title: '已绑定平台店铺数量', slotName: 'mappingCount', width: 220, minWidth: 160, align: 'center' },
+  { settingsKey: 'updatedAt', title: '更新时间', dataIndex: 'updatedAt', width: 220, minWidth: 140 },
+  { title: '操作', slotName: 'operation', width: 100, align: 'center' },
 ]
 
 const applyFilters = () => {
+  currentPage.value = 1
   appliedFilters.value = {
     sku: filters.sku.trim(),
     name: filters.name.trim(),
@@ -99,6 +129,10 @@ const goToEdit = (sku: string) => {
 }
 
 const getPrimaryMapping = (record: ProductRecord) => record.mappings[0]
+
+const openColumnSettings = () => {
+  columnSettingsVisible.value = true
+}
 
 applyFilters()
 </script>
@@ -192,6 +226,13 @@ applyFilters()
           <div class="filter-actions-bar">
             <a-button type="primary" class="volc-design-button" @click="applyFilters">查询</a-button>
             <a-button class="volc-design-button" @click="resetFilters">重置</a-button>
+            <a-tooltip content="定制列">
+              <a-button size="small" class="filter-icon-button" aria-label="定制列" @click="openColumnSettings">
+                <template #icon>
+                  <icon-settings />
+                </template>
+              </a-button>
+            </a-tooltip>
             <a-tooltip content="刷新">
               <a-button size="small" class="filter-icon-button" aria-label="刷新" @click="applyFilters">
                 <template #icon>
@@ -205,13 +246,17 @@ applyFilters()
     </section>
 
     <section class="table-wrapper">
-      <AppDataTable
-        :columns="columns"
-        :data="tableRows"
+      <ConfigurableDataTable
+        v-model:settings-visible="columnSettingsVisible"
+        :columns="allColumns"
+        :default-visible-keys="defaultVisibleColumnKeys"
+        :required-keys="requiredColumnKeys"
+        :pinned-column-keys="pinnedColumnKeys"
+        :data="pagedRows"
         row-key="id"
-        :pagination="{ pageSize: 8, total: filteredRows.length, showTotal: true }"
-        :scroll="{ x: 1360 }"
-        table-class="data-table"
+        :pagination="false"
+        table-class="product-list-data-table"
+        wrapper-class="product-list-table"
       >
         <template #sku="{ record }">
           <button type="button" class="cell-link" @click="goToEdit(record.basicInfo.sku)">
@@ -252,12 +297,24 @@ applyFilters()
           <span class="mapping-count">{{ record.mappings.length }}</span>
         </template>
 
-        <template #actions="{ record }">
+        <template #operation="{ record }">
           <a-space>
             <a-link @click="goToEdit(record.basicInfo.sku)">编辑</a-link>
           </a-space>
         </template>
-      </AppDataTable>
+
+        <template #footer>
+          <a-pagination
+            v-model:current="currentPage"
+            v-model:page-size="pageSize"
+            :total="filteredRows.length"
+            :page-size-options="[8, 20, 50, 100]"
+            show-total
+            show-jumper
+            show-page-size
+          />
+        </template>
+      </ConfigurableDataTable>
     </section>
   </div>
 </template>
@@ -275,6 +332,15 @@ applyFilters()
   --product-color-hover-bg: var(--color-fill-2);
   --product-control-height: var(--size-default, 32px);
   --product-radius: var(--border-radius-medium);
+  --workspace-color-primary: var(--product-color-primary);
+  --workspace-color-text: var(--product-color-text);
+  --workspace-color-text-secondary: var(--product-color-text-secondary);
+  --workspace-color-text-tertiary: var(--product-color-text-tertiary);
+  --workspace-color-bg: var(--product-color-bg);
+  --workspace-color-fill: var(--product-color-fill);
+  --workspace-color-border: var(--product-color-border);
+  --workspace-color-hover-bg: var(--product-color-hover-bg);
+  --workspace-radius: var(--product-radius);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -310,8 +376,7 @@ applyFilters()
   line-height: 20px;
 }
 
-.summary-strip,
-.table-wrapper {
+.summary-strip {
   border: 1px solid var(--product-color-border);
   border-radius: 8px;
   background: var(--product-color-bg);
@@ -487,35 +552,55 @@ applyFilters()
   overflow: hidden;
 }
 
-.table-wrapper :deep(.data-table .arco-table-th) {
+.product-list-table :deep(.arco-table-element) {
+  min-width: unset;
+}
+
+.product-list-table :deep(.arco-table-header) {
+  background: var(--product-color-fill);
+}
+
+.product-list-table :deep(.arco-table-scroll-position-right .arco-table-col-fixed-left-last::after),
+.product-list-table :deep(.arco-table-scroll-position-middle .arco-table-col-fixed-left-last::after) {
+  box-shadow: inset 6px 0 8px -3px rgba(0, 0, 0, 0.15) !important;
+  transition: none !important;
+}
+
+.product-list-table :deep(.arco-table-scroll-position-left .arco-table-col-fixed-right-first::after),
+.product-list-table :deep(.arco-table-scroll-position-middle .arco-table-col-fixed-right-first::after) {
+  box-shadow: inset -6px 0 8px -3px rgba(0, 0, 0, 0.15) !important;
+  transition: none !important;
+}
+
+.table-wrapper :deep(.product-list-data-table .arco-table-th) {
   background: var(--product-color-fill);
   color: var(--product-color-text-secondary);
   font-weight: 600;
 }
 
-.table-wrapper :deep(.data-table .arco-table-container) {
+.table-wrapper :deep(.product-list-data-table .arco-table-container) {
   border: 0;
 }
 
-.table-wrapper :deep(.data-table .arco-table-border .arco-table-container::before),
-.table-wrapper :deep(.data-table .arco-table-border .arco-table-container::after),
-.table-wrapper :deep(.data-table .arco-table-border .arco-table-container .arco-table),
-.table-wrapper :deep(.data-table .arco-table-border .arco-table-tr::after),
-.table-wrapper :deep(.data-table .arco-table-border .arco-table-th),
-.table-wrapper :deep(.data-table .arco-table-border .arco-table-td) {
+.table-wrapper :deep(.product-list-data-table .arco-table-border .arco-table-container::before),
+.table-wrapper :deep(.product-list-data-table .arco-table-border .arco-table-container::after),
+.table-wrapper :deep(.product-list-data-table .arco-table-border .arco-table-container .arco-table),
+.table-wrapper :deep(.product-list-data-table .arco-table-border .arco-table-tr::after),
+.table-wrapper :deep(.product-list-data-table .arco-table-border .arco-table-th),
+.table-wrapper :deep(.product-list-data-table .arco-table-border .arco-table-td) {
   border-color: #e9edf3;
 }
 
-.table-wrapper :deep(.data-table .arco-table-td) {
+.table-wrapper :deep(.product-list-data-table .arco-table-td) {
   background: var(--product-color-bg);
   white-space: nowrap;
 }
 
-.table-wrapper :deep(.data-table .arco-table-tr:hover .arco-table-td) {
+.table-wrapper :deep(.product-list-data-table .arco-table-tr:hover .arco-table-td) {
   background: var(--product-color-hover-bg);
 }
 
-.table-wrapper :deep(.data-table .arco-pagination) {
+.table-wrapper :deep(.product-list-data-table .arco-pagination) {
   padding: 0 18px 18px;
   margin-top: 16px;
 }
@@ -542,16 +627,17 @@ applyFilters()
 
 .thumb-box {
   display: flex;
-  width: 56px;
-  height: 56px;
+  width: 36px;
+  height: 36px;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--product-color-fill);
 }
 
 .thumb-image {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -559,20 +645,36 @@ applyFilters()
 
 .name-cell {
   display: flex;
+  width: 100%;
   min-width: 0;
+  max-width: 100%;
   flex-direction: column;
+  align-items: flex-start;
   gap: 4px;
+  text-align: left;
+}
+
+.table-wrapper :deep(.product-list-data-table:not(.is-auto-wrap) .name-cell strong),
+.table-wrapper :deep(.product-list-data-table:not(.is-auto-wrap) .name-cell small) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .name-cell strong {
   color: var(--product-color-text);
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 24px;
 }
 
 .name-cell small {
   color: var(--product-color-text-tertiary);
   font-size: 12px;
+  line-height: 18px;
 }
 
 .mapping-count {

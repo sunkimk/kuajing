@@ -9,7 +9,12 @@ import ProductDetailView from '../views/ProductDetailView.vue'
 import { flattenNavigation } from '../data/navigation'
 
 const placeholderRoutes = flattenNavigation()
-  .filter((item) => item.path !== '/products/core-library' && item.path !== '/warehouse/inventory' && item.path !== '/warehouse/batch-inventory')
+  .filter((item) =>
+    item.path !== '/products/core-library'
+    && item.path !== '/warehouse/inventory'
+    && item.path !== '/warehouse/warehouse-inventory'
+    && item.path !== '/warehouse/batch-inventory'
+  )
   .map((item) => ({
     path: item.path,
     component: PlaceholderView,
@@ -71,7 +76,19 @@ const router = createRouter({
           path: 'warehouse/inventory',
           component: WarehouseInventoryView,
           meta: {
-            title: '库存管理',
+            title: '产品库存',
+            inventoryTab: 'product',
+            sectionKey: 'warehouse',
+            sectionTitle: '仓储库存',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'warehouse/warehouse-inventory',
+          component: WarehouseInventoryView,
+          meta: {
+            title: '仓库库存',
+            inventoryTab: 'warehouse',
             sectionKey: 'warehouse',
             sectionTitle: '仓储库存',
             hideBreadcrumb: true,

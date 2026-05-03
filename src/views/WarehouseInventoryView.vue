@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { IconRefresh, IconSettings } from '@arco-design/web-vue/es/icon'
+import { useRoute, useRouter } from 'vue-router'
 import ConfigurableDataTable from '../components/common/ConfigurableDataTable.vue'
 import MetricSummaryStrip from '../components/common/MetricSummaryStrip.vue'
 import QueryActionBar from '../components/common/QueryActionBar.vue'
@@ -21,6 +22,25 @@ type InventoryColumnKey =
   | 'barcode'
   | 'updatedAt'
   | 'nextUpdate'
+  | 'warehouseType'
+  | 'productKinds'
+  | 'purchasePlanQty'
+  | 'transferOutboundQty'
+  | 'transferShippingQty'
+  | 'inTransitQty'
+  | 'reservedQty'
+  | 'availableQty'
+  | 'defectiveQty'
+  | 'goodQty'
+  | 'warehouseStockQty'
+  | 'totalStockQty'
+  | 'dailyAverage7d'
+  | 'age0To30'
+  | 'age31To60'
+  | 'age61To90'
+  | 'age365Plus'
+  | 'stagnantQty'
+  | 'stagnantRate'
 
 type InventoryRow = {
   id: string
@@ -44,33 +64,89 @@ type InventoryRow = {
 
 type InventoryTableColumnData = ConfigurableTableColumn<InventoryColumnKey> & { title: string }
 
-const activeTab = ref<InventoryTab>('product')
+type WarehouseAggregateRow = {
+  id: string
+  warehouse: string
+  warehouseMeta: string
+  warehouseType: 'FBS' | 'FBW'
+  productKinds: number
+  purchasePlanQty: number
+  transferOutboundQty: number
+  transferShippingQty: number
+  inTransitQty: number
+  reservedQty: number
+  availableQty: number
+  defectiveQty: number
+  goodQty: number
+  warehouseStockQty: number
+  totalStockQty: number
+  dailyAverage7d: number
+  age0To30: number
+  age31To60: number
+  age61To90: number
+  age365Plus: number
+  stagnantQty: number
+  stagnantRate: string
+}
 
-const inventoryTabs: Array<{ key: InventoryTab; title: string }> = [
-  { key: 'product', title: '产品库存' },
-  { key: 'warehouse', title: '仓库库存' },
-  { key: 'batch', title: '批次库存' },
+const route = useRoute()
+const router = useRouter()
+
+const pageTitle = '库存管理'
+const pageDescription = '统一查看产品库存、仓库库存和批次库存状态'
+const inventoryTabs: Array<{ key: InventoryTab, title: string, path: string }> = [
+  { key: 'product', title: '产品库存', path: '/warehouse/inventory' },
+  { key: 'warehouse', title: '仓库库存', path: '/warehouse/warehouse-inventory' },
+  { key: 'batch', title: '批次库存', path: '/warehouse/batch-inventory' },
 ]
+
+const getRouteInventoryTab = (): InventoryTab =>
+  ['product', 'warehouse', 'batch'].includes(String(route.meta.inventoryTab))
+    ? route.meta.inventoryTab as InventoryTab
+    : 'product'
+
+const activeTab = computed<InventoryTab>(getRouteInventoryTab)
+
+const switchInventoryTab = (tab: typeof inventoryTabs[number]) => {
+  if (route.path === tab.path) return
+  router.push(tab.path)
+}
+
+const prototypeProductTotal = 2947
+const productPageSize = 10
+const warehousePageSize = 20
 
 const filters = ref({
   store: undefined,
-  warehouse: undefined,
-  deliveryType: undefined,
-  brand: undefined,
-  stockOperator: 'gte',
+  warehouse: undefined as string | undefined,
+  deliveryType: undefined as string | undefined,
+  brand: undefined as string | undefined,
+  stockOperator: undefined as 'gte' | 'lte' | undefined,
   stockValue: 0,
   keyword: '',
+  warehouseOwner: undefined as string | undefined,
+  warehouseMetric: undefined as string | undefined,
+  warehouseCompare: undefined as string | undefined,
+  warehouseMetricValue: undefined as number | undefined,
 })
 const pagination = ref({
   page: 1,
-  pageSize: 10,
+  pageSize: activeTab.value === 'warehouse' ? 20 : 10,
 })
 
-const summaryCards = [
-  { label: '在库 SKU', value: '2,836', note: '产品库存已接入 12 个站点' },
-  { label: '低库存预警', value: '128', note: '近 24 小时新增 19 个 SKU' },
-  { label: '海外仓数量', value: '16', note: '覆盖俄区 / 欧区 / 中东仓' },
-  { label: '下次同步', value: '10:30', note: '库存任务每 30 分钟刷新一次' },
+watch(activeTab, () => {
+  pagination.value = {
+    ...pagination.value,
+    page: 1,
+    pageSize: activeTab.value === 'warehouse' ? warehousePageSize : productPageSize,
+  }
+})
+
+const prototypeSummaryCards = [
+  { label: '在库 SKU', value: '2,947', note: '已接入5站点' },
+  { label: '低库存预警', value: '10', note: '需关注补货' },
+  { label: '海外仓数量', value: '57', note: '俄/欧/中东仓' },
+  { label: '下次同步', value: '11:00', note: '每30分钟刷新' },
 ]
 
 const createThumbUrl = (label: string, colors: [string, string], shape: 'keyboard' | 'ssd' | 'drawer' | 'blender') => {
@@ -128,118 +204,413 @@ const createThumbUrl = (label: string, colors: [string, string], shape: 'keyboar
 
 const inventoryRows = ref<InventoryRow[]>([
   {
+    id: '2050848210824',
+    warehouse: '广州仓',
+    warehouseMeta: '15-30天 58元/公斤+2元',
+    productName: 'Механическая клавиатура PBT набор клавиш-Sage',
+    sku: '2050848210824',
+    storeName: '達焱國際有限公司',
+    storePlatform: 'AliExpress',
+    brand: '',
+    stock: 0,
+    deliveryType: 'FBS',
+    sellerCode: '130212011793',
+    barcode: '2050848210824',
+    updatedAt: '2026/05/03 10:30',
+    nextUpdateAt: '2026/05/03 11:00',
+    thumbUrl: createThumbUrl('SG', ['#ff8a3d', '#ef4444'], 'keyboard'),
+    thumbText: 'SG',
+    thumbTone: 'sunset',
+  },
+  {
+    id: '2050848210817',
+    warehouse: '广州仓',
+    warehouseMeta: '15-30天 58元/公斤+2元',
+    productName: 'Механическая клавиатура PBT набор клавиш-JETT',
+    sku: '2050848210817',
+    storeName: '達焱國際有限公司',
+    storePlatform: 'AliExpress',
+    brand: '',
+    stock: 0,
+    deliveryType: 'FBS',
+    sellerCode: '130212011792',
+    barcode: '2050848210817',
+    updatedAt: '2026/05/03 10:30',
+    nextUpdateAt: '2026/05/03 11:00',
+    thumbUrl: createThumbUrl('JT', ['#3c7eff', '#00b2ff'], 'keyboard'),
+    thumbText: 'JT',
+    thumbTone: 'ice',
+  },
+  {
+    id: '2050848210770',
+    warehouse: '广州仓',
+    warehouseMeta: '15-30天 58元/公斤+2元',
+    productName: 'Механическая клавиатура PBT набор клавиш-JETT',
+    sku: '2050848210770',
+    storeName: '達焱國際有限公司',
+    storePlatform: 'AliExpress',
+    brand: '',
+    stock: 0,
+    deliveryType: 'FBS',
+    sellerCode: '130212011791',
+    barcode: '2050848210770',
+    updatedAt: '2026/05/03 10:30',
+    nextUpdateAt: '2026/05/03 11:00',
+    thumbUrl: createThumbUrl('JT', ['#7b61ff', '#9f7aea'], 'keyboard'),
+    thumbText: 'JT',
+    thumbTone: 'violet',
+  },
+  {
+    id: '2050819406881',
+    warehouse: '广州仓',
+    warehouseMeta: '15-30天 58元/公斤+2元',
+    productName: 'Механическая клавиатура PBT набор клавиш-Clove',
+    sku: '2050819406881',
+    storeName: '達焱國際有限公司',
+    storePlatform: 'AliExpress',
+    brand: '',
+    stock: 0,
+    deliveryType: 'FBS',
+    sellerCode: '130212011789',
+    barcode: '2050819406881',
+    updatedAt: '2026/05/03 10:30',
+    nextUpdateAt: '2026/05/03 11:00',
+    thumbUrl: createThumbUrl('CL', ['#64748b', '#334155'], 'keyboard'),
+    thumbText: 'CL',
+    thumbTone: 'slate',
+  },
+  {
+    id: '2050818828455',
+    warehouse: '广州仓',
+    warehouseMeta: '15-30天 58元/公斤+2元',
+    productName: 'Механическая клавиатура PBT набор клавиш-Sage',
+    sku: '2050818828455',
+    storeName: '達焱國際有限公司',
+    storePlatform: 'AliExpress',
+    brand: '',
+    stock: 0,
+    deliveryType: 'FBS',
+    sellerCode: '130212011790',
+    barcode: '2050818828455',
+    updatedAt: '2026/05/03 10:30',
+    nextUpdateAt: '2026/05/03 11:00',
+    thumbUrl: createThumbUrl('SG', ['#22c55e', '#65a30d'], 'keyboard'),
+    thumbText: 'SG',
+    thumbTone: 'mint',
+  },
+  {
     id: '2050751433310',
     warehouse: '广州仓',
-    warehouseMeta: '15-30 天 · 58 元/公斤+2 元',
-    productName: 'Mechanical Keyboard PBT Keycap Set Asuka',
+    warehouseMeta: '15-30天 58元/公斤+2元',
+    productName: 'Механическая клавиатура PBT набор клавиш-Аска Лэнгли Сорью',
     sku: '2050751433310',
     storeName: '達焱國際有限公司',
     storePlatform: 'AliExpress',
-    brand: 'KeyMood',
-    stock: 90,
+    brand: '',
+    stock: 0,
     deliveryType: 'FBS',
-    sellerCode: 'JM0041',
+    sellerCode: '130212011787',
     barcode: '2050751433310',
-    updatedAt: '2026/04/25 10:00:20',
-    nextUpdateAt: '2026/04/25 10:30',
-    thumbUrl: createThumbUrl('AS', ['#ff8a3d', '#ef4444'], 'keyboard'),
+    updatedAt: '2026/05/03 10:30',
+    nextUpdateAt: '2026/05/03 11:00',
+    thumbUrl: createThumbUrl('AS', ['#ff7a45', '#f43f5e'], 'keyboard'),
     thumbText: 'AS',
-    thumbTone: 'sunset',
+    thumbTone: 'coral',
   },
   {
     id: '2050751433280',
     warehouse: '广州仓',
-    warehouseMeta: '15-30 天 · 58 元/公斤+2 元',
-    productName: 'Mechanical Keyboard PBT Keycap Set Rei',
+    warehouseMeta: '15-30天 58元/公斤+2元',
+    productName: 'Механическая клавиатура PBT набор клавиш-Аска Лэнгли Сорью',
     sku: '2050751433280',
     storeName: '達焱國際有限公司',
     storePlatform: 'AliExpress',
-    brand: 'KeyMood',
-    stock: 90,
+    brand: '',
+    stock: 0,
     deliveryType: 'FBS',
-    sellerCode: 'JM0031',
+    sellerCode: '130212011786',
     barcode: '2050751433280',
-    updatedAt: '2026/04/25 10:00:20',
-    nextUpdateAt: '2026/04/25 10:30',
-    thumbUrl: createThumbUrl('RE', ['#3c7eff', '#00b2ff'], 'keyboard'),
-    thumbText: 'RE',
+    updatedAt: '2026/05/03 10:30',
+    nextUpdateAt: '2026/05/03 11:00',
+    thumbUrl: createThumbUrl('AS', ['#3c7eff', '#00b2ff'], 'keyboard'),
+    thumbText: 'AS',
     thumbTone: 'ice',
   },
   {
     id: '2050751433242',
     warehouse: '广州仓',
-    warehouseMeta: '15-30 天 · 58 元/公斤+2 元',
-    productName: 'Mechanical Keyboard PBT Keycap Set EVA',
+    warehouseMeta: '15-30天 58元/公斤+2元',
+    productName: 'Механическая клавиатура PBT набор клавиш-Аска Лэнгли Сорью',
     sku: '2050751433242',
     storeName: '達焱國際有限公司',
     storePlatform: 'AliExpress',
-    brand: 'KeyMood',
-    stock: 90,
+    brand: '',
+    stock: 0,
     deliveryType: 'FBS',
-    sellerCode: 'JM0021',
+    sellerCode: '130212011785',
     barcode: '2050751433242',
-    updatedAt: '2026/04/25 10:00:20',
-    nextUpdateAt: '2026/04/25 10:30',
-    thumbUrl: createThumbUrl('EV', ['#7b61ff', '#9f7aea'], 'keyboard'),
-    thumbText: 'EV',
+    updatedAt: '2026/05/03 10:30',
+    nextUpdateAt: '2026/05/03 11:00',
+    thumbUrl: createThumbUrl('AS', ['#7b61ff', '#9f7aea'], 'keyboard'),
+    thumbText: 'AS',
     thumbTone: 'violet',
   },
   {
-    id: '2050691774191',
-    warehouse: '莫斯科 CHI 仓库',
-    warehouseMeta: '本地派送 · 核心补货仓',
-    productName: 'SSD 1TB NV2 PCIe 3.0 NVMe M.2',
-    sku: '020050000136',
+    id: '2050751433228',
+    warehouse: '广州仓',
+    warehouseMeta: '15-30天 58元/公斤+2元',
+    productName: 'Механическая клавиатура PBT набор клавиш-Рэй Аянами',
+    sku: '2050751433228',
     storeName: '達焱國際有限公司',
-    storePlatform: 'CPU HOME',
-    brand: 'Kingston',
-    stock: 1,
+    storePlatform: 'AliExpress',
+    brand: '',
+    stock: 0,
     deliveryType: 'FBS',
-    sellerCode: '020050000136',
-    barcode: '020050000136',
-    updatedAt: '2026/04/25 10:01:10',
-    nextUpdateAt: '2026/04/25 10:30',
-    thumbUrl: createThumbUrl('SD', ['#64748b', '#334155'], 'ssd'),
-    thumbText: 'SD',
+    sellerCode: '130212011788',
+    barcode: '2050751433228',
+    updatedAt: '2026/05/03 10:30',
+    nextUpdateAt: '2026/05/03 11:00',
+    thumbUrl: createThumbUrl('RE', ['#ff8a3d', '#ef4444'], 'keyboard'),
+    thumbText: 'RE',
+    thumbTone: 'sunset',
+  },
+  {
+    id: '2050691774191',
+    warehouse: '广州仓',
+    warehouseMeta: '15-30天 58元/公斤+2元',
+    productName: 'Механическая клавиатура PBT набор клавиш',
+    sku: '2050691774191',
+    storeName: '達焱國際有限公司',
+    storePlatform: 'AliExpress',
+    brand: '',
+    stock: 0,
+    deliveryType: 'FBS',
+    sellerCode: '130212011780',
+    barcode: '2050691774191',
+    updatedAt: '2026/05/03 10:30',
+    nextUpdateAt: '2026/05/03 11:00',
+    thumbUrl: createThumbUrl('KB', ['#64748b', '#334155'], 'keyboard'),
+    thumbText: 'KB',
     thumbTone: 'slate',
   },
+])
+
+const warehouseAggregateRows = ref<WarehouseAggregateRow[]>([
   {
-    id: '2050691449136',
-    warehouse: '华沙中转仓',
-    warehouseMeta: '欧区快转 · 日均补货 2 次',
-    productName: 'Foldable Storage Drawer Organizer Box',
-    sku: '2050691449136',
-    storeName: 'Nova Living',
-    storePlatform: 'Ozon',
-    brand: 'HomeEase',
-    stock: 412,
-    deliveryType: 'FBW',
-    sellerCode: 'HZ-1184',
-    barcode: '2050691449136',
-    updatedAt: '2026/04/25 09:40:12',
-    nextUpdateAt: '2026/04/25 10:30',
-    thumbUrl: createThumbUrl('HB', ['#22c55e', '#65a30d'], 'drawer'),
-    thumbText: 'HB',
-    thumbTone: 'mint',
+    id: 'WB-PLUS',
+    warehouse: 'WB-PLUS仓',
+    warehouseMeta: '海外平台仓 · FBW',
+    warehouseType: 'FBW',
+    productKinds: 2862,
+    purchasePlanQty: 1,
+    transferOutboundQty: 732,
+    transferShippingQty: 0,
+    inTransitQty: 11250,
+    reservedQty: 0,
+    availableQty: 4380,
+    defectiveQty: 13,
+    goodQty: 4988,
+    warehouseStockQty: 5001,
+    totalStockQty: 16251,
+    dailyAverage7d: 112.83,
+    age0To30: 1510,
+    age31To60: 1911,
+    age61To90: 1025,
+    age365Plus: 0,
+    stagnantQty: 0,
+    stagnantRate: '0%',
   },
   {
-    id: '2050691318661',
-    warehouse: '迪拜海外仓',
-    warehouseMeta: '中东专线 · 妥投率 98.2%',
-    productName: 'Portable Blender Travel Cup',
-    sku: '2050691318661',
-    storeName: 'Nova Living',
-    storePlatform: 'TikTok Shop',
-    brand: 'BlendGo',
-    stock: 56,
-    deliveryType: 'FBW',
-    sellerCode: 'DB-0192',
-    barcode: '2050691318661',
-    updatedAt: '2026/04/25 09:18:33',
-    nextUpdateAt: '2026/04/25 10:30',
-    thumbUrl: createThumbUrl('BL', ['#ff7a45', '#f43f5e'], 'blender'),
-    thumbText: 'BL',
-    thumbTone: 'coral',
+    id: 'MSK',
+    warehouse: 'MSK仓',
+    warehouseMeta: '莫斯科履约仓 · FBS',
+    warehouseType: 'FBS',
+    productKinds: 3026,
+    purchasePlanQty: 11,
+    transferOutboundQty: 0,
+    transferShippingQty: 0,
+    inTransitQty: 0,
+    reservedQty: 0,
+    availableQty: 6085,
+    defectiveQty: 1,
+    goodQty: 6085,
+    warehouseStockQty: 6086,
+    totalStockQty: 6086,
+    dailyAverage7d: 1,
+    age0To30: 5702,
+    age31To60: 206,
+    age61To90: 10,
+    age365Plus: 0,
+    stagnantQty: 0,
+    stagnantRate: '0%',
+  },
+  {
+    id: 'MSK-OFFLINE',
+    warehouse: 'MSK线下销售仓',
+    warehouseMeta: '线下销售周转仓 · FBS',
+    warehouseType: 'FBS',
+    productKinds: 2866,
+    purchasePlanQty: 0,
+    transferOutboundQty: 0,
+    transferShippingQty: 0,
+    inTransitQty: 0,
+    reservedQty: 0,
+    availableQty: 3,
+    defectiveQty: 0,
+    goodQty: 3,
+    warehouseStockQty: 3,
+    totalStockQty: 3,
+    dailyAverage7d: 0.28,
+    age0To30: 3,
+    age31To60: 0,
+    age61To90: 0,
+    age365Plus: 0,
+    stagnantQty: 0,
+    stagnantRate: '0%',
+  },
+  {
+    id: 'GZ',
+    warehouse: '广州仓',
+    warehouseMeta: '国内头程仓 · FBS',
+    warehouseType: 'FBS',
+    productKinds: 2861,
+    purchasePlanQty: 0,
+    transferOutboundQty: 0,
+    transferShippingQty: 0,
+    inTransitQty: 0,
+    reservedQty: 0,
+    availableQty: 824,
+    defectiveQty: 0,
+    goodQty: 824,
+    warehouseStockQty: 824,
+    totalStockQty: 824,
+    dailyAverage7d: 1,
+    age0To30: 0,
+    age31To60: 0,
+    age61To90: 0,
+    age365Plus: 0,
+    stagnantQty: 0,
+    stagnantRate: '0%',
+  },
+  {
+    id: 'GZ-SAMPLE',
+    warehouse: '广州样品仓',
+    warehouseMeta: '样品留存仓 · FBS',
+    warehouseType: 'FBS',
+    productKinds: 2860,
+    purchasePlanQty: 0,
+    transferOutboundQty: 0,
+    transferShippingQty: 0,
+    inTransitQty: 0,
+    reservedQty: 0,
+    availableQty: 0,
+    defectiveQty: 0,
+    goodQty: 0,
+    warehouseStockQty: 0,
+    totalStockQty: 0,
+    dailyAverage7d: 0,
+    age0To30: 0,
+    age31To60: 0,
+    age61To90: 0,
+    age365Plus: 0,
+    stagnantQty: 0,
+    stagnantRate: '0%',
+  },
+  {
+    id: 'DOMESTIC-LOSS',
+    warehouse: '国内报损仓',
+    warehouseMeta: '国内异常库存仓 · FBS',
+    warehouseType: 'FBS',
+    productKinds: 2860,
+    purchasePlanQty: 0,
+    transferOutboundQty: 0,
+    transferShippingQty: 0,
+    inTransitQty: 0,
+    reservedQty: 0,
+    availableQty: 38,
+    defectiveQty: 0,
+    goodQty: 38,
+    warehouseStockQty: 38,
+    totalStockQty: 38,
+    dailyAverage7d: 0,
+    age0To30: 0,
+    age31To60: 0,
+    age61To90: 0,
+    age365Plus: 0,
+    stagnantQty: 0,
+    stagnantRate: '0%',
+  },
+  {
+    id: 'KREMLIN',
+    warehouse: '克里姆枞宫',
+    warehouseMeta: '海外备用仓 · FBS',
+    warehouseType: 'FBS',
+    productKinds: 2851,
+    purchasePlanQty: 0,
+    transferOutboundQty: 0,
+    transferShippingQty: 0,
+    inTransitQty: 0,
+    reservedQty: 0,
+    availableQty: 0,
+    defectiveQty: 0,
+    goodQty: 0,
+    warehouseStockQty: 0,
+    totalStockQty: 0,
+    dailyAverage7d: 0,
+    age0To30: 1,
+    age31To60: 0,
+    age61To90: 0,
+    age365Plus: 0,
+    stagnantQty: 0,
+    stagnantRate: '0%',
+  },
+  {
+    id: 'OVERSEAS-IML',
+    warehouse: '海外IML仓',
+    warehouseMeta: '海外中转库存 · FBS',
+    warehouseType: 'FBS',
+    productKinds: 2860,
+    purchasePlanQty: 0,
+    transferOutboundQty: 0,
+    transferShippingQty: 0,
+    inTransitQty: 0,
+    reservedQty: 0,
+    availableQty: 80,
+    defectiveQty: 0,
+    goodQty: 80,
+    warehouseStockQty: 0,
+    totalStockQty: 80,
+    dailyAverage7d: 0,
+    age0To30: 0,
+    age31To60: 0,
+    age61To90: 0,
+    age365Plus: 0,
+    stagnantQty: 0,
+    stagnantRate: '0%',
+  },
+  {
+    id: 'OVERSEAS-LOSS',
+    warehouse: '海外报损仓',
+    warehouseMeta: '海外异常库存仓 · FBS',
+    warehouseType: 'FBS',
+    productKinds: 2896,
+    purchasePlanQty: 0,
+    transferOutboundQty: 0,
+    transferShippingQty: 0,
+    inTransitQty: 0,
+    reservedQty: 0,
+    availableQty: 198,
+    defectiveQty: 0,
+    goodQty: 198,
+    warehouseStockQty: 198,
+    totalStockQty: 198,
+    dailyAverage7d: 0,
+    age0To30: 0,
+    age31To60: 0,
+    age61To90: 211,
+    age365Plus: 0,
+    stagnantQty: 0,
+    stagnantRate: '0%',
   },
 ])
 
@@ -257,13 +628,37 @@ const defaultVisibleColumnKeys: InventoryColumnKey[] = [
   'nextUpdate',
 ]
 
+const warehouseDefaultVisibleColumnKeys: InventoryColumnKey[] = [
+  'warehouse',
+  'warehouseType',
+  'productKinds',
+  'purchasePlanQty',
+  'transferOutboundQty',
+  'transferShippingQty',
+  'inTransitQty',
+  'reservedQty',
+  'availableQty',
+  'defectiveQty',
+  'goodQty',
+  'warehouseStockQty',
+  'totalStockQty',
+  'dailyAverage7d',
+  'age0To30',
+  'age31To60',
+  'age61To90',
+  'age365Plus',
+  'stagnantQty',
+  'stagnantRate',
+]
+
 const requiredColumnKeys: InventoryColumnKey[] = ['warehouse', 'product']
+const warehouseRequiredColumnKeys: InventoryColumnKey[] = ['warehouse']
 const columnSettingsVisible = ref(false)
 
 const allColumns: InventoryTableColumnData[] = [
   { settingsKey: 'warehouse', title: '仓库', slotName: 'warehouse', width: 176, minWidth: 132 },
   { settingsKey: 'thumb', title: '图片', slotName: 'thumb', width: 86, minWidth: 72 },
-  { settingsKey: 'product', title: '产品名称/SKU', slotName: 'product', width: 280, minWidth: 220 },
+  { settingsKey: 'product', title: '产品名称/SKU', slotName: 'product', width: 280, minWidth: 220, align: 'left' },
   { settingsKey: 'store', title: '店铺名称', slotName: 'store', width: 180, minWidth: 150 },
   { settingsKey: 'brand', title: '品牌', dataIndex: 'brand', width: 120, minWidth: 96 },
   { settingsKey: 'stock', title: '在库库存', slotName: 'stock', width: 120, minWidth: 104, align: 'right', sortable: { sortDirections: ['ascend', 'descend'] } },
@@ -273,6 +668,44 @@ const allColumns: InventoryTableColumnData[] = [
   { settingsKey: 'updatedAt', title: '更新时间', dataIndex: 'updatedAt', width: 168, minWidth: 132 },
   { settingsKey: 'nextUpdate', title: '下次预计更新时间', slotName: 'nextUpdate', width: 176, minWidth: 148 },
 ]
+
+const warehouseColumns: InventoryTableColumnData[] = [
+  { settingsKey: 'warehouse', title: '仓库', slotName: 'warehouse', width: 180, minWidth: 150 },
+  { settingsKey: 'warehouseType', title: '仓库类型', dataIndex: 'warehouseType', width: 100, minWidth: 86, align: 'center' },
+  { settingsKey: 'productKinds', title: '产品种类', dataIndex: 'productKinds', width: 110, minWidth: 96, align: 'right' },
+  { settingsKey: 'purchasePlanQty', title: '计采交合计量', dataIndex: 'purchasePlanQty', width: 130, minWidth: 112, align: 'right' },
+  { settingsKey: 'transferOutboundQty', title: '调拨待出库', dataIndex: 'transferOutboundQty', width: 120, minWidth: 104, align: 'right' },
+  { settingsKey: 'transferShippingQty', title: '调拨待出运', dataIndex: 'transferShippingQty', width: 120, minWidth: 104, align: 'right' },
+  { settingsKey: 'inTransitQty', title: '在途量', dataIndex: 'inTransitQty', width: 100, minWidth: 86, align: 'right' },
+  { settingsKey: 'reservedQty', title: '预占量', dataIndex: 'reservedQty', width: 100, minWidth: 86, align: 'right' },
+  { settingsKey: 'availableQty', title: '可用量', dataIndex: 'availableQty', width: 100, minWidth: 86, align: 'right' },
+  { settingsKey: 'defectiveQty', title: '次品量', dataIndex: 'defectiveQty', width: 100, minWidth: 86, align: 'right' },
+  { settingsKey: 'goodQty', title: '良品量', dataIndex: 'goodQty', width: 100, minWidth: 86, align: 'right' },
+  { settingsKey: 'warehouseStockQty', title: '在库量', dataIndex: 'warehouseStockQty', width: 100, minWidth: 86, align: 'right' },
+  { settingsKey: 'totalStockQty', title: '总库存', dataIndex: 'totalStockQty', width: 100, minWidth: 86, align: 'right' },
+  { settingsKey: 'dailyAverage7d', title: '7天日均', dataIndex: 'dailyAverage7d', width: 100, minWidth: 86, align: 'right' },
+  { settingsKey: 'age0To30', title: '0~30', dataIndex: 'age0To30', width: 90, minWidth: 78, align: 'right' },
+  { settingsKey: 'age31To60', title: '31~60', dataIndex: 'age31To60', width: 90, minWidth: 78, align: 'right' },
+  { settingsKey: 'age61To90', title: '61~90', dataIndex: 'age61To90', width: 90, minWidth: 78, align: 'right' },
+  { settingsKey: 'age365Plus', title: '365+', dataIndex: 'age365Plus', width: 90, minWidth: 78, align: 'right' },
+  { settingsKey: 'stagnantQty', title: '滞销量', dataIndex: 'stagnantQty', width: 100, minWidth: 86, align: 'right' },
+  { settingsKey: 'stagnantRate', title: '滞销率', dataIndex: 'stagnantRate', width: 100, minWidth: 86, align: 'right' },
+]
+
+const activeSummaryCards = computed(() => prototypeSummaryCards)
+const activeColumns = computed(() => activeTab.value === 'warehouse' ? warehouseColumns : allColumns)
+const activeDefaultVisibleColumnKeys = computed(() =>
+  activeTab.value === 'warehouse' ? warehouseDefaultVisibleColumnKeys : defaultVisibleColumnKeys
+)
+const activeRequiredColumnKeys = computed(() =>
+  activeTab.value === 'warehouse' ? warehouseRequiredColumnKeys : requiredColumnKeys
+)
+const activeTableClass = computed(() =>
+  activeTab.value === 'warehouse' ? 'inventory-table warehouse-aggregate-table' : 'inventory-table'
+)
+const activeTableWrapperClass = computed(() =>
+  activeTab.value === 'warehouse' ? 'warehouse-aggregate-table-shell' : undefined
+)
 
 const openColumnSettings = () => {
   columnSettingsVisible.value = true
@@ -285,7 +718,7 @@ const filteredRows = computed(() => {
     rows = rows.filter((item) => item.storePlatform === filters.value.store)
   }
 
-  if (filters.value.warehouse) {
+  if (filters.value.warehouse && filters.value.warehouse !== 'all') {
     rows = rows.filter((item) => item.warehouse.includes(String(filters.value.warehouse)))
   }
 
@@ -299,8 +732,9 @@ const filteredRows = computed(() => {
 
   const stockValue = Number(filters.value.stockValue ?? 0)
   if (stockValue > 0) {
-    if (filters.value.stockOperator === 'lte') rows = rows.filter((item) => item.stock <= stockValue)
-    if (filters.value.stockOperator === 'gte') rows = rows.filter((item) => item.stock >= stockValue)
+    const stockOperator = filters.value.stockOperator ?? 'gte'
+    if (stockOperator === 'lte') rows = rows.filter((item) => item.stock <= stockValue)
+    if (stockOperator === 'gte') rows = rows.filter((item) => item.stock >= stockValue)
   }
 
   if (filters.value.keyword.trim()) {
@@ -315,9 +749,22 @@ const filteredRows = computed(() => {
   return rows
 })
 
+const filteredWarehouseRows = computed(() => {
+  let rows = [...warehouseAggregateRows.value]
+
+  if (filters.value.warehouse) {
+    rows = rows.filter((item) => item.warehouse.includes(String(filters.value.warehouse)))
+  }
+
+  return rows
+})
+
+const activeRows = computed(() => activeTab.value === 'warehouse' ? filteredWarehouseRows.value : filteredRows.value)
+const activeTotal = computed(() => activeTab.value === 'warehouse' ? activeRows.value.length : prototypeProductTotal)
+
 const pagedRows = computed(() => {
   const start = (pagination.value.page - 1) * pagination.value.pageSize
-  return filteredRows.value.slice(start, start + pagination.value.pageSize)
+  return activeRows.value.slice(start, start + pagination.value.pageSize)
 })
 
 const stockStatusText = (stock: number) => {
@@ -332,13 +779,18 @@ const resetFilters = () => {
     warehouse: undefined,
     deliveryType: undefined,
     brand: undefined,
-    stockOperator: 'gte',
+    stockOperator: undefined,
     stockValue: 0,
     keyword: '',
+    warehouseOwner: undefined,
+    warehouseMetric: undefined,
+    warehouseCompare: undefined,
+    warehouseMetricValue: undefined,
   }
   pagination.value = {
     ...pagination.value,
     page: 1,
+    pageSize: activeTab.value === 'warehouse' ? warehousePageSize : productPageSize,
   }
 }
 
@@ -348,210 +800,223 @@ const resetFilters = () => {
   <div class="inventory-page">
     <section class="page-head">
       <div class="page-title">
-        <span>库存管理</span>
+        <span>{{ pageTitle }}</span>
       </div>
-      <p class="page-description">统一查看产品库存、仓库库存和批次库存状态，按店铺、仓库、配送类型和品牌快速筛选，作为仓储库存模块的核心工作台。</p>
+      <p class="page-description">{{ pageDescription }}</p>
     </section>
-    <div class="inventory-tabs-shell arco-tabs arco-tabs-horizontal arco-tabs-card-gutter arco-tabs-top arco-tabs-size-default finance-page-tabs">
-      <div
-        class="inventory-tabs arco-tabs-header-nav arco-tabs-header-nav-horizontal arco-tabs-header-nav-top arco-tabs-header-size-default arco-tabs-header-nav-card-gutter"
-        role="tablist"
+
+    <nav class="inventory-tabs-shell" aria-label="库存分类">
+      <button
+        v-for="tab in inventoryTabs"
+        :key="tab.key"
+        type="button"
+        class="inventory-tab"
+        :class="{ 'is-active': activeTab === tab.key }"
+        :aria-pressed="activeTab === tab.key"
+        @click="switchInventoryTab(tab)"
       >
-        <div class="arco-tabs-header-scroll">
-          <div class="arco-tabs-header-wrapper">
-            <div class="arco-tabs-header">
-              <div
-                v-for="tab in inventoryTabs"
-                :id="`inventory-tab-${tab.key}`"
-                :key="tab.key"
-                class="arco-tabs-header-title"
-                :class="{ 'arco-tabs-header-title-active': activeTab === tab.key }"
-                role="tab"
-                :aria-selected="activeTab === tab.key"
-                :aria-controls="`inventory-panel-${tab.key}`"
-                tabindex="0"
-                @click="activeTab = tab.key"
-                @keydown.enter.prevent="activeTab = tab.key"
-                @keydown.space.prevent="activeTab = tab.key"
-              >
-                <span class="arco-tabs-header-title-text">{{ tab.title }}</span>
-              </div>
-            </div>
-          </div>
+        {{ tab.title }}
+      </button>
+    </nav>
+
+    <div class="volc-design-common-table inventory-table-workspace">
+      <MetricSummaryStrip class="inventory-summary" :cards="activeSummaryCards" />
+
+      <QueryFilterPanel
+        v-if="activeTab === 'warehouse'"
+        class="inventory-filter-panel warehouse-prototype-filter"
+      >
+        <div class="warehouse-filter-builder">
+          <a-select v-model="filters.warehouse" placeholder="全部" allow-clear class="warehouse-filter-select-all">
+            <a-option value="all">全部</a-option>
+            <a-option value="WB-PLUS仓">WB-PLUS仓</a-option>
+            <a-option value="MSK仓">MSK仓</a-option>
+            <a-option value="广州仓">广州仓</a-option>
+          </a-select>
+          <a-select v-model="filters.warehouseOwner" placeholder="所有人" allow-clear class="warehouse-filter-mini">
+            <a-option value="all">全部</a-option>
+          </a-select>
+          <a-select v-model="filters.warehouseMetric" placeholder="在库值" allow-clear class="warehouse-filter-mini">
+            <a-option value="warehouseStockQty">在库量</a-option>
+            <a-option value="availableQty">可用量</a-option>
+          </a-select>
+          <a-select v-model="filters.warehouseCompare" placeholder="等于" allow-clear class="warehouse-filter-compare">
+            <a-option value="eq">等于</a-option>
+            <a-option value="gte">大于等于</a-option>
+            <a-option value="lte">小于等于</a-option>
+          </a-select>
+          <a-input-number
+            v-model="filters.warehouseMetricValue"
+            hide-button
+            placeholder="请输入"
+            class="warehouse-filter-value"
+          />
+          <a-button class="volc-design-button" @click="resetFilters">重置</a-button>
         </div>
+      </QueryFilterPanel>
+
+      <div v-if="activeTab === 'warehouse'" class="warehouse-filter-summary" aria-label="店铺/仓库: 全部">
+        <span class="warehouse-filter-label">店铺/仓库:</span>
+        <span class="warehouse-filter-pill">全部</span>
+        <a-button size="small" class="volc-design-button" @click="resetFilters">清除全部</a-button>
       </div>
 
-      <div class="arco-tabs-content arco-tabs-content-horizontal inventory-tabs-content">
-        <div class="arco-tabs-content-inner">
-          <div
-            :id="`inventory-panel-${activeTab}`"
-            class="arco-tabs-content-item arco-tabs-content-item-active"
-            role="tabpanel"
-            tabindex="0"
-            :aria-labelledby="`inventory-tab-${activeTab}`"
-          >
-            <div class="arco-tabs-pane">
-              <div class="volc-design-common-table inventory-table-workspace">
-                <MetricSummaryStrip class="inventory-summary" :cards="summaryCards" />
-
-                <QueryFilterPanel class="inventory-filter-panel">
-                  <QueryFilterItem label="店铺">
-                    <a-select v-model="filters.store" placeholder="请选择店铺" allow-clear class="volc-design-search-item">
-                      <a-option value="AliExpress">AliExpress</a-option>
-                      <a-option value="Ozon">Ozon</a-option>
-                      <a-option value="TikTok Shop">TikTok Shop</a-option>
-                      <a-option value="CPU HOME">CPU HOME</a-option>
-                    </a-select>
-                  </QueryFilterItem>
-
-                  <QueryFilterItem label="仓库">
-                    <a-select v-model="filters.warehouse" placeholder="请选择仓库" allow-clear class="volc-design-search-item">
-                      <a-option value="广州仓">广州仓</a-option>
-                      <a-option value="莫斯科">莫斯科 CHI 仓库</a-option>
-                      <a-option value="华沙">华沙中转仓</a-option>
-                      <a-option value="迪拜">迪拜海外仓</a-option>
-                    </a-select>
-                  </QueryFilterItem>
-
-                  <QueryFilterItem label="配送类型">
-                    <a-select v-model="filters.deliveryType" placeholder="请选择配送类型" allow-clear class="volc-design-search-item">
-                      <a-option value="FBS">FBS</a-option>
-                      <a-option value="FBW">FBW</a-option>
-                    </a-select>
-                  </QueryFilterItem>
-
-                  <QueryFilterItem label="品牌">
-                    <a-select v-model="filters.brand" placeholder="请选择品牌" allow-clear class="volc-design-search-item">
-                      <a-option value="KeyMood">KeyMood</a-option>
-                      <a-option value="Kingston">Kingston</a-option>
-                      <a-option value="HomeEase">HomeEase</a-option>
-                      <a-option value="BlendGo">BlendGo</a-option>
-                    </a-select>
-                  </QueryFilterItem>
-
-                  <QueryFilterItem label="在库库存" class="filter-stock-range">
-                    <div class="stock-filter-combo">
-                      <a-select v-model="filters.stockOperator" class="stock-operator" :style="{ width: '112px' }">
-                        <a-option value="gte">≥</a-option>
-                        <a-option value="lte">≤</a-option>
-                      </a-select>
-                      <a-input-number
-                        v-model="filters.stockValue"
-                        :min="0"
-                        hide-button
-                        class="stock-value"
-                        placeholder="请输入"
-                        :style="{ width: '100%' }"
-                      />
-                    </div>
-                  </QueryFilterItem>
-
-                  <QueryFilterItem label="关键词">
-                    <a-input-search
-                      v-model="filters.keyword"
-                      allow-clear
-                      placeholder="搜索 sku / 卖家编号 / 条形码"
-                      class="volc-design-search-item filter-search"
-                    />
-                  </QueryFilterItem>
-
-                  <QueryActionBar>
-                    <a-button type="primary" class="volc-design-button">查询</a-button>
-                    <a-button class="volc-design-button" @click="resetFilters">重置</a-button>
-                    <a-tooltip content="定制列">
-                      <a-button size="small" class="filter-icon-button" aria-label="定制列" @click="openColumnSettings">
-                        <template #icon>
-                          <icon-settings />
-                        </template>
-                      </a-button>
-                    </a-tooltip>
-                    <a-tooltip content="刷新">
-                      <a-button size="small" class="filter-icon-button" aria-label="刷新">
-                        <template #icon>
-                          <icon-refresh />
-                        </template>
-                      </a-button>
-                    </a-tooltip>
-                  </QueryActionBar>
-                </QueryFilterPanel>
-
-                <ConfigurableDataTable
-                  v-model:settings-visible="columnSettingsVisible"
-                  :columns="allColumns"
-                  :default-visible-keys="defaultVisibleColumnKeys"
-                  :required-keys="requiredColumnKeys"
-                  :data="pagedRows"
-                  row-key="id"
-                  :pagination="false"
-                  table-class="inventory-table"
-                >
-                  <template #warehouse="{ record }">
-                    <div class="warehouse-cell">
-                      <strong>{{ record.warehouse }}</strong>
-                      <span>{{ record.warehouseMeta }}</span>
-                    </div>
-                  </template>
-
-                  <template #thumb="{ record }">
-                    <div class="thumb-card" :class="`tone-${record.thumbTone}`">
-                      <img
-                        v-if="record.thumbUrl"
-                        class="thumb-image"
-                        :src="record.thumbUrl"
-                        :alt="record.productName"
-                        loading="lazy"
-                        @error="record.thumbUrl = ''"
-                      />
-                      <span v-else>{{ record.thumbText }}</span>
-                    </div>
-                  </template>
-
-                  <template #product="{ record }">
-                    <div class="product-cell">
-                      <a-link>{{ record.productName }}</a-link>
-                      <span>{{ record.sku }}</span>
-                    </div>
-                  </template>
-
-                  <template #store="{ record }">
-                    <div class="store-cell">
-                      <strong>{{ record.storeName }}</strong>
-                      <span>{{ record.storePlatform }}</span>
-                    </div>
-                  </template>
-
-                  <template #stock="{ record }">
-                    <div class="stock-cell">
-                      <strong>{{ record.stock }}</strong>
-                      <a-tag :color="record.stock <= 10 ? 'red' : record.stock <= 80 ? 'orange' : 'green'">
-                        {{ stockStatusText(record.stock) }}
-                      </a-tag>
-                    </div>
-                  </template>
-
-                  <template #nextUpdate="{ record }">
-                    <span class="next-update">{{ record.nextUpdateAt }}</span>
-                  </template>
-
-                  <template #footer>
-                    <a-pagination
-                      v-model:current="pagination.page"
-                      v-model:page-size="pagination.pageSize"
-                      :total="filteredRows.length"
-                      :page-size-options="[10, 20, 50, 100]"
-                      show-total
-                      show-jumper
-                      show-page-size
-                    />
-                  </template>
-                </ConfigurableDataTable>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div v-if="activeTab === 'warehouse'" class="warehouse-table-toolbar">
+        <a-button size="small" class="volc-design-button">导出</a-button>
+        <a-tooltip content="定制列">
+          <a-button size="small" class="filter-icon-button" aria-label="定制列" @click="openColumnSettings">
+            <template #icon>
+              <icon-settings />
+            </template>
+          </a-button>
+        </a-tooltip>
       </div>
+
+      <QueryFilterPanel v-else class="inventory-filter-panel">
+        <QueryFilterItem label="店铺">
+          <a-select v-model="filters.store" placeholder="选择店铺" allow-clear class="volc-design-search-item">
+            <a-option value="AliExpress">AliExpress</a-option>
+          </a-select>
+        </QueryFilterItem>
+
+        <QueryFilterItem label="仓库">
+          <a-select v-model="filters.warehouse" placeholder="选择仓库" allow-clear class="volc-design-search-item">
+            <a-option value="广州仓">广州仓</a-option>
+          </a-select>
+        </QueryFilterItem>
+
+        <QueryFilterItem label="配送类型">
+          <a-select v-model="filters.deliveryType" placeholder="配送类型" allow-clear class="volc-design-search-item">
+            <a-option value="FBS">FBS</a-option>
+            <a-option value="FBW">FBW</a-option>
+          </a-select>
+        </QueryFilterItem>
+
+        <QueryFilterItem label="品牌">
+          <a-select v-model="filters.brand" placeholder="选择品牌" allow-clear class="volc-design-search-item">
+            <a-option value="">全部</a-option>
+            <a-option value="KeyMood">KeyMood</a-option>
+          </a-select>
+        </QueryFilterItem>
+
+        <QueryFilterItem label="在库库存" class="filter-stock-range">
+          <div class="stock-filter-combo">
+            <a-select v-model="filters.stockOperator" placeholder="条件" class="stock-operator" :style="{ width: '112px' }">
+              <a-option value="gte">≥</a-option>
+              <a-option value="lte">≤</a-option>
+            </a-select>
+            <a-input-number
+              v-model="filters.stockValue"
+              :min="0"
+              hide-button
+              class="stock-value"
+              placeholder="数值"
+              :style="{ width: '100%' }"
+            />
+          </div>
+        </QueryFilterItem>
+
+        <QueryFilterItem label="关键词">
+          <a-input-search
+            v-model="filters.keyword"
+            allow-clear
+            placeholder="搜索 sku / 卖家编号 / 条形码"
+            class="volc-design-search-item filter-search"
+          />
+        </QueryFilterItem>
+
+        <QueryActionBar>
+          <a-button type="primary" class="volc-design-button">查询</a-button>
+          <a-button class="volc-design-button" @click="resetFilters">重置</a-button>
+          <a-tooltip content="定制列">
+            <a-button size="small" class="filter-icon-button" aria-label="定制列" @click="openColumnSettings">
+              <template #icon>
+                <icon-settings />
+              </template>
+            </a-button>
+          </a-tooltip>
+          <a-tooltip content="刷新">
+            <a-button size="small" class="filter-icon-button" aria-label="刷新">
+              <template #icon>
+                <icon-refresh />
+              </template>
+            </a-button>
+          </a-tooltip>
+        </QueryActionBar>
+      </QueryFilterPanel>
+
+      <ConfigurableDataTable
+        v-model:settings-visible="columnSettingsVisible"
+        :columns="activeColumns"
+        :default-visible-keys="activeDefaultVisibleColumnKeys"
+        :required-keys="activeRequiredColumnKeys"
+        :data="pagedRows"
+        row-key="id"
+        :pagination="false"
+        :table-class="activeTableClass"
+        :wrapper-class="activeTableWrapperClass"
+      >
+        <template #warehouse="{ record }">
+          <div class="warehouse-cell warehouse-cell-compact">
+            <strong>{{ record.warehouse }}</strong>
+            <span v-if="activeTab !== 'warehouse'">{{ record.warehouseMeta }}</span>
+          </div>
+        </template>
+
+        <template #thumb="{ record }">
+          <div class="thumb-card" :class="`tone-${record.thumbTone}`">
+            <img
+              v-if="record.thumbUrl"
+              class="thumb-image"
+              :src="record.thumbUrl"
+              :alt="record.productName"
+              loading="lazy"
+              @error="record.thumbUrl = ''"
+            />
+            <span v-else>{{ record.thumbText }}</span>
+          </div>
+        </template>
+
+        <template #product="{ record }">
+          <div class="product-cell">
+            <a-link>{{ record.productName }}</a-link>
+            <span>{{ record.sku }}</span>
+          </div>
+        </template>
+
+        <template #store="{ record }">
+          <div class="store-cell">
+            <strong>{{ record.storeName }}</strong>
+            <span>{{ record.storePlatform }}</span>
+          </div>
+        </template>
+
+        <template #stock="{ record }">
+          <div class="stock-cell">
+            <strong>{{ record.stock }}</strong>
+            <a-tag :color="record.stock <= 10 ? 'red' : record.stock <= 80 ? 'orange' : 'green'">
+              {{ stockStatusText(record.stock) }}
+            </a-tag>
+          </div>
+        </template>
+
+        <template #nextUpdate="{ record }">
+          <span class="next-update">{{ record.nextUpdateAt }}</span>
+        </template>
+
+        <template #footer>
+          <a-pagination
+            v-model:current="pagination.page"
+            v-model:page-size="pagination.pageSize"
+            :total="activeTotal"
+            :page-size-options="[10, 20, 50, 100]"
+            show-total
+            show-jumper
+            show-page-size
+          />
+        </template>
+      </ConfigurableDataTable>
     </div>
-
   </div>
 </template>
 
@@ -611,57 +1076,31 @@ const resetFilters = () => {
   line-height: 20px;
 }
 
-.inventory-summary,
-.inventory-filter-panel {
+.inventory-summary {
   margin-bottom: 16px;
 }
 
+.inventory-filter-panel {
+  margin-bottom: 14px;
+}
+
 .inventory-tabs-shell {
-  border-bottom: 0;
   position: relative;
-  overflow: visible;
-}
-
-.inventory-tabs {
-  position: relative;
-  z-index: 1;
-  margin: 0;
-  width: 100%;
-}
-
-.finance-page-tabs .arco-tabs-header-nav::before {
-  position: absolute;
-  right: -32px;
-  bottom: 0;
-  left: -32px;
-  z-index: 0;
-  height: 1px;
-  background: var(--inventory-color-border);
-  content: '';
-}
-
-.inventory-tabs .arco-tabs-header-scroll,
-.inventory-tabs .arco-tabs-header-wrapper {
-  overflow: visible;
-}
-
-.inventory-tabs .arco-tabs-header {
-  position: relative;
-  z-index: 1;
   display: flex;
   align-items: flex-end;
+  border-bottom: 1px solid var(--inventory-color-border);
+  margin-bottom: 16px;
+  overflow: visible;
 }
 
-.inventory-tabs .arco-tabs-header-title {
+.inventory-tab {
   position: relative;
-  z-index: 1;
-  margin: 0 0 0 4px;
+  margin: 0 0 -1px 0;
   padding: 7px 16px;
+  border: 1px solid var(--inventory-color-border);
+  border-bottom-color: var(--inventory-color-border);
   border-radius: var(--inventory-radius-small) var(--inventory-radius-small) 0 0;
-  box-shadow:
-    inset 0 1px 0 var(--inventory-color-border),
-    inset -1px 0 0 var(--inventory-color-border),
-    inset 1px 0 0 var(--inventory-color-border);
+  appearance: none;
   background: var(--inventory-color-fill);
   color: var(--inventory-color-text-secondary);
   font-size: 14px;
@@ -672,58 +1111,131 @@ const resetFilters = () => {
   transition: none;
 }
 
-.inventory-tabs .arco-tabs-header-title:hover,
-.inventory-tabs .arco-tabs-header-title:active,
-.inventory-tabs .arco-tabs-header-title:focus,
-.inventory-tabs .arco-tabs-header-title:focus-visible {
+.inventory-tab + .inventory-tab {
+  margin-left: 0;
+}
+
+.inventory-tab:hover,
+.inventory-tab:active,
+.inventory-tab:focus,
+.inventory-tab:focus-visible {
   background: var(--inventory-color-fill);
   outline: none;
 }
 
-.inventory-tabs .arco-tabs-header-title-text {
-  position: relative;
-  z-index: 1;
-  padding: 0;
-}
-
-.inventory-tabs .arco-tabs-header-title:first-child {
-  margin-left: 0;
-}
-
-.inventory-tabs .arco-tabs-header-title::after {
-  position: absolute;
-  bottom: 0;
-  left: 1px;
-  width: calc(100% - 2px);
-  height: 1px;
-  background: var(--inventory-color-border);
-  content: '';
-}
-
-.inventory-tabs .arco-tabs-header-title-active {
-  position: relative;
+.inventory-tab.is-active {
   z-index: 2;
+  border-top: 2px solid var(--inventory-color-primary);
+  border-bottom-color: var(--inventory-color-bg);
+  background: var(--inventory-color-bg);
   color: var(--inventory-color-primary);
-  box-shadow:
-    inset 0 2px 0 var(--inventory-color-primary),
-    inset -1px 0 0 var(--inventory-color-border),
-    inset 1px 0 0 var(--inventory-color-border);
-  background: var(--inventory-color-bg);
 }
 
-.inventory-tabs .arco-tabs-header-title-active:hover,
-.inventory-tabs .arco-tabs-header-title-active:active,
-.inventory-tabs .arco-tabs-header-title-active:focus,
-.inventory-tabs .arco-tabs-header-title-active:focus-visible {
-  background: var(--inventory-color-bg);
-}
-
-.inventory-tabs .arco-tabs-header-title-active::after {
+.inventory-tab.is-active:hover,
+.inventory-tab.is-active:active,
+.inventory-tab.is-active:focus,
+.inventory-tab.is-active:focus-visible {
   background: var(--inventory-color-bg);
 }
 
 .volc-design-button {
   height: var(--inventory-control-height);
+}
+
+.warehouse-prototype-filter {
+  padding: 16px 18px;
+  background: var(--inventory-color-bg);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.warehouse-prototype-filter :deep(.query-filter-row) {
+  align-items: center;
+  gap: 10px;
+}
+
+.warehouse-filter-builder {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.warehouse-filter-select-all,
+.warehouse-filter-mini {
+  width: 112px;
+}
+
+.warehouse-filter-compare {
+  width: 78px;
+}
+
+.warehouse-filter-value {
+  width: 132px;
+}
+
+.warehouse-filter-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px 14px;
+  color: var(--inventory-color-text-secondary);
+  font-size: 12px;
+  line-height: 22px;
+}
+
+.warehouse-filter-pill {
+  display: inline-flex;
+  height: 22px;
+  align-items: center;
+  border-radius: 3px;
+  padding: 0 9px;
+  background: var(--inventory-color-primary);
+  color: #fff;
+  font-size: 12px;
+  line-height: 22px;
+}
+
+.warehouse-table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+:deep(.warehouse-aggregate-table-shell) {
+  border-radius: 0 0 8px 8px;
+  background: #fff;
+}
+
+:deep(.warehouse-aggregate-table .arco-table-th),
+:deep(.warehouse-aggregate-table .arco-table-td) {
+  height: 38px;
+  padding: 0 14px;
+  color: #1d2129;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+:deep(.warehouse-aggregate-table .arco-table-th) {
+  background: #f6f8fb;
+  font-weight: 600;
+}
+
+:deep(.warehouse-aggregate-table .arco-table-td) {
+  background: #fff;
+}
+
+:deep(.warehouse-aggregate-table .arco-table-tr:nth-child(even) .arco-table-td) {
+  background: #f7f8fa;
+}
+
+:deep(.warehouse-aggregate-table .arco-table-cell) {
+  padding: 0;
+}
+
+:deep(.warehouse-aggregate-table-shell .configurable-data-table-footer) {
+  padding: 14px 18px;
 }
 
 .stock-filter-combo {
@@ -792,8 +1304,28 @@ const resetFilters = () => {
 .product-cell,
 .store-cell {
   display: flex;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   flex-direction: column;
+  align-items: flex-start;
   gap: 4px;
+  text-align: left;
+}
+
+.warehouse-cell strong,
+.warehouse-cell span,
+.product-cell :deep(.arco-link),
+.product-cell span,
+.store-cell strong,
+.store-cell span {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .warehouse-cell strong,

@@ -12,4 +12,8 @@ describe('BatchInventoryTable source', () => {
     expect(componentSource).not.toContain('<a-checkbox')
     expect(componentSource).not.toContain('selectedRowKeys')
   })
+
+  it('leaves enough room around the fixed operation button', () => {
+    expect(componentSource).toContain("{ title: '操作', slotName: 'operation', width: 96, align: 'center' }")
+  })
 })

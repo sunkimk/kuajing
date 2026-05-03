@@ -83,7 +83,7 @@ const rawBaseColumns: BatchTableColumnData[] = [
   { settingsKey: 'expireDate', title: '有效期至', dataIndex: 'expireDate', slotName: 'expireDate', width: 112, minWidth: 104, align: 'center' },
   { settingsKey: 'supplier', title: '供应商', dataIndex: 'supplier', width: 160, minWidth: 132, ellipsis: true, tooltip: true },
   { settingsKey: 'status', title: '状态', dataIndex: 'status', slotName: 'status', width: 86, minWidth: 76, align: 'center' },
-  { title: '操作', slotName: 'operation', width: 78, align: 'center' },
+  { title: '操作', slotName: 'operation', width: 96, align: 'center' },
 ]
 </script>
 

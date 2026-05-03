@@ -56,15 +56,9 @@ const overviewMetrics = computed(() => [
   { label: '平台映射', value: `${draft.value.mappings.length} 条` },
   { label: '物流标签', value: draft.value.logistics.logisticsTags.length ? `${draft.value.logistics.logisticsTags.length} 项` : '-' },
   { label: '采购状态', value: procurementStatusOptions.find((item) => item.value === draft.value.procurement.status)?.label ?? '-' },
-  { label: '更新时间', value: draft.value.updatedAt || '-' },
 ])
 
 const pageTitle = computed(() => isCreateMode.value ? '新建商品' : '编辑商品')
-const pageDescription = computed(() =>
-  isCreateMode.value
-    ? '先建立 SKU 主数据，再在同一页补全包装、物流、采购和平台店铺映射。'
-    : '围绕单个内部 SKU 维护基础资料和平台映射，后续订单、库存和采购模块都基于这里的主数据扩展。'
-)
 
 const loadDraft = () => {
   if (isCreateMode.value) {
@@ -236,35 +230,33 @@ watch([() => route.params.sku, () => route.path], loadDraft, { immediate: true }
     <template v-if="!missingProduct">
       <SecondaryPageHeader
         :title="pageTitle"
-        :description="pageDescription"
-        :breadcrumbs="['商品管理', '商品列表', pageTitle]"
         @back="goBackToList"
       />
 
       <section class="overview-card">
-        <div class="overview-left">
+        <div class="overview-profile">
           <div class="image-preview">
             <img v-if="draft.basicInfo.mainImage" :src="draft.basicInfo.mainImage" :alt="draft.basicInfo.chineseName || draft.basicInfo.sku" />
             <div v-else class="image-empty">主图待补充</div>
           </div>
 
-          <div class="overview-copy">
-            <strong>{{ draft.basicInfo.chineseName || '未命名商品' }}</strong>
-            <span>{{ draft.basicInfo.sku || '请先填写 SKU' }}</span>
-            <div class="overview-tags">
+          <div class="overview-identity">
+            <div class="overview-title-row">
+              <strong>{{ draft.basicInfo.chineseName || '未命名商品' }}</strong>
               <a-tag :color="draft.basicInfo.status === 'normal' ? 'green' : 'gray'">{{ statusLabelMap[draft.basicInfo.status] }}</a-tag>
               <a-tag :color="draft.procurement.purchasable ? 'arcoblue' : 'gray'">
                 {{ draft.procurement.purchasable ? '可采购' : '不可采购' }}
               </a-tag>
               <a-tag color="purple">{{ draft.basicInfo.category || '未选类目' }}</a-tag>
             </div>
+            <span>{{ draft.basicInfo.sku || '请先填写 SKU' }}</span>
           </div>
         </div>
 
-        <div class="overview-right">
-          <div v-for="metric in overviewMetrics" :key="metric.label" class="overview-metric">
-            <span>{{ metric.label }}</span>
+        <div class="overview-stats">
+          <div v-for="metric in overviewMetrics" :key="metric.label" class="overview-stat">
             <strong>{{ metric.value }}</strong>
+            <span>{{ metric.label }}</span>
           </div>
         </div>
       </section>
@@ -595,31 +587,35 @@ watch([() => route.params.sku, () => route.path], loadDraft, { immediate: true }
 
 .overview-card {
   display: flex;
-  align-items: stretch;
+  min-height: 104px;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 18px;
+  gap: 24px;
+  padding: 20px 28px;
   border: 1px solid var(--product-color-border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--product-color-bg);
   box-shadow: none;
 }
 
-.overview-left {
+.overview-profile {
   display: flex;
+  align-items: center;
+  flex: 1 1 auto;
   min-width: 0;
   gap: 16px;
 }
 
 .image-preview {
   display: flex;
-  width: 120px;
-  height: 120px;
+  width: 64px;
+  height: 64px;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
   overflow: hidden;
-  border-radius: 16px;
-  background: var(--product-color-fill);
+  border-radius: 50%;
+  background: #eef4ff;
 }
 
 .image-preview img {
@@ -629,64 +625,75 @@ watch([() => route.params.sku, () => route.path], loadDraft, { immediate: true }
 }
 
 .image-empty {
-  padding: 0 16px;
-  color: var(--product-color-text-tertiary);
-  font-size: 12px;
+  padding: 0 12px;
+  color: #5a78a8;
+  font-size: 11px;
+  line-height: 16px;
   text-align: center;
 }
 
-.overview-copy {
+.overview-identity {
   display: flex;
   min-width: 0;
   flex-direction: column;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
 }
 
-.overview-copy strong {
-  color: var(--product-color-text);
-  font-size: 22px;
-  line-height: 1.3;
-}
-
-.overview-copy span {
-  color: var(--product-color-text-secondary);
-  font-size: 13px;
-}
-
-.overview-tags {
+.overview-title-row {
   display: flex;
+  min-width: 0;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
-.overview-right {
-  display: grid;
-  flex: 0 0 420px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+.overview-title-row strong {
+  color: var(--product-color-text);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 26px;
 }
 
-.overview-metric {
-  padding: 14px 16px;
-  border: 1px solid var(--product-color-border);
-  border-radius: 8px;
-  background: var(--product-color-bg);
-}
-
-.overview-metric span {
-  display: block;
-  margin-bottom: 8px;
+.overview-identity > span {
   color: var(--product-color-text-secondary);
   font-size: 13px;
   line-height: 20px;
 }
 
-.overview-metric strong {
+.overview-title-row :deep(.arco-tag) {
+  height: 20px;
+  padding: 0 6px;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.overview-stats {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: clamp(32px, 4vw, 64px);
+}
+
+.overview-stat {
+  min-width: 82px;
+  text-align: left;
+}
+
+.overview-stat strong {
   display: block;
   color: var(--product-color-text);
-  font-size: 15px;
-  line-height: 1.5;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 26px;
+}
+
+.overview-stat span {
+  display: block;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--product-color-text-tertiary);
 }
 
 .mapping-tip {
@@ -797,22 +804,36 @@ watch([() => route.params.sku, () => route.path], loadDraft, { immediate: true }
 
 @media (max-width: 1200px) {
   .overview-card {
+    align-items: stretch;
     flex-direction: column;
+    padding: 20px 24px;
   }
 
-  .overview-right {
-    flex: 1 1 auto;
+  .overview-stats {
+    justify-content: flex-start;
+    gap: 32px;
   }
 }
 
 @media (max-width: 768px) {
-  .overview-left {
-    flex-direction: column;
+  .overview-profile {
     align-items: flex-start;
+    flex-direction: column;
   }
 
-  .overview-right {
-    grid-template-columns: 1fr;
+  .overview-card {
+    padding: 18px;
+  }
+
+  .overview-stats {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .overview-stat {
+    min-width: 0;
   }
 
   .gallery-row {

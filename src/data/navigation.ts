@@ -86,7 +86,8 @@ export const navigationSections: NavSectionItem[] = [
     key: 'warehouse',
     title: '仓储库存',
     children: [
-      { key: 'inventory', title: '库存管理', path: '/warehouse/inventory', icon: IconStorage },
+      { key: 'inventory', title: '产品库存', path: '/warehouse/inventory', icon: IconStorage },
+      { key: 'warehouse-inventory', title: '仓库库存', path: '/warehouse/warehouse-inventory', icon: IconStorage },
       { key: 'batch-inventory', title: '批次库存', path: '/warehouse/batch-inventory', icon: IconDashboard },
       { key: 'stock-in', title: '入库管理', path: '/warehouse/stock-in', icon: IconCalendarClock },
       { key: 'stock-out', title: '出库管理', path: '/warehouse/stock-out', icon: IconNotification },

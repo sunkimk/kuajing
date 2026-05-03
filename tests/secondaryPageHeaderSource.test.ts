@@ -8,20 +8,27 @@ const productDetailSource = readFileSync(
 )
 
 describe('SecondaryPageHeader source', () => {
-  it('provides the PageHeader structure used by second-level pages', () => {
+  it('provides a compact detail header structure used by second-level pages', () => {
     expect(existsSync(headerComponentUrl)).toBe(true)
 
     const componentSource = readFileSync(headerComponentUrl, 'utf-8')
     expect(componentSource).toContain('class="secondary-page-header"')
-    expect(componentSource).toContain('class="secondary-page-header-breadcrumb"')
     expect(componentSource).toContain('class="secondary-page-header-title-row"')
-    expect(componentSource).toContain('class="secondary-page-header-divider"')
+    expect(componentSource).toContain('class="secondary-page-header-status"')
+    expect(componentSource).toContain('statusTone')
     expect(componentSource).toContain('IconArrowLeft')
+    expect(componentSource).not.toContain('secondary-page-header-breadcrumb')
   })
 
   it('is used by the product create and edit page', () => {
     expect(productDetailSource).toContain("import SecondaryPageHeader")
     expect(productDetailSource).toContain('<SecondaryPageHeader')
-    expect(productDetailSource).toContain(":breadcrumbs=\"['商品管理', '商品列表', pageTitle]\"")
+    expect(productDetailSource).not.toContain(':description=')
+    expect(productDetailSource).not.toContain('pageDescription')
+    expect(productDetailSource).not.toContain(':status-text=')
+    expect(productDetailSource).not.toContain(':status-tone=')
+    expect(productDetailSource).not.toContain('pageStatusText')
+    expect(productDetailSource).not.toContain('pageStatusTone')
+    expect(productDetailSource).not.toContain(':breadcrumbs=')
   })
 })
