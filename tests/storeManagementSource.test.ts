@@ -25,8 +25,7 @@ describe('store management homepage source', () => {
   it('keeps the existing store menu label and points /stores/list to the real homepage', () => {
     expect(navigationSource).toContain("{ key: 'store-list', title: '店铺列表', path: '/stores/list'")
     expect(routerSource).toContain("import StoreManagementHomeView from '../views/StoreManagementHomeView.vue'")
-    expect(routerSource).toContain("path: 'stores/list'")
-    expect(routerSource).toContain('component: StoreManagementHomeView')
+    expect(routerSource).toMatch(/\{\s*path:\s*'stores\/list',[\s\S]*?component:\s*StoreManagementHomeView,[\s\S]*?meta:\s*\{[\s\S]*?title:\s*'店铺管理'/)
     expect(routerSource).toContain("path: 'stores/add'")
   })
 

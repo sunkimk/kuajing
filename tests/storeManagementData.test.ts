@@ -59,12 +59,47 @@ describe('storeManagement helpers', () => {
     })
   })
 
-  it('builds the issue buckets used by the action panel', () => {
+  it('counts non-healthy sync states in the summary strip even when issue buckets are empty', () => {
+    expect(calculateStoreStats([
+      {
+        ...rows[0],
+        syncStatus: 'failed',
+        issueType: undefined,
+      },
+    ])).toEqual({
+      totalStores: 1,
+      healthyStores: 0,
+      authIssueStores: 0,
+      syncIssueStores: 1,
+    })
+  })
+
+  it('builds issueType-driven buckets for the action panel', () => {
     expect(createStoreIssueCards(rows)).toEqual([
       { key: 'auth-expired', label: '授权失效', value: 1, note: '需重新授权' },
       { key: 'api-missing', label: 'API 配置缺失', value: 0, note: '影响同步' },
       { key: 'sync-failed', label: '最近同步失败', value: 0, note: '待处理' },
       { key: 'sync-overdue', label: '超时未同步', value: 1, note: '超过阈值' },
+    ])
+  })
+
+  it('treats issueType as the bucket key even when sync status would suggest a different issue', () => {
+    expect(createStoreIssueCards([
+      {
+        ...rows[0],
+        syncStatus: 'failed',
+        issueType: undefined,
+      },
+      {
+        ...rows[1],
+        syncStatus: 'healthy',
+        issueType: 'sync-failed',
+      },
+    ])).toEqual([
+      { key: 'auth-expired', label: '授权失效', value: 0, note: '需重新授权' },
+      { key: 'api-missing', label: 'API 配置缺失', value: 0, note: '影响同步' },
+      { key: 'sync-failed', label: '最近同步失败', value: 1, note: '待处理' },
+      { key: 'sync-overdue', label: '超时未同步', value: 0, note: '超过阈值' },
     ])
   })
 
@@ -75,6 +110,16 @@ describe('storeManagement helpers', () => {
       authorizationStatus: undefined,
       syncStatus: undefined,
       issueType: undefined,
+    }).map((row) => row.id)).toEqual(['2'])
+  })
+
+  it('filters store rows by platform, authorization status, sync status, and issue type', () => {
+    expect(filterStoreRows(rows, {
+      keyword: '',
+      platform: 'Ozon',
+      authorizationStatus: 'expired',
+      syncStatus: 'failed',
+      issueType: 'auth-expired',
     }).map((row) => row.id)).toEqual(['2'])
   })
 
