@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, useAttrs, useSlots } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useAttrs, useSlots, watch } from 'vue'
 import type { HTMLAttributes } from 'vue'
-import type { TableColumnData } from '@arco-design/web-vue'
+import type { TableColumnData, TableData } from '@arco-design/web-vue'
 import ColumnSettingsModal from './ColumnSettingsModal.vue'
 import type { ColumnSettingsPayload } from '../../data/columnSettings'
 import {
@@ -26,6 +26,9 @@ defineOptions({
 })
 
 type TableClassValue = HTMLAttributes['class']
+type ColumnClassValue = TableColumnData['cellClass']
+type BodyColumnClassValue = TableColumnData['bodyCellClass']
+type NormalizedClassToken = string | Record<string, boolean>
 type ScrollConfig = {
   x?: string | number
   y?: string | number
@@ -92,6 +95,23 @@ const slotNames = computed(() =>
   Object.keys(slots).filter((slotName) => !['default', 'footer', 'hideableHeader'].includes(slotName))
 )
 
+const isNormalizedClassToken = (classValue: unknown): classValue is NormalizedClassToken =>
+  typeof classValue === 'string' || (typeof classValue === 'object' && classValue !== null)
+
+const mergeClassValues = (...classValues: Array<unknown>): NormalizedClassToken[] =>
+  classValues.filter(isNormalizedClassToken)
+
+const mergeBodyClassValue = (
+  originalValue: BodyColumnClassValue | undefined,
+  extraValue: ColumnClassValue,
+): BodyColumnClassValue => {
+  if (typeof originalValue === 'function') {
+    return (record: TableData) => mergeClassValues(originalValue(record), extraValue)
+  }
+
+  return mergeClassValues(originalValue, extraValue) as ColumnClassValue
+}
+
 const configurableKeySet = computed(() => new Set(props.defaultVisibleKeys))
 const pinnedColumnKeySet = computed(() => new Set(props.pinnedColumnKeys))
 const columnByKey = computed(() => new Map(
@@ -140,6 +160,49 @@ const getResolvedColumnWidth = (columnKey: string, fallbackWidth: number, minWid
 const isReorderableColumn = (column?: ConfigurableTableColumn | TableColumnData) =>
   isConfigurableTableColumnReorderable(getColumnKey(column), pinnedColumnKeySet.value)
 
+const getColumnStaticClassName = (columnKey: string) => `configurable-table-column-${columnKey}`
+
+const getColumnStateSelector = (columnKey: string, scope: 'header' | 'cells') => {
+  const columnClassName = getColumnStaticClassName(columnKey)
+  return scope === 'header'
+    ? `.arco-table-th.${columnClassName}`
+    : `.arco-table-th.${columnClassName}, .arco-table-td.${columnClassName}`
+}
+
+const toggleColumnStateClass = (
+  columnKey: string | undefined,
+  stateClassName: string,
+  enabled: boolean,
+  scope: 'header' | 'cells',
+) => {
+  const tableWrapper = tableWrapperRef.value
+  if (!tableWrapper || !columnKey) return
+
+  tableWrapper.querySelectorAll<HTMLElement>(getColumnStateSelector(columnKey, scope))
+    .forEach((element) => element.classList.toggle(stateClassName, enabled))
+}
+
+const syncColumnStateClass = (
+  previousColumnKey: string | undefined,
+  nextColumnKey: string | undefined,
+  stateClassName: string,
+  scope: 'header' | 'cells',
+) => {
+  if (previousColumnKey && previousColumnKey !== nextColumnKey) {
+    toggleColumnStateClass(previousColumnKey, stateClassName, false, scope)
+  }
+
+  if (nextColumnKey) {
+    toggleColumnStateClass(nextColumnKey, stateClassName, true, scope)
+  }
+}
+
+const syncInteractiveColumnStateClasses = () => {
+  syncColumnStateClass(hoveredColumnKey.value, hoveredColumnKey.value, 'configurable-table-column-hovered', 'cells')
+  syncColumnStateClass(dragOverColumnKey.value, dragOverColumnKey.value, 'configurable-table-drop-target', 'header')
+  syncColumnStateClass(draggingColumnKey.value, draggingColumnKey.value, 'configurable-table-dragging', 'header')
+}
+
 const addInteractiveColumnState = (column: ConfigurableTableColumn): ConfigurableTableColumn => {
   const columnKey = getColumnKey(column)
   if (!columnKey) return column
@@ -153,15 +216,8 @@ const addInteractiveColumnState = (column: ConfigurableTableColumn): Configurabl
     minWidth,
     width,
     titleSlotName: 'hideableHeader',
-    headerCellClass: {
-      [`configurable-table-column-${columnKey}`]: true,
-      'configurable-table-column-hovered': hoveredColumnKey.value === columnKey,
-      'configurable-table-drop-target': dragOverColumnKey.value === columnKey,
-      'configurable-table-dragging': draggingColumnKey.value === columnKey,
-    },
-    bodyCellClass: {
-      'configurable-table-column-hovered': hoveredColumnKey.value === columnKey,
-    },
+    headerCellClass: mergeClassValues(column.headerCellClass, getColumnStaticClassName(columnKey)) as ColumnClassValue,
+    bodyCellClass: mergeBodyClassValue(column.bodyCellClass, getColumnStaticClassName(columnKey)),
   }
 }
 
@@ -341,9 +397,14 @@ const startColumnResize = (columnKey: string | undefined, event: MouseEvent) => 
 
   const minWidth = getColumnMinWidth(column)
   const fallbackWidth = Math.max(column.width ?? minWidth, minWidth)
-  const startWidth = getResolvedColumnWidth(columnKey, fallbackWidth, minWidth)
+  const headerCell = getHeaderCellFromEvent(event)
+  const renderedHeaderWidth = headerCell?.getBoundingClientRect().width
+  const startWidth = Math.max(
+    minWidth,
+    Math.round(renderedHeaderWidth ?? getResolvedColumnWidth(columnKey, fallbackWidth, minWidth)),
+  )
 
-  updateColumnResizeGuide(event.clientX)
+  updateColumnResizeGuideFromHeaderCell(headerCell)
   resizingColumnKey.value = columnKey
   columnResizeStartX.value = event.clientX
   columnResizeStartWidth.value = startWidth
@@ -417,6 +478,23 @@ const handleDelegatedHeaderMouseOut = (event: MouseEvent) => {
   }
 }
 
+watch(hoveredColumnKey, (nextColumnKey, previousColumnKey) => {
+  syncColumnStateClass(previousColumnKey, nextColumnKey, 'configurable-table-column-hovered', 'cells')
+})
+
+watch(dragOverColumnKey, (nextColumnKey, previousColumnKey) => {
+  syncColumnStateClass(previousColumnKey, nextColumnKey, 'configurable-table-drop-target', 'header')
+})
+
+watch(draggingColumnKey, (nextColumnKey, previousColumnKey) => {
+  syncColumnStateClass(previousColumnKey, nextColumnKey, 'configurable-table-dragging', 'header')
+})
+
+watch(orderedVisibleColumnKeys, async () => {
+  await nextTick()
+  syncInteractiveColumnStateClasses()
+})
+
 onMounted(() => {
   const tableWrapper = tableWrapperRef.value
   if (!tableWrapper) return
@@ -429,6 +507,8 @@ onMounted(() => {
     tableWrapper.removeEventListener('mousemove', handleDelegatedHeaderMouseMove, true)
     tableWrapper.removeEventListener('mouseout', handleDelegatedHeaderMouseOut, true)
   }
+
+  syncInteractiveColumnStateClasses()
 })
 
 onBeforeUnmount(() => {
@@ -547,13 +627,20 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
+.configurable-data-table :deep(.arco-table-th .arco-table-cell),
+.configurable-data-table :deep(.arco-table-th .arco-table-cell-with-sorter) {
+  position: relative;
+}
+
 .hideable-table-header {
   display: flex;
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  box-sizing: border-box;
   align-items: center;
   gap: 4px;
+  padding-right: 8px;
   vertical-align: middle;
 }
 
@@ -581,7 +668,7 @@ onBeforeUnmount(() => {
 .column-resize-handle {
   position: absolute;
   top: 0;
-  right: -7px;
+  right: 0;
   z-index: 20;
   width: 14px;
   height: 100%;

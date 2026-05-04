@@ -28,4 +28,9 @@ describe('ConfigurableDataTable styles', () => {
 
     expect(zIndex).toBeGreaterThan(100)
   })
+
+  it('anchors the resize handle to the header content so drag hit areas stay on the correct column', () => {
+    expect(componentSource).toMatch(/\.configurable-data-table\s*:deep\(\.arco-table-th \.arco-table-cell\),[\s\S]*?position:\s*relative;/s)
+    expect(componentSource).toMatch(/\.column-resize-handle\s*\{[^}]*position:\s*absolute;[^}]*right:\s*0;/s)
+  })
 })

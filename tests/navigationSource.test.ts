@@ -24,7 +24,7 @@ describe('warehouse inventory navigation source', () => {
     expect(navigationSource).not.toContain("title: '库存管理', path: '/warehouse/inventory'")
   })
 
-  it('opens the shared inventory page on the requested tab from navigation', () => {
+  it('opens route-specific inventory pages without rendering tab switching controls', () => {
     expect(routerSource).toContain("title: '产品库存'")
     expect(routerSource).toContain("inventoryTab: 'product'")
     expect(routerSource).toContain("path: 'warehouse/warehouse-inventory'")
@@ -32,11 +32,12 @@ describe('warehouse inventory navigation source', () => {
     expect(routerSource).toContain("inventoryTab: 'warehouse'")
     expect(routerSource).toContain("item.path !== '/warehouse/warehouse-inventory'")
     expect(warehouseInventorySource).toContain('const route = useRoute()')
-    expect(warehouseInventorySource).toContain('const router = useRouter()')
     expect(warehouseInventorySource).toContain('const activeTab = computed<InventoryTab>(getRouteInventoryTab)')
-    expect(warehouseInventorySource).toContain('const inventoryTabs')
-    expect(warehouseInventorySource).toContain('v-for="tab in inventoryTabs"')
-    expect(warehouseInventorySource).toContain('@click="switchInventoryTab(tab)"')
-    expect(warehouseInventorySource).not.toContain('activeTab = tab.key')
+    expect(warehouseInventorySource).toContain('const pageTitle = computed(() => String(route.meta.title ??')
+    expect(warehouseInventorySource).not.toContain('const router = useRouter()')
+    expect(warehouseInventorySource).not.toContain('const inventoryTabs')
+    expect(warehouseInventorySource).not.toContain('v-for="tab in inventoryTabs"')
+    expect(warehouseInventorySource).not.toContain('@click="switchInventoryTab(tab)"')
+    expect(warehouseInventorySource).not.toContain('class="inventory-tabs-shell"')
   })
 })

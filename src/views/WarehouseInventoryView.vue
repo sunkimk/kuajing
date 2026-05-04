@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { IconRefresh, IconSettings } from '@arco-design/web-vue/es/icon'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import ConfigurableDataTable from '../components/common/ConfigurableDataTable.vue'
 import MetricSummaryStrip from '../components/common/MetricSummaryStrip.vue'
 import QueryActionBar from '../components/common/QueryActionBar.vue'
@@ -9,7 +9,7 @@ import QueryFilterItem from '../components/common/QueryFilterItem.vue'
 import QueryFilterPanel from '../components/common/QueryFilterPanel.vue'
 import type { ConfigurableTableColumn } from '../data/configurableTable'
 
-type InventoryTab = 'product' | 'warehouse' | 'batch'
+type InventoryTab = 'product' | 'warehouse'
 type InventoryColumnKey =
   | 'warehouse'
   | 'thumb'
@@ -90,27 +90,18 @@ type WarehouseAggregateRow = {
 }
 
 const route = useRoute()
-const router = useRouter()
-
-const pageTitle = '库存管理'
-const pageDescription = '统一查看产品库存、仓库库存和批次库存状态'
-const inventoryTabs: Array<{ key: InventoryTab, title: string, path: string }> = [
-  { key: 'product', title: '产品库存', path: '/warehouse/inventory' },
-  { key: 'warehouse', title: '仓库库存', path: '/warehouse/warehouse-inventory' },
-  { key: 'batch', title: '批次库存', path: '/warehouse/batch-inventory' },
-]
 
 const getRouteInventoryTab = (): InventoryTab =>
-  ['product', 'warehouse', 'batch'].includes(String(route.meta.inventoryTab))
+  ['product', 'warehouse'].includes(String(route.meta.inventoryTab))
     ? route.meta.inventoryTab as InventoryTab
     : 'product'
 
 const activeTab = computed<InventoryTab>(getRouteInventoryTab)
-
-const switchInventoryTab = (tab: typeof inventoryTabs[number]) => {
-  if (route.path === tab.path) return
-  router.push(tab.path)
-}
+const pageTitle = computed(() => String(route.meta.title ?? '库存管理'))
+const pageDescription = computed(() => ({
+  product: '统一查看产品库存状态',
+  warehouse: '统一查看仓库库存状态',
+})[activeTab.value])
 
 const prototypeProductTotal = 2947
 const productPageSize = 10
@@ -700,12 +691,6 @@ const activeDefaultVisibleColumnKeys = computed(() =>
 const activeRequiredColumnKeys = computed(() =>
   activeTab.value === 'warehouse' ? warehouseRequiredColumnKeys : requiredColumnKeys
 )
-const activeTableClass = computed(() =>
-  activeTab.value === 'warehouse' ? 'inventory-table warehouse-aggregate-table' : 'inventory-table'
-)
-const activeTableWrapperClass = computed(() =>
-  activeTab.value === 'warehouse' ? 'warehouse-aggregate-table-shell' : undefined
-)
 
 const openColumnSettings = () => {
   columnSettingsVisible.value = true
@@ -805,72 +790,68 @@ const resetFilters = () => {
       <p class="page-description">{{ pageDescription }}</p>
     </section>
 
-    <nav class="inventory-tabs-shell" aria-label="库存分类">
-      <button
-        v-for="tab in inventoryTabs"
-        :key="tab.key"
-        type="button"
-        class="inventory-tab"
-        :class="{ 'is-active': activeTab === tab.key }"
-        :aria-pressed="activeTab === tab.key"
-        @click="switchInventoryTab(tab)"
-      >
-        {{ tab.title }}
-      </button>
-    </nav>
-
     <div class="volc-design-common-table inventory-table-workspace">
       <MetricSummaryStrip class="inventory-summary" :cards="activeSummaryCards" />
 
-      <QueryFilterPanel
-        v-if="activeTab === 'warehouse'"
-        class="inventory-filter-panel warehouse-prototype-filter"
-      >
-        <div class="warehouse-filter-builder">
-          <a-select v-model="filters.warehouse" placeholder="全部" allow-clear class="warehouse-filter-select-all">
+      <QueryFilterPanel v-if="activeTab === 'warehouse'" class="inventory-filter-panel">
+        <QueryFilterItem label="店铺/仓库">
+          <a-select v-model="filters.warehouse" placeholder="全部" allow-clear class="volc-design-search-item">
             <a-option value="all">全部</a-option>
             <a-option value="WB-PLUS仓">WB-PLUS仓</a-option>
             <a-option value="MSK仓">MSK仓</a-option>
             <a-option value="广州仓">广州仓</a-option>
           </a-select>
-          <a-select v-model="filters.warehouseOwner" placeholder="所有人" allow-clear class="warehouse-filter-mini">
+        </QueryFilterItem>
+
+        <QueryFilterItem label="所有人">
+          <a-select v-model="filters.warehouseOwner" placeholder="所有人" allow-clear class="volc-design-search-item">
             <a-option value="all">全部</a-option>
           </a-select>
-          <a-select v-model="filters.warehouseMetric" placeholder="在库值" allow-clear class="warehouse-filter-mini">
+        </QueryFilterItem>
+
+        <QueryFilterItem label="在库值">
+          <a-select v-model="filters.warehouseMetric" placeholder="在库值" allow-clear class="volc-design-search-item">
             <a-option value="warehouseStockQty">在库量</a-option>
             <a-option value="availableQty">可用量</a-option>
           </a-select>
-          <a-select v-model="filters.warehouseCompare" placeholder="等于" allow-clear class="warehouse-filter-compare">
+        </QueryFilterItem>
+
+        <QueryFilterItem label="条件">
+          <a-select v-model="filters.warehouseCompare" placeholder="等于" allow-clear class="volc-design-search-item">
             <a-option value="eq">等于</a-option>
             <a-option value="gte">大于等于</a-option>
             <a-option value="lte">小于等于</a-option>
           </a-select>
+        </QueryFilterItem>
+
+        <QueryFilterItem label="数值">
           <a-input-number
             v-model="filters.warehouseMetricValue"
             hide-button
             placeholder="请输入"
-            class="warehouse-filter-value"
           />
+        </QueryFilterItem>
+
+        <QueryActionBar>
+          <a-button type="primary" class="volc-design-button">查询</a-button>
           <a-button class="volc-design-button" @click="resetFilters">重置</a-button>
-        </div>
+          <a-button class="volc-design-button">导出</a-button>
+          <a-tooltip content="定制列">
+            <a-button size="small" class="filter-icon-button" aria-label="定制列" @click="openColumnSettings">
+              <template #icon>
+                <icon-settings />
+              </template>
+            </a-button>
+          </a-tooltip>
+          <a-tooltip content="刷新">
+            <a-button size="small" class="filter-icon-button" aria-label="刷新">
+              <template #icon>
+                <icon-refresh />
+              </template>
+            </a-button>
+          </a-tooltip>
+        </QueryActionBar>
       </QueryFilterPanel>
-
-      <div v-if="activeTab === 'warehouse'" class="warehouse-filter-summary" aria-label="店铺/仓库: 全部">
-        <span class="warehouse-filter-label">店铺/仓库:</span>
-        <span class="warehouse-filter-pill">全部</span>
-        <a-button size="small" class="volc-design-button" @click="resetFilters">清除全部</a-button>
-      </div>
-
-      <div v-if="activeTab === 'warehouse'" class="warehouse-table-toolbar">
-        <a-button size="small" class="volc-design-button">导出</a-button>
-        <a-tooltip content="定制列">
-          <a-button size="small" class="filter-icon-button" aria-label="定制列" @click="openColumnSettings">
-            <template #icon>
-              <icon-settings />
-            </template>
-          </a-button>
-        </a-tooltip>
-      </div>
 
       <QueryFilterPanel v-else class="inventory-filter-panel">
         <QueryFilterItem label="店铺">
@@ -945,77 +926,80 @@ const resetFilters = () => {
         </QueryActionBar>
       </QueryFilterPanel>
 
-      <ConfigurableDataTable
-        v-model:settings-visible="columnSettingsVisible"
-        :columns="activeColumns"
-        :default-visible-keys="activeDefaultVisibleColumnKeys"
-        :required-keys="activeRequiredColumnKeys"
-        :data="pagedRows"
-        row-key="id"
-        :pagination="false"
-        :table-class="activeTableClass"
-        :wrapper-class="activeTableWrapperClass"
-      >
-        <template #warehouse="{ record }">
-          <div class="warehouse-cell warehouse-cell-compact">
-            <strong>{{ record.warehouse }}</strong>
-            <span v-if="activeTab !== 'warehouse'">{{ record.warehouseMeta }}</span>
-          </div>
-        </template>
+      <section class="table-wrapper">
+        <ConfigurableDataTable
+          :key="activeTab"
+          v-model:settings-visible="columnSettingsVisible"
+          :columns="activeColumns"
+          :default-visible-keys="activeDefaultVisibleColumnKeys"
+          :required-keys="activeRequiredColumnKeys"
+          :data="pagedRows"
+          row-key="id"
+          :pagination="false"
+          table-class="inventory-table"
+          wrapper-class="inventory-table-shell"
+        >
+          <template #warehouse="{ record }">
+            <div class="warehouse-cell warehouse-cell-compact">
+              <strong>{{ record.warehouse }}</strong>
+              <span v-if="activeTab !== 'warehouse'">{{ record.warehouseMeta }}</span>
+            </div>
+          </template>
 
-        <template #thumb="{ record }">
-          <div class="thumb-card" :class="`tone-${record.thumbTone}`">
-            <img
-              v-if="record.thumbUrl"
-              class="thumb-image"
-              :src="record.thumbUrl"
-              :alt="record.productName"
-              loading="lazy"
-              @error="record.thumbUrl = ''"
+          <template #thumb="{ record }">
+            <div class="thumb-card" :class="`tone-${record.thumbTone}`">
+              <img
+                v-if="record.thumbUrl"
+                class="thumb-image"
+                :src="record.thumbUrl"
+                :alt="record.productName"
+                loading="lazy"
+                @error="record.thumbUrl = ''"
+              />
+              <span v-else>{{ record.thumbText }}</span>
+            </div>
+          </template>
+
+          <template #product="{ record }">
+            <div class="product-cell">
+              <a-link>{{ record.productName }}</a-link>
+              <span>{{ record.sku }}</span>
+            </div>
+          </template>
+
+          <template #store="{ record }">
+            <div class="store-cell">
+              <strong>{{ record.storeName }}</strong>
+              <span>{{ record.storePlatform }}</span>
+            </div>
+          </template>
+
+          <template #stock="{ record }">
+            <div class="stock-cell">
+              <strong>{{ record.stock }}</strong>
+              <a-tag :color="record.stock <= 10 ? 'red' : record.stock <= 80 ? 'orange' : 'green'">
+                {{ stockStatusText(record.stock) }}
+              </a-tag>
+            </div>
+          </template>
+
+          <template #nextUpdate="{ record }">
+            <span class="next-update">{{ record.nextUpdateAt }}</span>
+          </template>
+
+          <template #footer>
+            <a-pagination
+              v-model:current="pagination.page"
+              v-model:page-size="pagination.pageSize"
+              :total="activeTotal"
+              :page-size-options="[10, 20, 50, 100]"
+              show-total
+              show-jumper
+              show-page-size
             />
-            <span v-else>{{ record.thumbText }}</span>
-          </div>
-        </template>
-
-        <template #product="{ record }">
-          <div class="product-cell">
-            <a-link>{{ record.productName }}</a-link>
-            <span>{{ record.sku }}</span>
-          </div>
-        </template>
-
-        <template #store="{ record }">
-          <div class="store-cell">
-            <strong>{{ record.storeName }}</strong>
-            <span>{{ record.storePlatform }}</span>
-          </div>
-        </template>
-
-        <template #stock="{ record }">
-          <div class="stock-cell">
-            <strong>{{ record.stock }}</strong>
-            <a-tag :color="record.stock <= 10 ? 'red' : record.stock <= 80 ? 'orange' : 'green'">
-              {{ stockStatusText(record.stock) }}
-            </a-tag>
-          </div>
-        </template>
-
-        <template #nextUpdate="{ record }">
-          <span class="next-update">{{ record.nextUpdateAt }}</span>
-        </template>
-
-        <template #footer>
-          <a-pagination
-            v-model:current="pagination.page"
-            v-model:page-size="pagination.pageSize"
-            :total="activeTotal"
-            :page-size-options="[10, 20, 50, 100]"
-            show-total
-            show-jumper
-            show-page-size
-          />
-        </template>
-      </ConfigurableDataTable>
+          </template>
+        </ConfigurableDataTable>
+      </section>
     </div>
   </div>
 </template>
@@ -1053,7 +1037,7 @@ const resetFilters = () => {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  padding: 16px 2px 10px;
+  padding: 16px 2px 16px;
 }
 
 .page-title {
@@ -1084,158 +1068,64 @@ const resetFilters = () => {
   margin-bottom: 14px;
 }
 
-.inventory-tabs-shell {
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  border-bottom: 1px solid var(--inventory-color-border);
-  margin-bottom: 16px;
-  overflow: visible;
-}
-
-.inventory-tab {
-  position: relative;
-  margin: 0 0 -1px 0;
-  padding: 7px 16px;
-  border: 1px solid var(--inventory-color-border);
-  border-bottom-color: var(--inventory-color-border);
-  border-radius: var(--inventory-radius-small) var(--inventory-radius-small) 0 0;
-  appearance: none;
-  background: var(--inventory-color-fill);
-  color: var(--inventory-color-text-secondary);
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 20px;
-  cursor: pointer;
-  user-select: none;
-  transition: none;
-}
-
-.inventory-tab + .inventory-tab {
-  margin-left: 0;
-}
-
-.inventory-tab:hover,
-.inventory-tab:active,
-.inventory-tab:focus,
-.inventory-tab:focus-visible {
-  background: var(--inventory-color-fill);
-  outline: none;
-}
-
-.inventory-tab.is-active {
-  z-index: 2;
-  border-top: 2px solid var(--inventory-color-primary);
-  border-bottom-color: var(--inventory-color-bg);
-  background: var(--inventory-color-bg);
-  color: var(--inventory-color-primary);
-}
-
-.inventory-tab.is-active:hover,
-.inventory-tab.is-active:active,
-.inventory-tab.is-active:focus,
-.inventory-tab.is-active:focus-visible {
-  background: var(--inventory-color-bg);
-}
-
 .volc-design-button {
   height: var(--inventory-control-height);
 }
 
-.warehouse-prototype-filter {
-  padding: 16px 18px;
-  background: var(--inventory-color-bg);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+.table-wrapper {
+  overflow: hidden;
 }
 
-.warehouse-prototype-filter :deep(.query-filter-row) {
-  align-items: center;
-  gap: 10px;
+.inventory-table-shell :deep(.arco-table-element) {
+  min-width: unset;
 }
 
-.warehouse-filter-builder {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+.inventory-table-shell :deep(.arco-table-header) {
+  background: var(--inventory-color-fill);
 }
 
-.warehouse-filter-select-all,
-.warehouse-filter-mini {
-  width: 112px;
+.inventory-table-shell :deep(.arco-table-scroll-position-right .arco-table-col-fixed-left-last::after),
+.inventory-table-shell :deep(.arco-table-scroll-position-middle .arco-table-col-fixed-left-last::after) {
+  box-shadow: inset 6px 0 8px -3px rgba(0, 0, 0, 0.15) !important;
+  transition: none !important;
 }
 
-.warehouse-filter-compare {
-  width: 78px;
+.inventory-table-shell :deep(.arco-table-scroll-position-left .arco-table-col-fixed-right-first::after),
+.inventory-table-shell :deep(.arco-table-scroll-position-middle .arco-table-col-fixed-right-first::after) {
+  box-shadow: inset -6px 0 8px -3px rgba(0, 0, 0, 0.15) !important;
+  transition: none !important;
 }
 
-.warehouse-filter-value {
-  width: 132px;
-}
-
-.warehouse-filter-summary {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 18px 14px;
+.table-wrapper :deep(.inventory-table .arco-table-th) {
+  background: var(--inventory-color-fill);
   color: var(--inventory-color-text-secondary);
-  font-size: 12px;
-  line-height: 22px;
-}
-
-.warehouse-filter-pill {
-  display: inline-flex;
-  height: 22px;
-  align-items: center;
-  border-radius: 3px;
-  padding: 0 9px;
-  background: var(--inventory-color-primary);
-  color: #fff;
-  font-size: 12px;
-  line-height: 22px;
-}
-
-.warehouse-table-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-:deep(.warehouse-aggregate-table-shell) {
-  border-radius: 0 0 8px 8px;
-  background: #fff;
-}
-
-:deep(.warehouse-aggregate-table .arco-table-th),
-:deep(.warehouse-aggregate-table .arco-table-td) {
-  height: 38px;
-  padding: 0 14px;
-  color: #1d2129;
-  font-size: 12px;
-  line-height: 18px;
-}
-
-:deep(.warehouse-aggregate-table .arco-table-th) {
-  background: #f6f8fb;
   font-weight: 600;
 }
 
-:deep(.warehouse-aggregate-table .arco-table-td) {
-  background: #fff;
+.table-wrapper :deep(.inventory-table .arco-table-container) {
+  border: 0;
 }
 
-:deep(.warehouse-aggregate-table .arco-table-tr:nth-child(even) .arco-table-td) {
-  background: #f7f8fa;
+.table-wrapper :deep(.inventory-table .arco-table-border .arco-table-container::before),
+.table-wrapper :deep(.inventory-table .arco-table-border .arco-table-container::after),
+.table-wrapper :deep(.inventory-table .arco-table-border .arco-table-container .arco-table),
+.table-wrapper :deep(.inventory-table .arco-table-border .arco-table-tr::after),
+.table-wrapper :deep(.inventory-table .arco-table-border .arco-table-th),
+.table-wrapper :deep(.inventory-table .arco-table-border .arco-table-td) {
+  border-color: #e9edf3;
 }
 
-:deep(.warehouse-aggregate-table .arco-table-cell) {
-  padding: 0;
+.table-wrapper :deep(.inventory-table .arco-table-td) {
+  background: var(--inventory-color-bg);
 }
 
-:deep(.warehouse-aggregate-table-shell .configurable-data-table-footer) {
-  padding: 14px 18px;
+.table-wrapper :deep(.inventory-table .arco-table-tr:hover .arco-table-td) {
+  background: var(--inventory-color-fill);
+}
+
+.table-wrapper :deep(.inventory-table .arco-pagination) {
+  padding: 0 18px 18px;
+  margin-top: 16px;
 }
 
 .stock-filter-combo {
@@ -1344,8 +1234,8 @@ const resetFilters = () => {
 
 .thumb-card {
   display: flex;
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   align-items: center;
   justify-content: center;
   overflow: hidden;

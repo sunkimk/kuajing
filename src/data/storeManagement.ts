@@ -97,8 +97,8 @@ export const createStoreSummaryCards = (rows: StoreRecord[]) => {
   const stats = calculateStoreStats(rows)
 
   return [
-    { label: '店铺总数', value: String(stats.totalStores), note: '当前列表' },
-    { label: '健康店铺', value: String(stats.healthyStores), note: '授权和同步正常' },
+    { label: '已接入店铺', value: String(stats.totalStores), note: '全部店铺' },
+    { label: '正常运行', value: String(stats.healthyStores), note: '授权和同步正常' },
     { label: '授权异常', value: String(stats.authIssueStores), note: '待重新授权' },
     { label: '同步异常', value: String(stats.syncIssueStores), note: '待处理' },
   ]

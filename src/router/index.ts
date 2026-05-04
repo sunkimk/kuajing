@@ -6,6 +6,10 @@ import WarehouseInventoryView from '../views/WarehouseInventoryView.vue'
 import BatchInventoryView from '../views/BatchInventoryView.vue'
 import ProductListView from '../views/ProductListView.vue'
 import ProductDetailView from '../views/ProductDetailView.vue'
+import SalesOrderView from '../views/SalesOrderView.vue'
+import SalesSecondaryView from '../views/SalesSecondaryView.vue'
+import SalesReturnView from '../views/SalesReturnView.vue'
+import StoreManagementHomeView from '../views/StoreManagementHomeView.vue'
 import { flattenNavigation } from '../data/navigation'
 
 const placeholderRoutes = flattenNavigation()
@@ -14,6 +18,10 @@ const placeholderRoutes = flattenNavigation()
     && item.path !== '/warehouse/inventory'
     && item.path !== '/warehouse/warehouse-inventory'
     && item.path !== '/warehouse/batch-inventory'
+    && item.path !== '/sales/orders'
+    && item.path !== '/sales/upsell'
+    && item.path !== '/sales/return'
+    && item.path !== '/stores/list'
   )
   .map((item) => ({
     path: item.path,
@@ -102,6 +110,56 @@ const router = createRouter({
             title: '批次库存',
             sectionKey: 'warehouse',
             sectionTitle: '仓储库存',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'sales/orders',
+          component: SalesOrderView,
+          meta: {
+            title: '销售订单',
+            sectionKey: 'sales',
+            sectionTitle: '销售管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'sales/upsell',
+          component: SalesSecondaryView,
+          meta: {
+            title: '二次销售',
+            sectionKey: 'sales',
+            sectionTitle: '销售管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'sales/return',
+          component: SalesReturnView,
+          meta: {
+            title: '退货管理',
+            sectionKey: 'sales',
+            sectionTitle: '销售管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'stores/list',
+          component: StoreManagementHomeView,
+          meta: {
+            title: '店铺列表',
+            sectionKey: 'stores',
+            sectionTitle: '店铺管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'stores/add',
+          component: PlaceholderView,
+          meta: {
+            title: '新增店铺',
+            sectionKey: 'stores',
+            sectionTitle: '店铺管理',
             hideBreadcrumb: true,
           },
         },

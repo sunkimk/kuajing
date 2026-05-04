@@ -553,7 +553,7 @@ applyFilters()
 }
 
 .product-list-table :deep(.arco-table-element) {
-  min-width: unset;
+  min-width: 100%;
 }
 
 .product-list-table :deep(.arco-table-header) {

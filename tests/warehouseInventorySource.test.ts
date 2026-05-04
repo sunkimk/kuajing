@@ -28,15 +28,12 @@ describe('WarehouseInventoryView source', () => {
 
   it('supports the warehouse aggregate inventory view from the warehouse menu', () => {
     expect(componentSource).toContain('type WarehouseAggregateRow')
-    expect(componentSource).toContain("const pageTitle = '库存管理'")
-    expect(componentSource).toContain("const pageDescription = '统一查看产品库存、仓库库存和批次库存状态'")
-    expect(componentSource).toContain('const inventoryTabs')
-    expect(componentSource).toContain("{ key: 'product', title: '产品库存', path: '/warehouse/inventory' }")
-    expect(componentSource).toContain("{ key: 'warehouse', title: '仓库库存', path: '/warehouse/warehouse-inventory' }")
-    expect(componentSource).toContain("{ key: 'batch', title: '批次库存', path: '/warehouse/batch-inventory' }")
-    expect(componentSource).toContain('switchInventoryTab')
-    expect(componentSource).toContain('v-for="tab in inventoryTabs"')
-    expect(componentSource).toContain("class=\"inventory-tabs-shell\"")
+    expect(componentSource).toContain("const pageTitle = computed(() => String(route.meta.title ?? '库存管理'))")
+    expect(componentSource).toContain("product: '统一查看产品库存状态'")
+    expect(componentSource).toContain("warehouse: '统一查看仓库库存状态'")
+    expect(componentSource).not.toContain('const inventoryTabs')
+    expect(componentSource).not.toContain('switchInventoryTab')
+    expect(componentSource).not.toContain("class=\"inventory-tabs-shell\"")
     expect(componentSource).toContain('const prototypeSummaryCards')
     expect(componentSource).toContain("{ label: '在库 SKU', value: '2,947', note: '已接入5站点' }")
     expect(componentSource).toContain("{ label: '海外仓数量', value: '57', note: '俄/欧/中东仓' }")
@@ -62,13 +59,19 @@ describe('WarehouseInventoryView source', () => {
     expect(componentSource).toContain("{ settingsKey: 'stagnantRate', title: '滞销率'")
     expect(componentSource).toMatch(/activeTab\.value\s*===\s*'warehouse'\s*\?\s*warehouseColumns\s*:\s*allColumns/)
     expect(componentSource).toContain('warehousePageSize')
-    expect(componentSource).toContain('activeTableClass')
-    expect(componentSource).toContain('warehouse-aggregate-table')
-    expect(componentSource).toContain('activeTableWrapperClass')
-    expect(componentSource).toContain('warehouse-aggregate-table-shell')
-    expect(componentSource).toContain('店铺/仓库: 全部')
-    expect(componentSource).toContain('class="warehouse-filter-pill"')
-    expect(componentSource).toContain('class="warehouse-table-toolbar"')
+    expect(componentSource).toContain('label="店铺/仓库"')
+    expect(componentSource).toContain('label="所有人"')
+    expect(componentSource).toContain('label="在库值"')
+    expect(componentSource).toContain('label="条件"')
+    expect(componentSource).toContain('label="数值"')
+    expect(componentSource).toContain('>导出</a-button>')
+    expect(componentSource).toContain('wrapper-class="inventory-table-shell"')
+    expect(componentSource).toContain('table-class="inventory-table"')
+    expect(componentSource).not.toContain('warehouse-aggregate-table')
+    expect(componentSource).not.toContain('warehouse-aggregate-table-shell')
+    expect(componentSource).not.toContain('店铺/仓库: 全部')
+    expect(componentSource).not.toContain('class="warehouse-filter-pill"')
+    expect(componentSource).not.toContain('class="warehouse-table-toolbar"')
     expect(componentSource).toContain('class="warehouse-cell warehouse-cell-compact"')
     expect(componentSource).toContain('v-if="activeTab !== \'warehouse\'"')
     expect(componentSource).toContain('placeholder="全部"')
@@ -76,6 +79,10 @@ describe('WarehouseInventoryView source', () => {
     expect(componentSource).toContain('placeholder="在库值"')
     expect(componentSource).toContain('placeholder="等于"')
     expect(componentSource).toContain('placeholder="请输入"')
+  })
+
+  it('remounts the configurable table when switching between inventory tabs', () => {
+    expect(componentSource).toMatch(/<ConfigurableDataTable[\s\S]*:key="activeTab"/)
   })
 
   it('keeps product inventory aligned with the prototype fields and pagination', () => {
@@ -91,5 +98,13 @@ describe('WarehouseInventoryView source', () => {
     expect(componentSource).toContain('配送类型')
     expect(componentSource).toContain('选择品牌')
     expect(componentSource).toContain('搜索 sku / 卖家编号 / 条形码')
+  })
+
+  it('matches the sales order product image size for the inventory thumbnail', () => {
+    expect(componentSource).toMatch(/\.thumb-card\s*\{[^}]*width:\s*42px;[^}]*height:\s*42px;/s)
+  })
+
+  it('matches the batch inventory spacing below the page description', () => {
+    expect(componentSource).toMatch(/\.page-head\s*\{[^}]*padding:\s*16px 2px 16px;/s)
   })
 })

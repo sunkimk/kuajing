@@ -80,6 +80,7 @@ export const navigationSections: NavSectionItem[] = [
     children: [
       { key: 'sales-orders', title: '销售订单', path: '/sales/orders', icon: IconBook },
       { key: 'upsell', title: '二次销售', path: '/sales/upsell', icon: IconCustomerService },
+      { key: 'sales-return', title: '退货管理', path: '/sales/return', icon: IconNotification },
     ],
   },
   {
