@@ -2,11 +2,12 @@
 import { IconMore, IconPlus } from '@arco-design/web-vue/es/icon'
 import type { StoreRecord } from '../../data/storeManagement'
 import {
+  formatStoreBalance,
   getStoreAuthorizationStatusLabel,
   getStoreSyncStatusLabel,
 } from '../../data/storeManagement'
 
-type StoreCardAction = 'detail' | 'sync' | 'authorize'
+type StoreCardAction = 'detail' | 'sync' | 'authorize' | 'settings'
 
 const props = defineProps<{
   stores: StoreRecord[]
@@ -18,6 +19,7 @@ const emit = defineEmits<{
   openStore: [storeId: string]
   syncStore: [storeId: string]
   authorizeStore: [storeId: string]
+  configureStore: [storeId: string]
 }>()
 
 const getStatusClass = (type: 'authorization' | 'sync', status: string) => {
@@ -62,6 +64,11 @@ const handleMenuSelect = (
     return
   }
 
+  if (nextAction === 'settings') {
+    emit('configureStore', storeId)
+    return
+  }
+
   if (nextAction === 'authorize') {
     emit('authorizeStore', storeId)
   }
@@ -94,21 +101,30 @@ const handleMenuSelect = (
     </div>
 
     <div v-else class="store-card-grid">
-      <article v-for="store in props.stores" :key="store.id" class="store-card">
+      <article
+        v-for="store in props.stores"
+        :key="store.id"
+        class="store-card"
+        role="link"
+        tabindex="0"
+        @click="emit('openStore', store.id)"
+        @keydown.enter.prevent="emit('openStore', store.id)"
+        @keydown.space.prevent="emit('openStore', store.id)"
+      >
         <div class="store-card-head">
           <div class="store-card-identity">
             <div class="store-avatar">{{ getStoreMonogram(store) }}</div>
 
             <div class="store-card-copy">
-              <button type="button" class="store-card-title" @click="emit('openStore', store.id)">
-                {{ store.storeName }}
+              <button type="button" class="store-card-title" @click.stop="emit('openStore', store.id)">
+                {{ store.legalName }}
               </button>
-              <span>{{ store.storeCode }} · {{ store.platform }}</span>
+              <span>{{ store.platform }} · {{ store.businessType }}</span>
             </div>
           </div>
 
           <a-dropdown trigger="click" @select="(value) => handleMenuSelect(store.id, value)">
-            <a-button size="small" class="store-more-button" aria-label="更多操作">
+            <a-button size="small" class="store-more-button" aria-label="更多操作" @click.stop>
               <template #icon>
                 <icon-more />
               </template>
@@ -117,13 +133,27 @@ const handleMenuSelect = (
             <template #content>
               <a-doption value="detail">查看详情</a-doption>
               <a-doption value="sync">立即同步</a-doption>
-              <a-doption value="authorize">{{ store.authorizationStatus === 'active' ? '平台配置' : '重新授权' }}</a-doption>
+              <a-doption :value="store.authorizationStatus === 'active' ? 'settings' : 'authorize'">
+                {{ store.authorizationStatus === 'active' ? '平台配置' : '重新授权' }}
+              </a-doption>
             </template>
           </a-dropdown>
         </div>
 
+        <div class="store-account-panel">
+          <div class="store-account-item">
+            <span>账户余额</span>
+            <strong>{{ formatStoreBalance(store) }}</strong>
+          </div>
+          <div class="store-account-item">
+            <span>税号</span>
+            <strong class="store-mono">{{ store.taxNumber }}</strong>
+          </div>
+        </div>
+
         <div class="store-card-tags">
           <span class="store-platform-pill">{{ store.platform }}</span>
+          <span class="store-type-pill">{{ store.storeType }}</span>
           <span class="store-status-pill" :class="getStatusClass('authorization', store.authorizationStatus)">
             {{ getStoreAuthorizationStatusLabel(store.authorizationStatus) }}
           </span>
@@ -134,12 +164,12 @@ const handleMenuSelect = (
 
         <div class="store-card-summary">
           <div class="store-card-summary-item">
-            <span>负责人</span>
-            <strong>{{ store.owner }}</strong>
+            <span>店铺编号</span>
+            <strong class="store-mono">{{ store.storeCode }}</strong>
           </div>
           <div class="store-card-summary-item">
-            <span>站点 / 区域</span>
-            <strong>{{ store.region }}</strong>
+            <span>负责人</span>
+            <strong>{{ store.owner }}</strong>
           </div>
           <div class="store-card-summary-item">
             <span>最近同步</span>

@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Message } from '@arco-design/web-vue'
 import { IconRefresh } from '@arco-design/web-vue/es/icon'
 import { useRouter } from 'vue-router'
 import type {
   StoreAuthorizationStatus,
-  StoreRecord,
   StoreSyncStatus,
 } from '../../data/storeManagement'
 import {
@@ -13,15 +11,12 @@ import {
   createStoreRows,
   filterStoreRows,
 } from '../../data/storeManagement'
-import StoreDetailDrawer from './StoreDetailDrawer.vue'
 import StoreHealthActionPanel from './StoreHealthActionPanel.vue'
 import './storeManagement.css'
 
 const router = useRouter()
 const filters = ref(createDefaultStoreFilters())
 const loading = ref(false)
-const detailVisible = ref(false)
-const currentRow = ref<StoreRecord>()
 const allRows = ref(createStoreRows())
 
 const platformOptions = computed(() =>
@@ -54,39 +49,24 @@ const refreshData = () => {
   loading.value = false
 }
 
-const findStoreById = (storeId: string) => allRows.value.find((row) => row.id === storeId)
-
-const openDetail = (row: StoreRecord) => {
-  currentRow.value = row
-  detailVisible.value = true
-}
-
 const handleCreateStore = () => {
   router.push('/stores/add')
 }
 
 const handleOpenStore = (storeId: string) => {
-  const row = findStoreById(storeId)
-  if (!row) return
-  openDetail(row)
+  router.push(`/stores/${storeId}`)
 }
 
 const handleSyncStore = (storeId: string) => {
-  const row = findStoreById(storeId)
-  if (!row) return
-  Message.success(`${row.storeName} 已加入同步队列`)
+  router.push(`/stores/${storeId}/sync`)
 }
 
 const handleAuthorizeStore = (storeId: string) => {
-  const row = findStoreById(storeId)
-  if (!row) return
+  router.push(`/stores/${storeId}/authorize`)
+}
 
-  if (row.authorizationStatus === 'active') {
-    Message.info(`${row.storeName} 的平台配置将在下一阶段接入`)
-    return
-  }
-
-  Message.info(`${row.storeName} 的重新授权流程将在下一阶段接入`)
+const handleConfigureStore = (storeId: string) => {
+  router.push(`/stores/${storeId}/settings`)
 }
 </script>
 
@@ -189,8 +169,7 @@ const handleAuthorizeStore = (storeId: string) => {
       @open-store="handleOpenStore"
       @sync-store="handleSyncStore"
       @authorize-store="handleAuthorizeStore"
+      @configure-store="handleConfigureStore"
     />
-
-    <StoreDetailDrawer v-model:visible="detailVisible" :row="currentRow" />
   </div>
 </template>

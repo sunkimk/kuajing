@@ -14,6 +14,12 @@ export type StoreRecord = {
   lastSyncAt: string
   sevenDayOrders: number
   owner: string
+  businessType: string
+  storeType: string
+  legalName: string
+  accountBalance: number
+  taxNumber: string
+  currencySymbol: string
 }
 
 export type StoreFilterState = {
@@ -77,6 +83,9 @@ export const getStoreIssueTypeLabel = (issueType: StoreIssueType | string) =>
 export const getStoreIssueTypeNote = (issueType: StoreIssueType | string) =>
   issueTypeMeta[issueType as StoreIssueType]?.note ?? ''
 
+export const formatStoreBalance = (row: Pick<StoreRecord, 'accountBalance' | 'currencySymbol'>) =>
+  `${row.accountBalance.toLocaleString('zh-CN')} ${row.currencySymbol}`
+
 const isHealthyStore = (row: StoreRecord) =>
   row.authorizationStatus === 'active' && row.syncStatus === 'healthy'
 
@@ -118,7 +127,17 @@ export const filterStoreRows = (rows: StoreRecord[], filters: StoreFilterState) 
 
   if (keyword) {
     nextRows = nextRows.filter((row) =>
-      [row.platform, row.storeName, row.storeCode, row.region, row.owner].some((field) =>
+      [
+        row.platform,
+        row.storeName,
+        row.storeCode,
+        row.region,
+        row.owner,
+        row.legalName,
+        row.businessType,
+        row.storeType,
+        row.taxNumber,
+      ].some((field) =>
         field.toLowerCase().includes(keyword)
       )
     )
@@ -151,6 +170,12 @@ const storeSeeds: Array<Omit<StoreRecord, 'id'>> = [
     lastSyncAt: '2026-05-04 09:30',
     sevenDayOrders: 48,
     owner: 'Alice',
+    businessType: '百货',
+    storeType: '跨境店',
+    legalName: '沃莓国际有限公司',
+    accountBalance: 287592,
+    taxNumber: '78644060',
+    currencySymbol: '¥',
   },
   {
     platform: 'Ozon',
@@ -163,6 +188,12 @@ const storeSeeds: Array<Omit<StoreRecord, 'id'>> = [
     lastSyncAt: '2026-05-03 18:20',
     sevenDayOrders: 12,
     owner: 'Bob',
+    businessType: '电子消费',
+    storeType: '本土店',
+    legalName: '欧仓贸易有限公司',
+    accountBalance: 84210,
+    taxNumber: '99021041',
+    currencySymbol: '¥',
   },
   {
     platform: 'AliExpress',
@@ -175,6 +206,12 @@ const storeSeeds: Array<Omit<StoreRecord, 'id'>> = [
     lastSyncAt: '2026-05-03 08:10',
     sevenDayOrders: 26,
     owner: 'Cindy',
+    businessType: '百货',
+    storeType: '跨境店',
+    legalName: '达焱国际有限公司',
+    accountBalance: 162880,
+    taxNumber: '78644060',
+    currencySymbol: '¥',
   },
   {
     platform: 'TikTok Shop',
@@ -187,6 +224,12 @@ const storeSeeds: Array<Omit<StoreRecord, 'id'>> = [
     lastSyncAt: '2026-05-02 14:05',
     sevenDayOrders: 8,
     owner: 'Dylan',
+    businessType: '美妆个护',
+    storeType: '跨境店',
+    legalName: '英仓优选有限公司',
+    accountBalance: 52190,
+    taxNumber: '44091827',
+    currencySymbol: '¥',
   },
   {
     platform: 'Amazon',
@@ -199,6 +242,12 @@ const storeSeeds: Array<Omit<StoreRecord, 'id'>> = [
     lastSyncAt: '2026-05-01 21:45',
     sevenDayOrders: 31,
     owner: 'Eva',
+    businessType: '家居百货',
+    storeType: '本土店',
+    legalName: '莱茵商贸有限公司',
+    accountBalance: 241360,
+    taxNumber: 'DE93844120',
+    currencySymbol: '¥',
   },
   {
     platform: 'Temu',
@@ -211,6 +260,12 @@ const storeSeeds: Array<Omit<StoreRecord, 'id'>> = [
     lastSyncAt: '2026-05-04 07:15',
     sevenDayOrders: 19,
     owner: 'Frank',
+    businessType: '服饰配件',
+    storeType: '跨境店',
+    legalName: '伊比利亚优选有限公司',
+    accountBalance: 73480,
+    taxNumber: 'ES20481677',
+    currencySymbol: '¥',
   },
 ]
 

@@ -10,6 +10,7 @@ import SalesOrderView from '../views/SalesOrderView.vue'
 import SalesSecondaryView from '../views/SalesSecondaryView.vue'
 import SalesReturnView from '../views/SalesReturnView.vue'
 import StoreManagementHomeView from '../views/StoreManagementHomeView.vue'
+import StoreDetailView from '../views/StoreDetailView.vue'
 import { flattenNavigation } from '../data/navigation'
 
 const placeholderRoutes = flattenNavigation()
@@ -158,6 +159,46 @@ const router = createRouter({
           component: PlaceholderView,
           meta: {
             title: '新增店铺',
+            sectionKey: 'stores',
+            sectionTitle: '店铺管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'stores/:storeId',
+          component: StoreDetailView,
+          meta: {
+            title: '店铺详情',
+            sectionKey: 'stores',
+            sectionTitle: '店铺管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'stores/:storeId/settings',
+          component: PlaceholderView,
+          meta: {
+            title: '平台配置',
+            sectionKey: 'stores',
+            sectionTitle: '店铺管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'stores/:storeId/authorize',
+          component: PlaceholderView,
+          meta: {
+            title: '重新授权',
+            sectionKey: 'stores',
+            sectionTitle: '店铺管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'stores/:storeId/sync',
+          component: PlaceholderView,
+          meta: {
+            title: '同步策略',
             sectionKey: 'stores',
             sectionTitle: '店铺管理',
             hideBreadcrumb: true,

@@ -222,6 +222,7 @@
   border: 1px solid var(--store-color-border);
   border-radius: 8px;
   background: var(--store-color-surface);
+  cursor: pointer;
   transition:
     transform 0.18s ease,
     border-color 0.18s ease,
@@ -233,6 +234,14 @@
   transform: translateY(-2px);
   border-color: rgba(var(--primary-6), 0.35);
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+}
+
+.store-card:focus-visible {
+  border-color: rgba(var(--primary-6), 0.5);
+  box-shadow:
+    0 0 0 2px rgba(var(--primary-6), 0.16),
+    0 10px 22px rgba(15, 23, 42, 0.08);
+  outline: none;
 }
 
 .store-card:hover .store-card-title,
@@ -316,6 +325,53 @@
   white-space: nowrap;
 }
 
+.store-account-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: hidden;
+  min-height: 86px;
+  border: 1px solid var(--store-color-border);
+  border-radius: 8px;
+  background: var(--store-color-bg);
+}
+
+.store-account-panel::before {
+  position: absolute;
+  top: 18px;
+  bottom: 18px;
+  left: 50%;
+  width: 1px;
+  background: var(--store-color-border);
+  content: '';
+}
+
+.store-account-item {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 16px;
+}
+
+.store-account-item span {
+  color: var(--store-color-text-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.store-account-item strong {
+  overflow: hidden;
+  color: var(--store-color-text);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 26px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .store-card-tags {
   display: flex;
   flex-wrap: wrap;
@@ -323,6 +379,7 @@
 }
 
 .store-platform-pill,
+.store-type-pill,
 .store-status-pill {
   display: inline-flex;
   min-height: 22px;
@@ -336,6 +393,12 @@
 
 .store-platform-pill {
   background: rgba(var(--primary-6), 0.1);
+  color: var(--store-color-primary);
+  font-weight: 500;
+}
+
+.store-type-pill {
+  background: #e8f3ff;
   color: var(--store-color-primary);
   font-weight: 500;
 }

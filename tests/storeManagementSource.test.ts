@@ -16,6 +16,11 @@ const homeViewSource = readFileSync(
   'utf-8',
 )
 
+const detailViewSource = readFileSync(
+  new URL('../src/views/StoreDetailView.vue', import.meta.url),
+  'utf-8',
+)
+
 const workbenchSource = readFileSync(
   new URL('../src/components/stores/StoreManagementWorkbench.vue', import.meta.url),
   'utf-8',
@@ -35,8 +40,13 @@ describe('store management homepage source', () => {
   it('keeps the existing store menu label and points /stores/list to the real homepage', () => {
     expect(navigationSource).toContain("{ key: 'store-list', title: '店铺列表', path: '/stores/list'")
     expect(routerSource).toContain("import StoreManagementHomeView from '../views/StoreManagementHomeView.vue'")
+    expect(routerSource).toContain("import StoreDetailView from '../views/StoreDetailView.vue'")
     expect(routerSource).toMatch(/\{\s*path:\s*'stores\/list',[\s\S]*?component:\s*StoreManagementHomeView,[\s\S]*?meta:\s*\{[\s\S]*?title:\s*'店铺列表'/)
     expect(routerSource).toContain("path: 'stores/add'")
+    expect(routerSource).toContain("path: 'stores/:storeId'")
+    expect(routerSource).toContain("path: 'stores/:storeId/settings'")
+    expect(routerSource).toContain("path: 'stores/:storeId/authorize'")
+    expect(routerSource).toContain("path: 'stores/:storeId/sync'")
   })
 
   it('renders the simplified homepage through the workbench wrapper', () => {
@@ -48,10 +58,23 @@ describe('store management homepage source', () => {
     expect(workbenchSource).toContain('volc-design-search-item-wrap')
     expect(panelSource).toContain('a-dropdown')
     expect(panelSource).toContain('store-card-grid')
+    expect(panelSource).toContain('账户余额')
+    expect(panelSource).toContain('税号')
+    expect(panelSource).toContain('formatStoreBalance(store)')
+    expect(panelSource).toContain('store.taxNumber')
+    expect(panelSource).toContain('store.businessType')
+    expect(panelSource).toContain('store.storeType')
+    expect(panelSource).toContain('@click="emit(\'openStore\', store.id)"')
+    expect(panelSource).toContain('@keydown.enter.prevent="emit(\'openStore\', store.id)"')
+    expect(panelSource).toContain('@click.stop')
     expect(panelSource).toContain('创建新店铺')
     expect(panelSource).toContain('store-showcase-toolbar')
     expect(panelSource).toContain("@click=\"emit('createStore')\"")
     expect(workbenchSource).toContain('@create-store="handleCreateStore"')
+    expect(workbenchSource).toContain("router.push(`/stores/${storeId}`)")
+    expect(workbenchSource).toContain("router.push(`/stores/${storeId}/settings`)")
+    expect(workbenchSource).toContain("router.push(`/stores/${storeId}/authorize`)")
+    expect(workbenchSource).toContain("router.push(`/stores/${storeId}/sync`)")
     expect(workbenchSource).not.toContain('创建新店铺')
     expect(workbenchSource).toContain('集中查看我的店铺、授权状态与同步情况')
     expect(workbenchSource).not.toContain('卡片视图和表格视图之间快速切换')
@@ -71,6 +94,9 @@ describe('store management homepage source', () => {
     expect(styleSource).toContain('color: #fff;')
     expect(styleSource).toContain('.store-card:hover .store-card-title,\n.store-card:focus-within .store-card-title {')
     expect(styleSource).toContain('.store-card:hover .store-more-button,\n.store-card:focus-within .store-more-button {')
+    expect(styleSource).toContain('.store-account-panel {')
+    expect(styleSource).toContain('.store-account-panel::before {')
+    expect(styleSource).toContain('.store-card:focus-visible {')
     expect(panelSource).not.toContain('卡片视图')
     expect(panelSource).not.toContain('表格视图')
     expect(panelSource).not.toContain('store-table-view')
@@ -81,5 +107,15 @@ describe('store management homepage source', () => {
     expect(panelSource).not.toContain('快捷入口')
     expect(panelSource).not.toContain('重点店铺')
     expect(panelSource).not.toContain('featured-store-card')
+  })
+
+  it('renders a real store detail page for card navigation', () => {
+    expect(detailViewSource).toContain('SecondaryPageHeader')
+    expect(detailViewSource).toContain('createStoreRows')
+    expect(detailViewSource).toContain('账户余额')
+    expect(detailViewSource).toContain('税号')
+    expect(detailViewSource).toContain('平台配置')
+    expect(detailViewSource).toContain('同步策略')
+    expect(detailViewSource).toContain("router.push('/stores/list')")
   })
 })

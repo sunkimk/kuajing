@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   calculateStoreStats,
+  createStoreRows,
   createStoreIssueCards,
   filterStoreRows,
+  formatStoreBalance,
   paginateStoreRows,
   type StoreRecord,
 } from '../src/data/storeManagement'
@@ -20,6 +22,12 @@ const rows: StoreRecord[] = [
     lastSyncAt: '2026-05-03 11:00',
     sevenDayOrders: 18,
     owner: 'Alice',
+    businessType: '百货',
+    storeType: '跨境店',
+    legalName: '沃莓国际有限公司',
+    accountBalance: 287592,
+    taxNumber: '78644060',
+    currencySymbol: '¥',
   },
   {
     id: '2',
@@ -33,6 +41,12 @@ const rows: StoreRecord[] = [
     lastSyncAt: '2026-05-03 08:00',
     sevenDayOrders: 5,
     owner: 'Bob',
+    businessType: '电子消费',
+    storeType: '本土店',
+    legalName: 'Ozon Eurasia LLP',
+    accountBalance: 84210,
+    taxNumber: '99021041',
+    currencySymbol: '¥',
   },
   {
     id: '3',
@@ -46,6 +60,12 @@ const rows: StoreRecord[] = [
     lastSyncAt: '2026-05-02 09:00',
     sevenDayOrders: 9,
     owner: 'Cindy',
+    businessType: '百货',
+    storeType: '跨境店',
+    legalName: '达焱国际有限公司',
+    accountBalance: 162880,
+    taxNumber: '78644060',
+    currencySymbol: '¥',
   },
 ]
 
@@ -125,5 +145,19 @@ describe('storeManagement helpers', () => {
 
   it('paginates store rows by page', () => {
     expect(paginateStoreRows(rows, { page: 2, pageSize: 2 }).map((row) => row.id)).toEqual(['3'])
+  })
+
+  it('exposes store financial and compliance fields for list cards', () => {
+    const [store] = createStoreRows(1)
+
+    expect(store).toMatchObject({
+      legalName: expect.any(String),
+      businessType: expect.any(String),
+      storeType: expect.any(String),
+      accountBalance: expect.any(Number),
+      taxNumber: expect.any(String),
+      currencySymbol: '¥',
+    })
+    expect(formatStoreBalance(store)).toMatch(/¥$/)
   })
 })
