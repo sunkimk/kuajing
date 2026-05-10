@@ -36,6 +36,8 @@ type ScrollConfig = {
   maxHeight?: string | number
 }
 
+const COLUMN_RESIZE_EDGE_GUARD_WIDTH = 12
+
 const props = withDefaults(defineProps<{
   columns: ConfigurableTableColumn[]
   defaultVisibleKeys: string[]
@@ -43,6 +45,7 @@ const props = withDefaults(defineProps<{
   requiredKeys?: string[]
   pinnedColumnKeys?: string[]
   operationSlotName?: string
+  defaultFreezeLastColumn?: boolean
   tableClass?: TableClassValue
   wrapperClass?: TableClassValue
 }>(), {
@@ -50,6 +53,7 @@ const props = withDefaults(defineProps<{
   requiredKeys: () => [],
   pinnedColumnKeys: () => [],
   operationSlotName: 'operation',
+  defaultFreezeLastColumn: false,
   tableClass: undefined,
   wrapperClass: undefined,
 })
@@ -73,7 +77,7 @@ const columnOrder = ref<string[]>([...props.defaultVisibleKeys])
 const tableAutoWrap = ref(false)
 const freezeFirstRow = ref(true)
 const freezeFirstColumn = ref(true)
-const freezeLastColumn = ref(true)
+const freezeLastColumn = ref(props.defaultFreezeLastColumn)
 const pendingDragColumnKey = ref<string>()
 const draggingColumnKey = ref<string>()
 const dragOverColumnKey = ref<string>()
@@ -86,6 +90,7 @@ const columnResizeStartWidth = ref(0)
 const columnResizeMinWidth = ref(0)
 const columnResizeStartGuideLeft = ref(0)
 const columnResizeGuideLeft = ref<number>()
+const columnResizeNextWidth = ref<number>()
 const headerTitleWidthCache = new Map<string, number>()
 let columnDragMouseupCleanup: (() => void) | undefined
 let columnResizeCleanup: (() => void) | undefined
@@ -322,6 +327,7 @@ const clearColumnDragState = () => {
 
 const clearColumnResizeState = () => {
   resizingColumnKey.value = undefined
+  columnResizeNextWidth.value = undefined
   clearColumnResizeGuide()
   setGlobalTableTextSelectionGuard(false)
   if (columnResizeCleanup) {
@@ -371,16 +377,27 @@ const handleColumnResizeMove = (event: MouseEvent) => {
 
   const deltaX = event.clientX - columnResizeStartX.value
   const nextWidth = Math.max(columnResizeMinWidth.value, Math.round(columnResizeStartWidth.value + deltaX))
+  columnResizeNextWidth.value = nextWidth
   columnResizeGuideLeft.value = getColumnResizeGuideLeftFromWidth(
     columnResizeStartGuideLeft.value,
     columnResizeStartWidth.value,
     nextWidth,
     { minLeft: 0, maxLeft: getColumnResizeGuideMaxLeft() },
   )
-  columnWidthOverrides.value = {
-    ...columnWidthOverrides.value,
-    [columnKey]: nextWidth,
+}
+
+const finishColumnResize = () => {
+  const columnKey = resizingColumnKey.value
+  const nextWidth = columnResizeNextWidth.value
+
+  if (columnKey && nextWidth !== undefined) {
+    columnWidthOverrides.value = {
+      ...columnWidthOverrides.value,
+      [columnKey]: nextWidth,
+    }
   }
+
+  clearColumnResizeState()
 }
 
 const startColumnResize = (columnKey: string | undefined, event: MouseEvent) => {
@@ -410,15 +427,15 @@ const startColumnResize = (columnKey: string | undefined, event: MouseEvent) => 
   columnResizeStartWidth.value = startWidth
   columnResizeMinWidth.value = minWidth
   columnResizeStartGuideLeft.value = columnResizeGuideLeft.value ?? 0
+  columnResizeNextWidth.value = startWidth
 
-  const stopResize = () => clearColumnResizeState()
   window.addEventListener('mousemove', handleColumnResizeMove)
-  window.addEventListener('mouseup', stopResize, { once: true })
-  window.addEventListener('contextmenu', stopResize, { once: true })
+  window.addEventListener('mouseup', finishColumnResize, { once: true })
+  window.addEventListener('contextmenu', finishColumnResize, { once: true })
   columnResizeCleanup = () => {
     window.removeEventListener('mousemove', handleColumnResizeMove)
-    window.removeEventListener('mouseup', stopResize)
-    window.removeEventListener('contextmenu', stopResize)
+    window.removeEventListener('mouseup', finishColumnResize)
+    window.removeEventListener('contextmenu', finishColumnResize)
   }
 }
 
@@ -433,6 +450,14 @@ const getHeaderCellFromEvent = (event: MouseEvent) => {
   const target = event.target
   if (!(target instanceof Element)) return null
   return target.closest('.arco-table-th')
+}
+
+const isNearHeaderRightEdge = (headerCell: Element | null, event: MouseEvent) => {
+  if (!headerCell) return false
+
+  const headerRect = headerCell.getBoundingClientRect()
+  return event.clientX <= headerRect.right
+    && headerRect.right - event.clientX <= COLUMN_RESIZE_EDGE_GUARD_WIDTH
 }
 
 const syncHoveredColumnKey = (event: MouseEvent) => {
@@ -456,7 +481,10 @@ const handleDelegatedHeaderMouseDown = (event: MouseEvent) => {
   const target = event.target
   if (target instanceof Element && target.closest('.column-resize-handle')) return
 
-  const columnKey = getColumnKeyFromHeaderCell(getHeaderCellFromEvent(event))
+  const headerCell = getHeaderCellFromEvent(event)
+  if (isNearHeaderRightEdge(headerCell, event)) return
+
+  const columnKey = getColumnKeyFromHeaderCell(headerCell)
   if (!columnKey) return
 
   startColumnDrag(event, columnKey)
@@ -557,7 +585,7 @@ onBeforeUnmount(() => {
       </a-table>
 
       <span
-        v-if="columnResizeGuideLeft !== undefined"
+        v-if="resizingColumnKey && columnResizeGuideLeft !== undefined"
         class="column-resize-guide"
         :style="{ left: `${columnResizeGuideLeft}px` }"
         aria-hidden="true"
@@ -578,6 +606,7 @@ onBeforeUnmount(() => {
       :freeze-first-row="freezeFirstRow"
       :freeze-first-column="freezeFirstColumn"
       :freeze-last-column="freezeLastColumn"
+      :default-freeze-last-column="defaultFreezeLastColumn"
       @confirm="applyColumnSettings"
     />
   </section>
@@ -602,10 +631,9 @@ onBeforeUnmount(() => {
   top: 0;
   bottom: 0;
   z-index: 120;
-  width: 2px;
+  width: 1px;
   background: var(--workspace-color-primary, rgb(var(--primary-6)));
   pointer-events: none;
-  transform: translateX(-50%);
 }
 
 :global(body.configurable-table-is-interacting),
@@ -668,9 +696,9 @@ onBeforeUnmount(() => {
 .column-resize-handle {
   position: absolute;
   top: 0;
-  right: 0;
+  right: -3px;
   z-index: 20;
-  width: 14px;
+  width: 6px;
   height: 100%;
   cursor: col-resize;
 }

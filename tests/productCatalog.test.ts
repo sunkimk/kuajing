@@ -11,11 +11,14 @@ describe('filterProducts', () => {
 
     const skuMatches = filterProducts(products, { keyword: 'SKU-BLEND-001' })
     const nameMatches = filterProducts(products, { keyword: '蓝牙键盘' })
+    const russianNameMatches = filterProducts(products, { keyword: 'Блендер' })
 
     expect(skuMatches).toHaveLength(1)
     expect(skuMatches[0]?.basicInfo.sku).toBe('SKU-BLEND-001')
     expect(nameMatches).toHaveLength(1)
     expect(nameMatches[0]?.basicInfo.sku).toBe('SKU-KEYBOARD-003')
+    expect(russianNameMatches).toHaveLength(1)
+    expect(russianNameMatches[0]?.basicInfo.sku).toBe('SKU-BLEND-001')
   })
 
   it('supports category, status, and purchasable filters together', () => {

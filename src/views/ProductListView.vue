@@ -53,11 +53,20 @@ const currentPage = ref(1)
 const pageSize = ref(8)
 
 const statusLabelMap: Record<ProductStatus, string> = {
-  normal: '正常',
-  disabled: '停用',
+  '': '-',
+  normal: '在售',
+  disabled: '停售',
+  draft: '草稿',
 }
 
 const getStatusLabel = (status: ProductStatus) => statusLabelMap[status]
+
+const getStatusClass = (status: ProductStatus) => {
+  if (status === 'normal') return 'status-normal'
+  if (status === 'disabled') return 'status-disabled'
+  if (status === 'draft') return 'status-draft'
+  return 'status-unknown'
+}
 
 const purchasableLabel = (value: boolean | undefined) => value ? '是' : value === false ? '否' : '-'
 
@@ -66,7 +75,7 @@ const summaryCards = computed(() => {
 
   return [
     { label: '商品总数', value: String(products.length), note: '内部 SKU 主数据' },
-    { label: '正常商品', value: String(products.filter((item) => item.basicInfo.status === 'normal').length), note: '可在订单链路流转' },
+    { label: '在售商品', value: String(products.filter((item) => item.basicInfo.status === 'normal').length), note: '可在订单链路流转' },
     { label: '可采购商品', value: String(products.filter((item) => item.procurement.purchasable).length), note: '支持采购参考维护' },
     { label: '已绑定映射', value: String(products.reduce((total, item) => total + item.mappings.length, 0)), note: '平台店铺商品绑定数' },
   ]
@@ -252,6 +261,7 @@ applyFilters()
         :default-visible-keys="defaultVisibleColumnKeys"
         :required-keys="requiredColumnKeys"
         :pinned-column-keys="pinnedColumnKeys"
+        :default-freeze-last-column="true"
         :data="pagedRows"
         row-key="id"
         :pagination="false"
@@ -282,7 +292,7 @@ applyFilters()
         </template>
 
         <template #status="{ record }">
-          <span class="status-pill" :class="record.basicInfo.status === 'normal' ? 'status-normal' : 'status-disabled'">
+          <span class="status-pill" :class="getStatusClass(record.basicInfo.status)">
             {{ getStatusLabel(record.basicInfo.status) }}
           </span>
         </template>
@@ -299,7 +309,7 @@ applyFilters()
 
         <template #operation="{ record }">
           <a-space>
-            <a-link @click="goToEdit(record.basicInfo.sku)">编辑</a-link>
+            <a-link @click="goToEdit(record.basicInfo.sku)">查看详情</a-link>
           </a-space>
         </template>
 
@@ -702,8 +712,18 @@ applyFilters()
 }
 
 .status-disabled {
-  background: rgba(78, 89, 105, 0.12);
-  color: #4e5969;
+  background: rgba(255, 125, 0, 0.12);
+  color: #ff7d00;
+}
+
+.status-draft {
+  background: rgba(245, 63, 63, 0.12);
+  color: #f53f3f;
+}
+
+.status-unknown {
+  background: var(--color-fill-2);
+  color: var(--color-text-3);
 }
 
 .status-purchasable {

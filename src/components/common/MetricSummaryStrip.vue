@@ -6,7 +6,8 @@ const props = withDefaults(defineProps<{
   cards: Array<{
     label: string
     value: string | number
-    note: string
+    note?: string
+    tone?: 'green' | 'orange' | 'blue' | 'red'
   }>
   columns?: number
 }>(), {
@@ -23,8 +24,8 @@ const gridStyle = computed<CSSProperties>(() => ({
     <div class="metric-summary-grid" :style="gridStyle">
       <div v-for="card in cards" :key="card.label" class="metric-summary-item">
         <span>{{ card.label }}</span>
-        <strong>{{ card.value }}</strong>
-        <small>{{ card.note }}</small>
+        <strong :class="card.tone ? `is-${card.tone}` : undefined">{{ card.value }}</strong>
+        <small v-if="card.note">{{ card.note }}</small>
       </div>
     </div>
   </section>
@@ -33,7 +34,6 @@ const gridStyle = computed<CSSProperties>(() => ({
 <style scoped>
 .metric-summary-strip {
   overflow: hidden;
-  padding: 18px 0;
   border: 1px solid var(--workspace-color-border, var(--color-border-2));
   border-radius: 8px;
   background: var(--workspace-color-bg, var(--color-bg-2));
@@ -47,10 +47,9 @@ const gridStyle = computed<CSSProperties>(() => ({
 
 .metric-summary-item {
   display: flex;
-  min-height: 86px;
   flex-direction: column;
   justify-content: center;
-  padding: 0 28px;
+  padding: 18px 28px;
 }
 
 .metric-summary-item + .metric-summary-item {
@@ -70,6 +69,22 @@ const gridStyle = computed<CSSProperties>(() => ({
   font-size: 26px;
   font-weight: 600;
   line-height: 32px;
+}
+
+.metric-summary-item strong.is-green {
+  color: #00b42a;
+}
+
+.metric-summary-item strong.is-orange {
+  color: #ff7d00;
+}
+
+.metric-summary-item strong.is-blue {
+  color: var(--workspace-color-primary, rgb(var(--primary-6)));
+}
+
+.metric-summary-item strong.is-red {
+  color: #f53f3f;
 }
 
 .metric-summary-item small {

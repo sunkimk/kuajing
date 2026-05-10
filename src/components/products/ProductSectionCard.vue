@@ -23,10 +23,10 @@ defineProps<{
 
 <style scoped>
 .product-section-card {
-  overflow: hidden;
-  border: 1px solid var(--color-border-2);
-  border-radius: 8px;
-  background: var(--color-bg-2);
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   box-shadow: none;
 }
 
@@ -34,8 +34,8 @@ defineProps<{
   height: auto;
   min-height: auto;
   align-items: flex-start;
-  padding: 14px 18px 12px;
-  border-bottom: 1px solid #f2f3f5;
+  padding: 24px 0 8px;
+  border-bottom: 0;
   overflow: visible;
 }
 
@@ -45,7 +45,7 @@ defineProps<{
 }
 
 .product-section-card :deep(.arco-card-body) {
-  padding: 18px;
+  padding: 14px 0 0;
 }
 
 .section-heading {

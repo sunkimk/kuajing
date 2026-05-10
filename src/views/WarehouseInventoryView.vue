@@ -933,6 +933,7 @@ const resetFilters = () => {
           :columns="activeColumns"
           :default-visible-keys="activeDefaultVisibleColumnKeys"
           :required-keys="activeRequiredColumnKeys"
+          :default-freeze-last-column="true"
           :data="pagedRows"
           row-key="id"
           :pagination="false"
@@ -1061,6 +1062,8 @@ const resetFilters = () => {
 }
 
 .inventory-summary {
+  --workspace-color-bg: var(--color-bg-1);
+
   margin-bottom: 16px;
 }
 

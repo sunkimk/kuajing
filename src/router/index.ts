@@ -75,7 +75,7 @@ const router = createRouter({
           path: 'products/core-library/:sku/edit',
           component: ProductDetailView,
           meta: {
-            title: '编辑商品',
+            title: '商品详情',
             sectionKey: 'products',
             sectionTitle: '商品管理',
             hideBreadcrumb: true,

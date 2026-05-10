@@ -45,4 +45,9 @@ describe('ProductListView table source', () => {
     expect(productListSource).toContain('.table-wrapper :deep(.product-list-data-table:not(.is-auto-wrap) .name-cell strong)')
     expect(productListSource).toContain('.table-wrapper :deep(.product-list-data-table:not(.is-auto-wrap) .name-cell small)')
   })
+
+  it('labels the row operation as view details', () => {
+    expect(productListSource).toContain('<a-link @click="goToEdit(record.basicInfo.sku)">查看详情</a-link>')
+    expect(productListSource).not.toContain('<a-link @click="goToEdit(record.basicInfo.sku)">编辑</a-link>')
+  })
 })

@@ -30,4 +30,39 @@ describe('ConfigurableDataTable source', () => {
     expect(resizeStartSource).toContain('const headerCell = getHeaderCellFromEvent(event)')
     expect(resizeStartSource).toContain('headerCell?.getBoundingClientRect().width')
   })
+
+  it('previews column resizing with the guide and applies the new width only after mouseup', () => {
+    const resizeMoveSource = componentSource.match(
+      /const handleColumnResizeMove =[\s\S]*?const finishColumnResize =/ ,
+    )?.[0] ?? ''
+    const resizeFinishSource = componentSource.match(
+      /const finishColumnResize =[\s\S]*?const startColumnResize =/ ,
+    )?.[0] ?? ''
+
+    expect(componentSource).toContain('const columnResizeNextWidth = ref<number>()')
+    expect(resizeMoveSource).toContain('columnResizeNextWidth.value = nextWidth')
+    expect(resizeMoveSource).not.toContain('columnWidthOverrides.value = {')
+    expect(resizeFinishSource).toContain('columnWidthOverrides.value = {')
+    expect(resizeFinishSource).toContain('[columnKey]: nextWidth')
+    expect(componentSource).toContain("window.addEventListener('mouseup', finishColumnResize, { once: true })")
+  })
+
+  it('does not start column reordering from the resize edge guard area', () => {
+    const mouseDownSource = componentSource.match(
+      /const handleDelegatedHeaderMouseDown =[\s\S]*?const handleDelegatedHeaderMouseMove =/ ,
+    )?.[0] ?? ''
+
+    expect(componentSource).toContain('const COLUMN_RESIZE_EDGE_GUARD_WIDTH = 12')
+    expect(componentSource).toContain('const isNearHeaderRightEdge =')
+    expect(mouseDownSource).toContain('isNearHeaderRightEdge(headerCell, event)')
+    expect(mouseDownSource).toContain('return')
+  })
+
+  it('does not freeze the last column by default unless a table opts into it', () => {
+    expect(componentSource).toContain('defaultFreezeLastColumn?: boolean')
+    expect(componentSource).toContain('defaultFreezeLastColumn: false')
+    expect(componentSource).toContain('const freezeLastColumn = ref(props.defaultFreezeLastColumn)')
+    expect(componentSource).toContain(':default-freeze-last-column="defaultFreezeLastColumn"')
+    expect(componentSource).not.toContain('const freezeLastColumn = ref(true)')
+  })
 })

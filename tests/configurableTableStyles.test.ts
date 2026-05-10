@@ -31,6 +31,13 @@ describe('ConfigurableDataTable styles', () => {
 
   it('anchors the resize handle to the header content so drag hit areas stay on the correct column', () => {
     expect(componentSource).toMatch(/\.configurable-data-table\s*:deep\(\.arco-table-th \.arco-table-cell\),[\s\S]*?position:\s*relative;/s)
-    expect(componentSource).toMatch(/\.column-resize-handle\s*\{[^}]*position:\s*absolute;[^}]*right:\s*0;/s)
+    expect(componentSource).toMatch(/\.column-resize-handle\s*\{[^}]*position:\s*absolute;[^}]*right:\s*-3px;/s)
+  })
+
+  it('keeps the resize handle narrow and shows the guide only while resizing', () => {
+    const handleStyle = componentSource.match(/\.column-resize-handle\s*\{(?<style>[^}]*)\}/s)?.groups?.style ?? ''
+
+    expect(handleStyle).toContain('width: 6px')
+    expect(componentSource).toContain("v-if=\"resizingColumnKey && columnResizeGuideLeft !== undefined\"")
   })
 })

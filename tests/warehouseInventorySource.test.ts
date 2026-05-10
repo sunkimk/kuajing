@@ -107,4 +107,8 @@ describe('WarehouseInventoryView source', () => {
   it('matches the batch inventory spacing below the page description', () => {
     expect(componentSource).toMatch(/\.page-head\s*\{[^}]*padding:\s*16px 2px 16px;/s)
   })
+
+  it('uses a white fill for the inventory summary strip', () => {
+    expect(componentSource).toMatch(/\.inventory-summary\s*\{[^}]*--workspace-color-bg:\s*var\(--color-bg-1\);/s)
+  })
 })

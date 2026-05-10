@@ -94,6 +94,7 @@ const rawBaseColumns: BatchTableColumnData[] = [
     :default-visible-keys="defaultVisibleColumnKeys"
     :required-keys="requiredColumnKeys"
     :pinned-column-keys="pinnedDataColumnKeys"
+    :default-freeze-last-column="true"
     :data="rows"
     row-key="id"
     :pagination="false"

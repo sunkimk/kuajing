@@ -203,6 +203,7 @@ const formatMoney = (value = 0) => `${value.toLocaleString('zh-CN')} RUB`
       :default-visible-keys="defaultVisibleKeys"
       :required-keys="requiredKeys"
       :pinned-column-keys="pinnedColumnKeys"
+      :default-freeze-last-column="true"
       :data="pagedRows"
       row-key="id"
       :pagination="false"
