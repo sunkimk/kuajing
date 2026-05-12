@@ -1,0 +1,270 @@
+.product-metadata-page {
+  --metadata-color-primary: rgb(var(--primary-6));
+  --metadata-color-text: var(--color-text-1);
+  --metadata-color-text-secondary: var(--color-text-2);
+  --metadata-color-text-tertiary: var(--color-text-3);
+  --metadata-color-bg: var(--color-bg-2);
+  --metadata-color-fill: var(--color-fill-1);
+  --metadata-color-border: var(--color-border-2);
+  --metadata-control-height: var(--size-default, 32px);
+  --metadata-radius: var(--border-radius-medium);
+  --workspace-color-primary: var(--metadata-color-primary);
+  --workspace-color-text: var(--metadata-color-text);
+  --workspace-color-text-secondary: var(--metadata-color-text-secondary);
+  --workspace-color-text-tertiary: var(--metadata-color-text-tertiary);
+  --workspace-color-bg: var(--metadata-color-bg);
+  --workspace-color-fill: var(--metadata-color-fill);
+  --workspace-color-border: var(--metadata-color-border);
+  --workspace-color-hover-bg: var(--color-fill-2);
+  --workspace-color-control-border: var(--metadata-color-border);
+  --workspace-control-height: var(--metadata-control-height);
+  --workspace-radius: var(--metadata-radius);
+  gap: 12px;
+}
+
+.product-metadata-header {
+  align-items: center;
+}
+
+.metadata-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.product-metadata-table .arco-table-element {
+  min-width: 100%;
+}
+
+.product-metadata-data-table .arco-table-th {
+  font-size: 13px;
+}
+
+.metadata-code-cell {
+  color: var(--metadata-color-text);
+  font-weight: 400;
+}
+
+.metadata-name-cell {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metadata-status-switch {
+  width: 40px;
+  min-width: 40px;
+}
+
+.metadata-table-footer-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.metadata-bulk-action-bar {
+  display: inline-flex;
+  height: var(--workspace-control-height, var(--size-default, 32px));
+  min-height: var(--workspace-control-height, var(--size-default, 32px));
+  align-items: center;
+  gap: 12px;
+  color: var(--metadata-color-text-secondary);
+  font-size: 13px;
+  line-height: var(--workspace-control-height, var(--size-default, 32px));
+}
+
+.metadata-bulk-selected-count {
+  display: inline-flex;
+  height: var(--workspace-control-height, var(--size-default, 32px));
+  align-items: center;
+}
+
+.metadata-bulk-selected-count span {
+  color: var(--metadata-color-text);
+  font-weight: 500;
+}
+
+.metadata-bulk-cancel {
+  display: inline-flex;
+  height: var(--workspace-control-height, var(--size-default, 32px));
+  align-items: center;
+  color: var(--metadata-color-primary);
+  cursor: pointer;
+  line-height: var(--workspace-control-height, var(--size-default, 32px));
+}
+
+.metadata-bulk-action-bar .arco-btn {
+  display: inline-flex;
+  height: var(--workspace-control-height, var(--size-default, 32px));
+  align-items: center;
+  border-radius: var(--metadata-radius);
+  padding: 0 15px;
+}
+
+.metadata-bulk-action-placeholder {
+  flex: 1 1 auto;
+}
+
+.metadata-pagination {
+  margin-left: auto;
+}
+
+.metadata-modal-content {
+  padding: 20px 20px 0;
+}
+
+.metadata-simple-modal .arco-modal-footer {
+  text-align: right;
+}
+
+.metadata-confirm-modal.arco-modal-simple .arco-modal-footer {
+  text-align: right;
+}
+
+.metadata-create-form .arco-form-item {
+  margin-bottom: 20px;
+}
+
+.metadata-create-form .arco-form-item:last-child {
+  margin-bottom: 0;
+}
+
+.metadata-create-form .arco-form-label-item > label {
+  color: var(--metadata-color-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.metadata-create-control,
+.metadata-create-control .arco-input-wrapper,
+.metadata-create-control .arco-select-view-single {
+  height: 40px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.metadata-create-control .arco-input,
+.metadata-create-control .arco-select-view-value,
+.metadata-create-control .arco-input-word-limit {
+  font-size: 14px;
+}
+
+.metadata-import-category-content {
+  padding: 0;
+}
+
+.metadata-import-action-panel {
+  display: flex;
+  min-height: 32px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 20px;
+}
+
+.metadata-import-action-main {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: flex-start;
+  overflow-x: hidden;
+}
+
+.metadata-import-upload {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.metadata-import-upload-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.metadata-import-upload .arco-upload-list {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin-top: 12px;
+  overflow-x: hidden;
+}
+
+.metadata-import-upload .arco-upload-list-item,
+.metadata-import-upload .arco-upload-list-item-content,
+.metadata-import-upload .arco-upload-list-item-name,
+.metadata-import-upload .arco-upload-list-item-name-link,
+.metadata-import-upload .arco-upload-list-item-name-text {
+  min-width: 0;
+}
+
+.metadata-import-upload .arco-upload-list-item-name-link,
+.metadata-import-upload .arco-upload-list-item-name-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metadata-import-template-link {
+  flex: 0 0 auto;
+  padding: 0;
+  font-size: 14px;
+  line-height: 32px;
+  white-space: nowrap;
+}
+
+.metadata-import-date {
+  flex: 0 0 auto;
+  color: #a9b1c0;
+  font-size: 13px;
+  line-height: 32px;
+  white-space: nowrap;
+}
+
+.metadata-import-notes {
+  margin-top: 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--metadata-color-border);
+  border-radius: var(--metadata-radius);
+  background: var(--color-fill-1);
+  color: var(--metadata-color-text-secondary);
+  font-size: 13px;
+  line-height: 22px;
+}
+
+.metadata-import-notes strong {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--metadata-color-text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.metadata-import-notes ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.metadata-import-notes li + li {
+  margin-top: 6px;
+}
+
+.metadata-move-category-content {
+  min-height: 160px;
+}
+
+.metadata-move-category-cascader {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .product-metadata-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

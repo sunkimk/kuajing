@@ -8,7 +8,7 @@ const componentSource = readFileSync(
 
 describe('ConfigurableDataTable source', () => {
   it('starts column resizing from the header cell boundary instead of the mouse position', () => {
-    expect(componentSource).toContain('updateColumnResizeGuideFromHeaderCell(getHeaderCellFromEvent(event))')
+    expect(componentSource).toContain('updateColumnResizeGuideFromHeaderCell(headerCell)')
     expect(componentSource).not.toContain('updateColumnResizeGuide(event.clientX)')
   })
 
@@ -31,7 +31,7 @@ describe('ConfigurableDataTable source', () => {
     expect(resizeStartSource).toContain('headerCell?.getBoundingClientRect().width')
   })
 
-  it('previews column resizing with the guide and applies the new width only after mouseup', () => {
+  it('resizes columns live while dragging instead of waiting for mouseup', () => {
     const resizeMoveSource = componentSource.match(
       /const handleColumnResizeMove =[\s\S]*?const finishColumnResize =/ ,
     )?.[0] ?? ''
@@ -41,10 +41,15 @@ describe('ConfigurableDataTable source', () => {
 
     expect(componentSource).toContain('const columnResizeNextWidth = ref<number>()')
     expect(resizeMoveSource).toContain('columnResizeNextWidth.value = nextWidth')
-    expect(resizeMoveSource).not.toContain('columnWidthOverrides.value = {')
-    expect(resizeFinishSource).toContain('columnWidthOverrides.value = {')
-    expect(resizeFinishSource).toContain('[columnKey]: nextWidth')
+    expect(resizeMoveSource).toContain('applyColumnWidthOverride(columnKey, nextWidth)')
+    expect(resizeFinishSource).not.toContain('columnWidthOverrides.value = {')
     expect(componentSource).toContain("window.addEventListener('mouseup', finishColumnResize, { once: true })")
+  })
+
+  it('tracks hover over the resize handle separately so the guide can show before dragging', () => {
+    expect(componentSource).toContain('const hoveredResizeColumnKey = ref<string>()')
+    expect(componentSource).toContain('hoveredResizeColumnKey.value = getColumnKeyFromHeaderCell(getHeaderCellFromEvent(event))')
+    expect(componentSource).toContain('hoveredResizeColumnKey.value = undefined')
   })
 
   it('does not start column reordering from the resize edge guard area', () => {
@@ -64,5 +69,11 @@ describe('ConfigurableDataTable source', () => {
     expect(componentSource).toContain('const freezeLastColumn = ref(props.defaultFreezeLastColumn)')
     expect(componentSource).toContain(':default-freeze-last-column="defaultFreezeLastColumn"')
     expect(componentSource).not.toContain('const freezeLastColumn = ref(true)')
+  })
+
+  it('treats every keyed column as configurable so default-hidden columns are not rendered as utility columns', () => {
+    expect(componentSource).toContain('const configurableColumnKeys = computed(() => createConfigurableTableColumnKeys(props.columns))')
+    expect(componentSource).toContain('const configurableKeySet = computed(() => new Set(configurableColumnKeys.value))')
+    expect(componentSource).not.toContain('const configurableKeySet = computed(() => new Set(props.defaultVisibleKeys))')
   })
 })

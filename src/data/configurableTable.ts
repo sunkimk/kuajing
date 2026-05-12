@@ -5,6 +5,31 @@ export type ConfigurableTableColumn<Key extends string = string> = TableColumnDa
   settingsKey?: Key
 }
 
+const getConfigurableTableColumnCandidateKey = <Key extends string>(
+  column: ConfigurableTableColumn<Key> | TableColumnData | undefined,
+) => {
+  const settingsKey = (column as ConfigurableTableColumn<Key> | undefined)?.settingsKey
+  if (settingsKey) return settingsKey
+
+  const dataIndex = column?.dataIndex
+  if (typeof dataIndex === 'string') return dataIndex as Key
+
+  return undefined
+}
+
+export const createConfigurableTableColumnKeys = <Key extends string>(
+  columns: ConfigurableTableColumn<Key>[],
+) => {
+  const keys: Key[] = []
+
+  columns.forEach((column) => {
+    const key = getConfigurableTableColumnCandidateKey(column)
+    if (key && !keys.includes(key)) keys.push(key)
+  })
+
+  return keys
+}
+
 export const getConfigurableTableColumnKey = <Key extends string>(
   column: ConfigurableTableColumn<Key> | TableColumnData | undefined,
   validKeys: Set<Key>,
@@ -24,11 +49,17 @@ export const createTableColumnSettingsOptions = <Key extends string>(
   columns: ConfigurableTableColumn<Key>[],
   defaultVisibleKeys: Key[],
 ): ColumnSettingsOption<Key>[] => {
-  const validKeys = new Set(defaultVisibleKeys)
+  const columnKeys = createConfigurableTableColumnKeys(columns)
+  const columnKeySet = new Set(columnKeys)
+  const defaultVisibleKeySet = new Set(defaultVisibleKeys)
+  const optionKeys = [
+    ...defaultVisibleKeys.filter((key) => columnKeySet.has(key)),
+    ...columnKeys.filter((key) => !defaultVisibleKeySet.has(key)),
+  ]
 
-  return defaultVisibleKeys
+  return optionKeys
     .map((key) => {
-      const column = columns.find((item) => getConfigurableTableColumnKey(item, validKeys) === key)
+      const column = columns.find((item) => getConfigurableTableColumnKey(item, columnKeySet) === key)
       if (!column) return undefined
 
       return {

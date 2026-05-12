@@ -682,9 +682,8 @@ const handleResponsiveCollapse = (value: boolean) => {
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  padding: 0 22px 24px;
+  padding: 0 32px 24px;
   background: #ffffff;
-  scrollbar-gutter: stable;
 }
 
 .content-head {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   createTableColumnSettingsOptions,
+  createConfigurableTableColumnKeys,
   getConfigurableTableColumnKey,
   getConfigurableTableColumnFixedSide,
   isConfigurableTableColumnReorderable,
@@ -28,7 +29,12 @@ describe('configurable table helpers', () => {
     expect(createTableColumnSettingsOptions(columns, ['stock', 'warehouse'])).toEqual([
       { key: 'stock', title: '库存' },
       { key: 'warehouse', title: '仓库' },
+      { key: 'product', title: '商品' },
     ])
+  })
+
+  it('collects configurable columns from settingsKey and dataIndex even when hidden by default', () => {
+    expect(createConfigurableTableColumnKeys(columns)).toEqual(['warehouse', 'product', 'stock'])
   })
 
   it('keeps confirmed visible keys first and appends hidden default keys', () => {

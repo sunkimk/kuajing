@@ -6,23 +6,37 @@ import WarehouseInventoryView from '../views/WarehouseInventoryView.vue'
 import BatchInventoryView from '../views/BatchInventoryView.vue'
 import ProductListView from '../views/ProductListView.vue'
 import ProductDetailView from '../views/ProductDetailView.vue'
+import ProductBrandView from '../views/ProductBrandView.vue'
+import ProductCategoryView from '../views/ProductCategoryView.vue'
+import PurchaseOrderView from '../views/PurchaseOrderView.vue'
+import PurchaseDeliveryView from '../views/PurchaseDeliveryView.vue'
+import PurchaseReturnView from '../views/PurchaseReturnView.vue'
+import PurchaseChangeLogView from '../views/PurchaseChangeLogView.vue'
 import SalesOrderView from '../views/SalesOrderView.vue'
 import SalesSecondaryView from '../views/SalesSecondaryView.vue'
 import SalesReturnView from '../views/SalesReturnView.vue'
 import StoreManagementHomeView from '../views/StoreManagementHomeView.vue'
 import StoreDetailView from '../views/StoreDetailView.vue'
+import FirstMileQuoteView from '../views/FirstMileQuoteView.vue'
 import { flattenNavigation } from '../data/navigation'
 
 const placeholderRoutes = flattenNavigation()
   .filter((item) =>
     item.path !== '/products/core-library'
+    && item.path !== '/products/brands'
+    && item.path !== '/products/categories'
     && item.path !== '/warehouse/inventory'
     && item.path !== '/warehouse/warehouse-inventory'
     && item.path !== '/warehouse/batch-inventory'
+    && item.path !== '/purchase/orders'
+    && item.path !== '/purchase/delivery-orders'
+    && item.path !== '/purchase/return-orders'
+    && item.path !== '/purchase/change-logs'
     && item.path !== '/sales/orders'
     && item.path !== '/sales/upsell'
     && item.path !== '/sales/return'
     && item.path !== '/stores/list'
+    && item.path !== '/services/first-mile'
   )
   .map((item) => ({
     path: item.path,
@@ -82,6 +96,26 @@ const router = createRouter({
           },
         },
         {
+          path: 'products/brands',
+          component: ProductBrandView,
+          meta: {
+            title: '品牌资料',
+            sectionKey: 'products',
+            sectionTitle: '商品管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'products/categories',
+          component: ProductCategoryView,
+          meta: {
+            title: '品类资料',
+            sectionKey: 'products',
+            sectionTitle: '商品管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
           path: 'warehouse/inventory',
           component: WarehouseInventoryView,
           meta: {
@@ -111,6 +145,46 @@ const router = createRouter({
             title: '批次库存',
             sectionKey: 'warehouse',
             sectionTitle: '仓储库存',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'purchase/orders',
+          component: PurchaseOrderView,
+          meta: {
+            title: '采购订单',
+            sectionKey: 'purchase',
+            sectionTitle: '采购管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'purchase/delivery-orders',
+          component: PurchaseDeliveryView,
+          meta: {
+            title: '交货单',
+            sectionKey: 'purchase',
+            sectionTitle: '采购管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'purchase/return-orders',
+          component: PurchaseReturnView,
+          meta: {
+            title: '采购退货单',
+            sectionKey: 'purchase',
+            sectionTitle: '采购管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'purchase/change-logs',
+          component: PurchaseChangeLogView,
+          meta: {
+            title: '采购变更日志',
+            sectionKey: 'purchase',
+            sectionTitle: '采购管理',
             hideBreadcrumb: true,
           },
         },
@@ -201,6 +275,16 @@ const router = createRouter({
             title: '同步策略',
             sectionKey: 'stores',
             sectionTitle: '店铺管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'services/first-mile',
+          component: FirstMileQuoteView,
+          meta: {
+            title: '物流智能询价',
+            sectionKey: 'logistics',
+            sectionTitle: '物流管理',
             hideBreadcrumb: true,
           },
         },

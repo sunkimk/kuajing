@@ -1101,13 +1101,14 @@ describe('ProductDetailView overview card source', () => {
     expect(sectionBodyRule).not.toContain('padding: 14px 16px 0')
   })
 
-  it('uses a borderless color-bg-3 overview card treatment', () => {
+  it('uses a light-bordered overview card without color-bg-3 fill', () => {
     const overviewCardRule = getStyleRule('.overview-card')
 
     expect(overviewCardRule).toContain('min-height: 104px')
     expect(overviewCardRule).toContain('padding: 20px 28px')
-    expect(overviewCardRule).toContain('background: var(--color-bg-3)')
-    expect(overviewCardRule).not.toContain('border:')
+    expect(overviewCardRule).toContain('border: 1px solid var(--product-color-border)')
+    expect(overviewCardRule).toContain('background: transparent')
+    expect(overviewCardRule).not.toContain('background: var(--color-bg-3)')
   })
 
   it('keeps the overview card visually compact like the reference console card', () => {

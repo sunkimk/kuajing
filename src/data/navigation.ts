@@ -43,12 +43,19 @@ export const navigationSections: NavSectionItem[] = [
     title: '商品管理',
     children: [
       { key: 'product-list', title: '商品列表', path: '/products/core-library', icon: IconApps },
+      { key: 'product-brands', title: '品牌资料', path: '/products/brands', icon: IconBook },
+      { key: 'product-categories', title: '品类资料', path: '/products/categories', icon: IconCommon },
     ],
   },
   {
     key: 'purchase',
     title: '采购管理',
-    children: [{ key: 'purchase-orders', title: '采购单', path: '/purchase/orders', icon: IconCalendarClock }],
+    children: [
+      { key: 'purchase-orders', title: '采购订单', path: '/purchase/orders', icon: IconCalendarClock },
+      { key: 'purchase-delivery-orders', title: '交货单', path: '/purchase/delivery-orders', icon: IconNotification },
+      { key: 'purchase-return-orders', title: '采购退货单', path: '/purchase/return-orders', icon: IconCommon },
+      { key: 'purchase-change-logs', title: '采购变更日志', path: '/purchase/change-logs', icon: IconBook },
+    ],
   },
   {
     key: 'stores',
@@ -99,6 +106,7 @@ export const navigationSections: NavSectionItem[] = [
     title: '物流管理',
     children: [
       { key: 'shipping', title: '头程发货', path: '/logistics/shipping', icon: IconNotification },
+      { key: 'first-mile', title: '物流智能询价', path: '/services/first-mile', icon: IconNotification },
       { key: 'orders', title: '物流订单', path: '/logistics/orders', icon: IconBook },
       { key: 'tracking', title: '物流追踪', path: '/logistics/tracking', icon: IconCommon },
     ],
@@ -125,7 +133,6 @@ export const navigationSections: NavSectionItem[] = [
     key: 'services',
     title: '外部服务商',
     children: [
-      { key: 'first-mile', title: '头程物流', path: '/services/first-mile', icon: IconNotification },
       { key: 'warehouse-service', title: '海外仓', path: '/services/warehouse', icon: IconStorage },
       { key: 'delivery-service', title: '送仓服务', path: '/services/delivery', icon: IconCalendarClock },
       { key: 'tax-service', title: '财税服务', path: '/services/tax', icon: IconCommon },

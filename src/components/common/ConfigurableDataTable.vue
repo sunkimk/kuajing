@@ -5,6 +5,7 @@ import type { TableColumnData, TableData } from '@arco-design/web-vue'
 import ColumnSettingsModal from './ColumnSettingsModal.vue'
 import type { ColumnSettingsPayload } from '../../data/columnSettings'
 import {
+  createConfigurableTableColumnKeys,
   createTableColumnSettingsOptions,
   getConfigurableTableColumnFixedSide,
   getConfigurableTableColumnKey,
@@ -82,6 +83,7 @@ const pendingDragColumnKey = ref<string>()
 const draggingColumnKey = ref<string>()
 const dragOverColumnKey = ref<string>()
 const hoveredColumnKey = ref<string>()
+const hoveredResizeColumnKey = ref<string>()
 const resizingColumnKey = ref<string>()
 const columnWidthOverrides = ref<Record<string, number>>({})
 const columnDragStartX = ref(0)
@@ -117,7 +119,8 @@ const mergeBodyClassValue = (
   return mergeClassValues(originalValue, extraValue) as ColumnClassValue
 }
 
-const configurableKeySet = computed(() => new Set(props.defaultVisibleKeys))
+const configurableColumnKeys = computed(() => createConfigurableTableColumnKeys(props.columns))
+const configurableKeySet = computed(() => new Set(configurableColumnKeys.value))
 const pinnedColumnKeySet = computed(() => new Set(props.pinnedColumnKeys))
 const columnByKey = computed(() => new Map(
   props.columns
@@ -313,10 +316,15 @@ const clearColumnResizeGuide = () => {
   columnResizeGuideLeft.value = undefined
 }
 
+const clearHoveredResizeColumn = () => {
+  hoveredResizeColumnKey.value = undefined
+}
+
 const clearColumnDragState = () => {
   pendingDragColumnKey.value = undefined
   draggingColumnKey.value = undefined
   dragOverColumnKey.value = undefined
+  clearHoveredResizeColumn()
   clearColumnResizeGuide()
   setGlobalTableTextSelectionGuard(false)
   if (columnDragMouseupCleanup) {
@@ -328,6 +336,7 @@ const clearColumnDragState = () => {
 const clearColumnResizeState = () => {
   resizingColumnKey.value = undefined
   columnResizeNextWidth.value = undefined
+  clearHoveredResizeColumn()
   clearColumnResizeGuide()
   setGlobalTableTextSelectionGuard(false)
   if (columnResizeCleanup) {
@@ -338,6 +347,13 @@ const clearColumnResizeState = () => {
 
 const reorderVisibleColumn = (sourceColumnKey: string, targetColumnKey: string) => {
   columnOrder.value = reorderColumnKeys(columnOrder.value, sourceColumnKey, targetColumnKey)
+}
+
+const applyColumnWidthOverride = (columnKey: string, width: number) => {
+  columnWidthOverrides.value = {
+    ...columnWidthOverrides.value,
+    [columnKey]: width,
+  }
 }
 
 const startColumnDrag = (event: MouseEvent, columnKey?: string) => {
@@ -384,19 +400,10 @@ const handleColumnResizeMove = (event: MouseEvent) => {
     nextWidth,
     { minLeft: 0, maxLeft: getColumnResizeGuideMaxLeft() },
   )
+  applyColumnWidthOverride(columnKey, nextWidth)
 }
 
 const finishColumnResize = () => {
-  const columnKey = resizingColumnKey.value
-  const nextWidth = columnResizeNextWidth.value
-
-  if (columnKey && nextWidth !== undefined) {
-    columnWidthOverrides.value = {
-      ...columnWidthOverrides.value,
-      [columnKey]: nextWidth,
-    }
-  }
-
   clearColumnResizeState()
 }
 
@@ -411,6 +418,7 @@ const startColumnResize = (columnKey: string | undefined, event: MouseEvent) => 
   clearColumnDragState()
   setGlobalTableTextSelectionGuard(true)
   hoveredColumnKey.value = undefined
+  clearHoveredResizeColumn()
 
   const minWidth = getColumnMinWidth(column)
   const fallbackWidth = Math.max(column.width ?? minWidth, minWidth)
@@ -463,18 +471,25 @@ const isNearHeaderRightEdge = (headerCell: Element | null, event: MouseEvent) =>
 const syncHoveredColumnKey = (event: MouseEvent) => {
   if (resizingColumnKey.value) {
     hoveredColumnKey.value = undefined
+    clearHoveredResizeColumn()
     return
   }
 
   const target = event.target
-  if (target instanceof Element && target.closest('.column-resize-handle')) {
-    updateColumnResizeGuideFromHeaderCell(getHeaderCellFromEvent(event))
+  const headerCell = getHeaderCellFromEvent(event)
+  if (
+    target instanceof Element
+    && (target.closest('.column-resize-handle') || isNearHeaderRightEdge(headerCell, event))
+  ) {
+    updateColumnResizeGuideFromHeaderCell(headerCell)
     hoveredColumnKey.value = undefined
+    hoveredResizeColumnKey.value = getColumnKeyFromHeaderCell(getHeaderCellFromEvent(event))
     return
   }
 
+  clearHoveredResizeColumn()
   clearColumnResizeGuide()
-  hoveredColumnKey.value = getColumnKeyFromHeaderCell(getHeaderCellFromEvent(event))
+  hoveredColumnKey.value = getColumnKeyFromHeaderCell(headerCell)
 }
 
 const handleDelegatedHeaderMouseDown = (event: MouseEvent) => {
@@ -502,6 +517,7 @@ const handleDelegatedHeaderMouseOut = (event: MouseEvent) => {
   const relatedTarget = event.relatedTarget
   if (!(relatedTarget instanceof Element) || !relatedTarget.closest('.arco-table-th')) {
     hoveredColumnKey.value = undefined
+    clearHoveredResizeColumn()
     if (!resizingColumnKey.value) clearColumnResizeGuide()
   }
 }
@@ -543,6 +559,7 @@ onBeforeUnmount(() => {
   clearColumnDragState()
   clearColumnResizeState()
   hoveredColumnKey.value = undefined
+  clearHoveredResizeColumn()
   tableHeaderDelegationCleanup?.()
 })
 </script>
@@ -585,7 +602,7 @@ onBeforeUnmount(() => {
       </a-table>
 
       <span
-        v-if="resizingColumnKey && columnResizeGuideLeft !== undefined"
+        v-if="(resizingColumnKey || hoveredResizeColumnKey) && columnResizeGuideLeft !== undefined"
         class="column-resize-guide"
         :style="{ left: `${columnResizeGuideLeft}px` }"
         aria-hidden="true"

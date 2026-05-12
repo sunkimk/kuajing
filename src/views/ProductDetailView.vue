@@ -1853,8 +1853,9 @@ onBeforeUnmount(() => {
   gap: 24px;
   margin-top: 16px;
   padding: 20px 28px;
+  border: 1px solid var(--product-color-border);
   border-radius: 12px;
-  background: var(--color-bg-3);
+  background: transparent;
   box-shadow: none;
 }
 

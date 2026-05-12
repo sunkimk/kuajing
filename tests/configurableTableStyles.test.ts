@@ -38,6 +38,6 @@ describe('ConfigurableDataTable styles', () => {
     const handleStyle = componentSource.match(/\.column-resize-handle\s*\{(?<style>[^}]*)\}/s)?.groups?.style ?? ''
 
     expect(handleStyle).toContain('width: 6px')
-    expect(componentSource).toContain("v-if=\"resizingColumnKey && columnResizeGuideLeft !== undefined\"")
+    expect(componentSource).toContain("v-if=\"(resizingColumnKey || hoveredResizeColumnKey) && columnResizeGuideLeft !== undefined\"")
   })
 })
