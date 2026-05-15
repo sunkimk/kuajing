@@ -1,68 +1,703 @@
 .store-advertising-workbench {
+  --advertising-color-primary: rgb(var(--primary-6));
+  --advertising-color-text: var(--color-text-1);
+  --advertising-color-text-secondary: var(--color-text-2);
+  --advertising-color-text-tertiary: var(--color-text-3);
+  --advertising-color-bg: var(--color-bg-2);
+  --advertising-color-surface: var(--color-bg-1);
+  --advertising-color-fill: var(--color-fill-1);
+  --advertising-color-hover-bg: var(--color-fill-2);
+  --advertising-color-border: var(--color-border-2);
+  --advertising-color-control-border: var(--color-border-2);
+  --advertising-control-height: var(--size-default, 32px);
+  --advertising-radius: 8px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding-top: 16px;
+  color: var(--advertising-color-text);
 }
 
 .advertising-page-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  padding: 0 2px;
 }
 
-.advertising-page-header h1 {
-  margin: 0;
-  font-size: 20px;
-}
-
-.advertising-page-header p {
-  margin: 4px 0 0;
-  color: var(--color-text-2);
-}
-
-.advertising-filter-row,
-.advertising-summary-grid,
-.advertising-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.advertising-summary-card,
-.advertising-detail-grid > div,
-.advertising-chart-card,
-.advertising-product-expanded {
-  border: 1px solid var(--color-border-2);
-  border-radius: 6px;
-  background: var(--color-bg-2);
-  padding: 12px;
-}
-
-.advertising-summary-card {
+.advertising-page-header-copy {
   display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 4px;
 }
 
-.advertising-link-button {
-  border: 0;
-  background: transparent;
-  color: rgb(var(--primary-6));
-  cursor: pointer;
-  padding: 0;
+.advertising-page-header h1,
+.advertising-detail-title-row h1 {
+  margin: 0;
+  color: var(--advertising-color-text);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 28px;
 }
 
-.advertising-chart-card svg {
+.advertising-page-header p {
+  margin: 0;
+  color: var(--advertising-color-text-secondary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.advertising-page-header-actions,
+.advertising-section-actions,
+.advertising-expanded-actions,
+.advertising-product-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.advertising-back-button {
+  width: fit-content;
+  height: auto;
+  padding: 0;
+  color: var(--advertising-color-primary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.advertising-scope-bar,
+.advertising-filter-row,
+.advertising-detail-budget-card,
+.advertising-statistics-section,
+.advertising-products-section,
+.advertising-chart-card,
+.advertising-stat-table-card,
+.advertising-empty-state {
+  border: 1px solid var(--advertising-color-border);
+  border-radius: var(--advertising-radius);
+  background: var(--advertising-color-bg);
+}
+
+.advertising-scope-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.advertising-scope-bar span {
+  color: var(--advertising-color-text-secondary);
+}
+
+.advertising-scope-bar strong {
+  color: var(--advertising-color-text);
+  font-weight: 600;
+}
+
+.advertising-filter-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 16px;
+  padding: 12px;
+}
+
+.advertising-statistics-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.advertising-statistics-filter .arco-picker,
+.advertising-stat-filter .arco-picker {
+  width: 280px;
+}
+
+.advertising-area-select,
+.advertising-statistics-filter .arco-select {
+  width: 180px;
+}
+
+.store-advertising-table {
+  --workspace-color-hover-bg: var(--advertising-color-hover-bg);
+}
+
+.store-advertising-table .arco-table-th {
+  background: var(--advertising-color-fill);
+}
+
+.store-advertising-campaign-table .arco-table-td,
+.store-advertising-campaign-table .arco-table-th {
+  font-size: 12px;
+}
+
+.advertising-campaign-cell {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+
+.advertising-campaign-thumb,
+.advertising-product-image {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--advertising-color-fill);
+  color: var(--advertising-color-text-tertiary);
+  font-size: 12px;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+.advertising-campaign-image,
+.advertising-product-image img {
   display: block;
   width: 100%;
-  height: 160px;
+  height: 100%;
+  object-fit: cover;
+}
+
+.advertising-campaign-copy,
+.advertising-store-cell,
+.advertising-product-main,
+.advertising-statistics-product-name {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.advertising-link-button {
+  display: inline-flex;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--advertising-color-primary);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.advertising-link-button:hover,
+.advertising-link-button:focus-visible {
+  text-decoration: underline;
+}
+
+.advertising-campaign-meta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.advertising-campaign-id,
+.advertising-store-cell span,
+.advertising-product-main span,
+.advertising-statistics-product-name span,
+.advertising-detail-meta,
+.advertising-section-header p,
+.advertising-product-metric span,
+.advertising-kpi-card span,
+.advertising-detail-budget-card span,
+.advertising-statistics-funnel-rates {
+  color: var(--advertising-color-text-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.advertising-status-pill {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(78, 89, 105, 0.12);
+  color: #4e5969;
+  font-size: 12px;
+  line-height: 22px;
+  white-space: nowrap;
+}
+
+.advertising-status-pill.is-active {
+  background: rgba(var(--primary-6), 0.12);
+  color: var(--advertising-color-primary);
+}
+
+.advertising-status-pill.is-paused {
+  background: rgba(255, 125, 0, 0.14);
+  color: #ff7d00;
+}
+
+.advertising-status-pill.is-ended {
+  background: rgba(78, 89, 105, 0.12);
+  color: #4e5969;
+}
+
+.advertising-status-pill.is-draft,
+.advertising-status-pill.is-unknown {
+  background: var(--advertising-color-fill);
+  color: var(--advertising-color-text-secondary);
+}
+
+.advertising-store-cell strong,
+.advertising-product-main strong,
+.advertising-statistics-product-name strong {
+  overflow: hidden;
+  color: var(--advertising-color-text);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.advertising-number-cell {
+  color: var(--advertising-color-text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.advertising-create-form {
+  padding-top: 4px;
+}
+
+.advertising-detail-workbench,
+.advertising-statistics-workbench {
+  gap: 16px;
+}
+
+.advertising-detail-header,
+.advertising-statistics-header {
+  padding-bottom: 2px;
+}
+
+.advertising-detail-title-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.advertising-detail-meta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px 12px;
+  flex-wrap: wrap;
+}
+
+.advertising-detail-budget-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(140px, 1fr)) minmax(160px, auto) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.advertising-detail-budget-card > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.advertising-detail-budget-card strong {
+  color: var(--advertising-color-text);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.advertising-budget-switch {
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.advertising-statistics-section,
+.advertising-products-section,
+.advertising-chart-card,
+.advertising-stat-table-card,
+.advertising-empty-state {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+.advertising-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.advertising-section-header h2 {
+  margin: 0;
+  color: var(--advertising-color-text);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.advertising-section-header p {
+  margin: 2px 0 0;
+}
+
+.advertising-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.advertising-kpi-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: var(--advertising-radius);
+  background: var(--advertising-color-fill);
+}
+
+.advertising-kpi-card strong {
+  color: var(--advertising-color-text);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.advertising-chart-card {
+  color: var(--advertising-color-primary);
+}
+
+.advertising-chart-card svg,
+.advertising-statistics-chart svg {
+  display: block;
+  width: 100%;
+  height: 220px;
+  color: currentColor;
+}
+
+.advertising-chart-grid line {
+  stroke: var(--advertising-color-border);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.advertising-statistics-chart-card {
+  gap: 16px;
+}
+
+.advertising-chart-mode,
+.advertising-metric-toggles,
+.advertising-statistics-metric-group {
+  display: flex;
+  align-items: center;
+  gap: 10px 14px;
+  flex-wrap: wrap;
+}
+
+.advertising-statistics-metric-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.advertising-product-list,
+.advertising-recommended-list,
+.advertising-recommended-products,
+.advertising-funnel-list,
+.advertising-statistics-funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.advertising-product-card,
+.advertising-recommended-card,
+.advertising-recommended-product,
+.advertising-funnel-row,
+.advertising-statistics-funnel-step {
+  border: 1px solid var(--advertising-color-border);
+  border-radius: var(--advertising-radius);
+  background: var(--advertising-color-surface);
+}
+
+.advertising-product-row,
+.advertising-recommended-card,
+.advertising-recommended-product {
+  display: grid;
+  grid-template-columns: 42px minmax(180px, 1fr) minmax(96px, auto) minmax(132px, auto) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+}
+
+.advertising-product-metric {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.advertising-product-metric strong {
+  color: var(--advertising-color-text);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.advertising-product-actions .arco-btn {
+  flex: 0 0 auto;
+}
+
+.advertising-product-expanded {
+  margin: 0 12px 12px;
+  padding: 12px;
+  border: 1px solid var(--advertising-color-border);
+  border-radius: var(--advertising-radius);
+  background: var(--advertising-color-bg);
+}
+
+.advertising-expanded-toolbar,
+.advertising-cluster-filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.advertising-expanded-actions .arco-picker {
+  width: 260px;
+}
+
+.advertising-cluster-filter-row .arco-input-wrapper {
+  width: 240px;
+}
+
+.advertising-product-expanded .arco-table-container {
+  border: 1px solid var(--advertising-color-border);
+  border-radius: var(--advertising-radius);
+  overflow: hidden;
+}
+
+.advertising-product-expanded .arco-table-th {
+  background: var(--advertising-color-fill);
+}
+
+.advertising-product-expanded .arco-table-td,
+.advertising-product-expanded .arco-table-th {
+  font-size: 12px;
+}
+
+.advertising-recommended-products .advertising-recommended-product,
+.advertising-recommended-list .advertising-recommended-card {
+  grid-template-columns: 42px minmax(180px, 1fr) minmax(80px, auto) auto;
+}
+
+.advertising-statistics-funnel-step {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) minmax(180px, 1fr) minmax(160px, auto);
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+}
+
+.advertising-statistics-funnel-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.advertising-statistics-funnel-copy strong {
+  color: var(--advertising-color-text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.advertising-statistics-funnel-copy span {
+  color: var(--advertising-color-text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 18px;
+}
+
+.advertising-funnel-bar,
+.advertising-statistics-funnel-track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--advertising-color-fill);
+}
+
+.advertising-funnel-fill,
+.advertising-statistics-funnel-bar {
+  height: 100%;
+  min-width: 2px;
+  border-radius: inherit;
+  background: var(--advertising-color-primary);
+}
+
+.advertising-statistics-funnel-rates {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  text-align: right;
+}
+
+.advertising-statistics-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--advertising-color-border);
+  border-radius: var(--advertising-radius);
+}
+
+.advertising-statistics-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  background: var(--advertising-color-surface);
+}
+
+.advertising-statistics-table th,
+.advertising-statistics-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--advertising-color-border);
+  color: var(--advertising-color-text-secondary);
+  font-size: 12px;
+  line-height: 18px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.advertising-statistics-table th {
+  background: var(--advertising-color-fill);
+  color: var(--advertising-color-text);
+  font-weight: 500;
+}
+
+.advertising-statistics-table td:not(:first-child):not(:nth-child(2)) {
+  font-variant-numeric: tabular-nums;
+}
+
+.advertising-statistics-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.advertising-statistics-table tbody tr:hover td {
+  background: var(--advertising-color-hover-bg);
+}
+
+@media (max-width: 1199px) {
+  .advertising-filter-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .advertising-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .advertising-detail-budget-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .advertising-product-row,
+  .advertising-recommended-card,
+  .advertising-recommended-product,
+  .advertising-recommended-products .advertising-recommended-product,
+  .advertising-recommended-list .advertising-recommended-card {
+    grid-template-columns: 42px minmax(160px, 1fr) repeat(2, minmax(96px, auto));
+  }
+
+  .advertising-product-actions,
+  .advertising-recommended-product > .arco-btn,
+  .advertising-recommended-card > .arco-btn {
+    grid-column: 2 / -1;
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 767px) {
+  .advertising-page-header,
+  .advertising-section-header,
+  .advertising-expanded-toolbar,
+  .advertising-cluster-filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .advertising-page-header-actions,
+  .advertising-section-actions,
+  .advertising-expanded-actions,
+  .advertising-product-actions,
+  .advertising-statistics-funnel-rates {
+    justify-content: flex-start;
+  }
+
   .advertising-filter-row,
-  .advertising-summary-grid,
-  .advertising-detail-grid {
+  .advertising-kpi-grid,
+  .advertising-detail-budget-card {
     grid-template-columns: 1fr;
+  }
+
+  .advertising-statistics-filter,
+  .advertising-statistics-filter .arco-picker,
+  .advertising-statistics-filter .arco-select,
+  .advertising-area-select,
+  .advertising-expanded-actions .arco-picker,
+  .advertising-cluster-filter-row .arco-input-wrapper {
+    width: 100%;
+  }
+
+  .advertising-product-row,
+  .advertising-recommended-card,
+  .advertising-recommended-product,
+  .advertising-recommended-products .advertising-recommended-product,
+  .advertising-recommended-list .advertising-recommended-card,
+  .advertising-statistics-funnel-step {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .advertising-product-metric,
+  .advertising-product-actions,
+  .advertising-recommended-product > .arco-btn,
+  .advertising-recommended-card > .arco-btn,
+  .advertising-statistics-funnel-track,
+  .advertising-statistics-funnel-rates {
+    grid-column: 1 / -1;
+  }
+
+  .advertising-chart-card svg,
+  .advertising-statistics-chart svg {
+    height: 180px;
   }
 }

@@ -96,8 +96,25 @@ describe('store advertising source contracts', () => {
   })
 
   it('adds advertising styles', () => {
-    expect(styleSource).toContain('.store-advertising-workbench')
-    expect(styleSource).toContain('.advertising-chart-card')
-    expect(styleSource).toContain('.advertising-product-expanded')
+    [
+      '.store-advertising-workbench',
+      '.advertising-page-header',
+      '.advertising-scope-bar',
+      '.store-advertising-table',
+      '.advertising-detail-budget-card',
+      '.advertising-product-expanded',
+      '.advertising-statistics-workbench',
+      '.advertising-chart-card',
+      '.advertising-statistics-funnel',
+      '.advertising-statistics-table',
+    ].forEach((selector) => {
+      expect(styleSource).toContain(selector)
+    })
+    expect(styleSource).toContain('--advertising-color-primary: rgb(var(--primary-6))')
+    expect(styleSource).toContain('.advertising-status-pill.is-active')
+    expect(styleSource).toContain('.advertising-status-pill.is-unknown')
+    expect(styleSource).toContain('.advertising-chart-grid line')
+    expect(styleSource).toContain('@media (max-width: 1199px)')
+    expect(styleSource).toContain('@media (max-width: 767px)')
   })
 })
