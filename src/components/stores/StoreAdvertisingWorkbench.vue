@@ -170,7 +170,6 @@ watch(() => filters.value.platforms, () => {
 
     <section class="advertising-activity-toolbar">
       <div class="advertising-toolbar-primary">
-        <h2>活动</h2>
         <a-button type="primary" class="advertising-create-button" @click="createVisible = true">
           <template #icon>
             <icon-plus />

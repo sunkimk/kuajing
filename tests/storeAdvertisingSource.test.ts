@@ -81,7 +81,7 @@ describe('store advertising source contracts', () => {
     expect(workbenchSource).not.toContain('<section class="advertising-scope-bar">')
     expect(workbenchSource).not.toContain('<MetricSummaryStrip')
     expect(workbenchSource).toContain('class="advertising-activity-toolbar"')
-    expect(workbenchSource).toContain('<h2>活动</h2>')
+    expect(workbenchSource).not.toContain('<h2>活动</h2>')
     expect(workbenchSource).toContain('通过活动ID或名称搜索')
     expect(workbenchSource).toContain('class="advertising-toolbar-search"')
     expect(workbenchSource).toContain('class="advertising-toolbar-date"')

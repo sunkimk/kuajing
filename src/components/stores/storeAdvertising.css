@@ -147,14 +147,6 @@
   flex: 1 1 520px;
 }
 
-.advertising-activity-toolbar h2 {
-  margin: 0;
-  color: var(--advertising-color-text);
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 32px;
-}
-
 .advertising-create-button {
   min-width: 112px;
 }
