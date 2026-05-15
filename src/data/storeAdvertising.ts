@@ -205,15 +205,22 @@ const flagshipProducts: AdvertisingCampaignProduct[] = [
   },
 ]
 
-const createStatistics = (base: number, spendBase: number): AdvertisingMetricPoint[] =>
-  Array.from({ length: 7 }, (_, index) => ({
+const createStatistics = (base: number, spendBase: number): AdvertisingMetricPoint[] => {
+  const impressionWave = [0.78, 0.86, 1.12, 0.94, 1.08, 1.25, 1.03]
+  const clickWave = [0.84, 0.9, 1.04, 0.72, 0.88, 1.18, 0.97]
+  const cartWave = [0.72, 0.82, 0.76, 0.64, 0.74, 0.98, 0.88]
+  const orderWave = [0.66, 0.74, 0.68, 0.56, 0.63, 0.82, 0.77]
+  const spendWave = [0.88, 0.84, 0.79, 0.93, 1.02, 0.97, 1.11]
+
+  return Array.from({ length: 7 }, (_, index) => ({
     date: `2026-05-${String(6 + index).padStart(2, '0')}`,
-    impressions: base + index * 620,
-    clicks: Math.round((base + index * 620) * 0.058),
-    cartAdds: 90 + index * 11,
-    orderedItems: 28 + index * 3,
-    spend: spendBase + index * 145,
+    impressions: Math.round(base * impressionWave[index]),
+    clicks: Math.round(base * 0.058 * clickWave[index]),
+    cartAdds: Math.round(base * 0.008 * cartWave[index]),
+    orderedItems: Math.round(base * 0.003 * orderWave[index]),
+    spend: Math.round(spendBase * spendWave[index]),
   }))
+}
 
 const createCampaign = (
   id: string,

@@ -3,6 +3,7 @@ import {
   advertisingPlatformOptions,
   calculateAdvertisingSummary,
   createAdvertisingCampaignRows,
+  createStatisticPolylinePoints,
   filterAdvertisingCampaigns,
   filterAdvertisingProductClusters,
   findAdvertisingCampaignById,
@@ -116,5 +117,14 @@ describe('storeAdvertising data contract', () => {
       'orderedItems',
       'spend',
     ])
+  })
+
+  it('generates distinct chart lines for the statistics metrics', () => {
+    const campaign = findAdvertisingCampaignById('ad-cp-1001')
+    const lines = getStatisticsMetricOptions().map((option) =>
+      createStatisticPolylinePoints(campaign?.statistics ?? [], option.value, 720, 220)
+    )
+
+    expect(new Set(lines).size).toBeGreaterThanOrEqual(4)
   })
 })
