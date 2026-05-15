@@ -149,11 +149,19 @@ const createClusters = (productId: string, queries: string[]): AdvertisingSearch
     orders: 45 - index * 4,
   }))
 
+const productSampleImages = [
+  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2284%22 height=%2284%22 viewBox=%220 0 84 84%22%3E%3Crect width=%2284%22 height=%2284%22 rx=%2218%22 fill=%22%23eaf4ff%22/%3E%3Crect x=%2228%22 y=%2212%22 width=%2228%22 height=%2260%22 rx=%228%22 fill=%22%232563eb%22/%3E%3Crect x=%2232%22 y=%2218%22 width=%2220%22 height=%2248%22 rx=%224%22 fill=%22%23dbeafe%22/%3E%3Ccircle cx=%2242%22 cy=%2261%22 r=%222%22 fill=%22%232563eb%22/%3E%3C/svg%3E',
+  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2284%22 height=%2284%22 viewBox=%220 0 84 84%22%3E%3Crect width=%2284%22 height=%2284%22 rx=%2218%22 fill=%22%23ecfdf5%22/%3E%3Cpath d=%22M22 38h40v18a8 8 0 0 1-8 8H30a8 8 0 0 1-8-8V38Z%22 fill=%22%2310b981%22/%3E%3Cpath d=%22M29 31a13 13 0 0 1 26 0v7h-6v-7a7 7 0 0 0-14 0v7h-6v-7Z%22 fill=%22%23047857%22/%3E%3Ccircle cx=%2242%22 cy=%2251%22 r=%225%22 fill=%22%23d1fae5%22/%3E%3C/svg%3E',
+  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2284%22 height=%2284%22 viewBox=%220 0 84 84%22%3E%3Crect width=%2284%22 height=%2284%22 rx=%2218%22 fill=%22%23fff7ed%22/%3E%3Cpath d=%22M23 34c0-9 7-16 16-16h6c9 0 16 7 16 16v16c0 9-7 16-16 16h-6c-9 0-16-7-16-16V34Z%22 fill=%22%23f97316%22/%3E%3Cpath d=%22M32 34h20v18H32z%22 fill=%22%23fed7aa%22/%3E%3Cpath d=%22M33 28h18%22 stroke=%22%23fff7ed%22 stroke-width=%224%22 stroke-linecap=%22round%22/%3E%3C/svg%3E',
+  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2284%22 height=%2284%22 viewBox=%220 0 84 84%22%3E%3Crect width=%2284%22 height=%2284%22 rx=%2218%22 fill=%22%23f5f3ff%22/%3E%3Cpath d=%22M25 26h34v32H25z%22 fill=%22%238b5cf6%22/%3E%3Cpath d=%22M31 32h22v20H31z%22 fill=%22%23ddd6fe%22/%3E%3Cpath d=%22M36 64h12%22 stroke=%22%236d28d9%22 stroke-width=%225%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M42 58v7%22 stroke=%22%236d28d9%22 stroke-width=%225%22/%3E%3C/svg%3E',
+]
+
 const flagshipProducts: AdvertisingCampaignProduct[] = [
   {
     id: 'wb-ip15-case',
     sku: 'WB-IP15-CASE',
     name: 'iPhone 15 透明防摔壳',
+    image: productSampleImages[0],
     searchClusters: createClusters('wb-ip15-case', [
       'iphone 15 case',
       'iphone clear case',
@@ -165,42 +173,49 @@ const flagshipProducts: AdvertisingCampaignProduct[] = [
     id: 'wb-usbc-cable',
     sku: 'WB-USBC-100',
     name: '快充 USB-C 数据线',
+    image: productSampleImages[1],
     searchClusters: createClusters('wb-usbc-cable', ['type c cable', 'fast charge cable']),
   },
   {
     id: 'wb-watch-band',
     sku: 'WB-WATCH-BAND',
     name: '智能手表硅胶表带',
+    image: productSampleImages[2],
     searchClusters: createClusters('wb-watch-band', ['watch band', 'smart watch strap']),
   },
   {
     id: 'wb-airbuds',
     sku: 'WB-AIRBUDS',
     name: '蓝牙耳机收纳套',
+    image: productSampleImages[3],
     searchClusters: createClusters('wb-airbuds', ['earbuds case', 'wireless earphone cover']),
   },
   {
     id: 'wb-powerbank',
     sku: 'WB-PB-20K',
     name: '20000mAh 移动电源',
+    image: productSampleImages[0],
     searchClusters: createClusters('wb-powerbank', ['power bank', 'portable charger']),
   },
   {
     id: 'wb-screen',
     sku: 'WB-SCREEN-IP',
     name: '高清钢化膜',
+    image: productSampleImages[1],
     searchClusters: createClusters('wb-screen', ['screen protector', 'tempered glass']),
   },
   {
     id: 'wb-car-holder',
     sku: 'WB-CAR-HOLDER',
     name: '车载磁吸支架',
+    image: productSampleImages[2],
     searchClusters: createClusters('wb-car-holder', ['car phone holder', 'magnetic holder']),
   },
   {
     id: 'wb-charger',
     sku: 'WB-GAN-65',
     name: '65W GaN 充电器',
+    image: productSampleImages[3],
     searchClusters: createClusters('wb-charger', ['gan charger', '65w charger']),
   },
 ]

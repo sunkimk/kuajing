@@ -11,9 +11,20 @@
   --advertising-color-control-border: var(--color-border-2);
   --advertising-control-height: var(--size-default, 32px);
   --advertising-radius: 8px;
+  --workspace-color-primary: var(--advertising-color-primary);
+  --workspace-color-text: var(--advertising-color-text);
+  --workspace-color-text-secondary: var(--advertising-color-text-secondary);
+  --workspace-color-text-tertiary: var(--advertising-color-text-tertiary);
+  --workspace-color-bg: var(--advertising-color-bg);
+  --workspace-color-fill: var(--advertising-color-fill);
+  --workspace-color-border: var(--advertising-color-border);
+  --workspace-color-hover-bg: var(--advertising-color-hover-bg);
+  --workspace-color-control-border: var(--advertising-color-control-border);
+  --workspace-control-height: var(--advertising-control-height);
+  --workspace-radius: var(--advertising-radius);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   padding-top: 16px;
   color: var(--advertising-color-text);
 }
@@ -42,42 +53,15 @@
   line-height: 28px;
 }
 
-.advertising-page-header p {
-  margin: 0;
-  color: var(--advertising-color-text-secondary);
-  font-size: 13px;
-  line-height: 20px;
-}
-
 .advertising-page-header-actions,
 .advertising-section-actions,
 .advertising-expanded-actions,
-.advertising-product-actions,
-.advertising-toolbar-actions,
-.advertising-filter-actions,
-.advertising-bulk-actions {
+.advertising-product-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-.advertising-scope-picker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--advertising-color-text-secondary);
-  font-size: 12px;
-  line-height: 20px;
-}
-
-.advertising-scope-picker > span {
-  white-space: nowrap;
-}
-
-.advertising-scope-select {
-  width: 220px;
 }
 
 .advertising-back-button {
@@ -89,9 +73,6 @@
   line-height: 20px;
 }
 
-.advertising-filter-row,
-.advertising-activity-toolbar,
-.advertising-bulk-action-bar,
 .advertising-detail-budget-card,
 .advertising-statistics-section,
 .advertising-products-section,
@@ -103,88 +84,117 @@
   background: var(--advertising-color-bg);
 }
 
-.advertising-activity-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 12px;
-}
-
-.advertising-toolbar-primary,
-.advertising-toolbar-actions {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.advertising-toolbar-primary {
-  flex: 1 1 520px;
-}
-
 .advertising-create-button {
   min-width: 112px;
 }
 
-.advertising-toolbar-search {
-  width: min(420px, 100%);
+.advertising-filter-panel .arco-select-view-multiple {
+  height: var(--workspace-control-height, var(--size-default, 32px));
+  min-height: var(--workspace-control-height, var(--size-default, 32px));
+  align-items: center;
+  margin-left: -1px;
+  border-color: var(--workspace-color-control-border, var(--color-border-2));
+  border-radius: 0 var(--workspace-radius, var(--border-radius-medium)) var(--workspace-radius, var(--border-radius-medium)) 0;
+  background: var(--workspace-color-bg, var(--color-bg-2));
+  box-shadow: none;
 }
 
-.advertising-toolbar-date {
-  width: 300px;
+.advertising-filter-panel .arco-select-view-multiple:hover,
+.advertising-filter-panel .arco-select-view-multiple:focus-within,
+.advertising-filter-panel .arco-select-view-multiple.arco-select-view-focus {
+  border-color: var(--workspace-color-primary, rgb(var(--primary-6)));
+  background: var(--workspace-color-bg, var(--color-bg-2));
+  box-shadow: 0 4px 10px rgba(var(--primary-6), 0.12);
 }
 
-.advertising-filter-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
-  gap: 12px 16px;
-  align-items: end;
-  padding: 12px;
-}
-
-.advertising-filter-field {
-  display: flex;
+.advertising-filter-panel .arco-select-view-multiple .arco-select-view-inner {
   min-width: 0;
-  flex-direction: column;
-  gap: 6px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
-.advertising-filter-field > span {
-  color: var(--advertising-color-text-tertiary);
-  font-size: 12px;
-  line-height: 18px;
+.advertising-filter-panel .arco-select-view-inner.arco-select-view-nowrap {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
-.advertising-filter-actions {
-  align-self: end;
+.advertising-filter-panel .arco-select-view-multiple .arco-select-view-tag,
+.advertising-filter-panel .arco-select-view-multiple .arco-select-view-input {
+  height: 22px;
+  min-height: 22px;
+  margin-top: 0;
+  margin-bottom: 0;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.advertising-filter-panel .arco-select-view-multiple .arco-select-view-tag {
+  max-width: 96px;
+  overflow: hidden;
+}
+
+.advertising-filter-panel .arco-select-view-multiple .arco-tag-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.advertising-table-footer-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .advertising-bulk-action-bar {
-  display: flex;
+  display: inline-flex;
+  height: var(--workspace-control-height, var(--size-default, 32px));
+  min-height: var(--workspace-control-height, var(--size-default, 32px));
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  padding: 10px 12px;
+  color: var(--advertising-color-text-secondary);
+  font-size: 13px;
+  line-height: var(--workspace-control-height, var(--size-default, 32px));
 }
 
 .advertising-bulk-selected-count {
-  color: var(--advertising-color-text-secondary);
-  font-size: 13px;
-  line-height: 20px;
+  display: inline-flex;
+  height: var(--workspace-control-height, var(--size-default, 32px));
+  align-items: center;
 }
 
 .advertising-bulk-selected-count span {
-  color: var(--advertising-color-primary);
-  font-weight: 600;
+  color: var(--advertising-color-text);
+  font-weight: 500;
 }
 
 .advertising-bulk-cancel {
+  display: inline-flex;
+  height: var(--workspace-control-height, var(--size-default, 32px));
+  align-items: center;
+  color: var(--advertising-color-primary);
   cursor: pointer;
-  font-size: 13px;
-  line-height: 20px;
-  user-select: none;
+  line-height: var(--workspace-control-height, var(--size-default, 32px));
+}
+
+.advertising-bulk-action-bar .arco-btn {
+  display: inline-flex;
+  height: var(--workspace-control-height, var(--size-default, 32px));
+  align-items: center;
+  border-radius: var(--advertising-radius);
+  padding: 0 15px;
+}
+
+.advertising-bulk-action-placeholder {
+  flex: 1 1 auto;
+}
+
+.advertising-pagination {
+  margin-left: auto;
 }
 
 .advertising-statistics-filter {
@@ -208,21 +218,48 @@
   --workspace-color-hover-bg: var(--advertising-color-hover-bg);
 }
 
-.store-advertising-table .arco-table-th {
-  background: var(--advertising-color-fill);
+.store-advertising-table .arco-table-element {
+  min-width: 100%;
 }
 
-.store-advertising-campaign-table .arco-table-td,
 .store-advertising-campaign-table .arco-table-th {
-  font-size: 12px;
+  background: var(--advertising-color-fill);
+  color: var(--advertising-color-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.store-advertising-campaign-table .arco-table-td {
+  color: var(--advertising-color-text);
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 .advertising-campaign-cell {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   text-align: left;
+}
+
+.advertising-campaign-cell .arco-switch {
+  flex: 0 0 auto;
+}
+
+.advertising-campaign-thumb-badge {
+  flex: 0 0 auto;
+}
+
+.advertising-campaign-thumb-badge .arco-badge-number {
+  min-width: 14px;
+  height: 14px;
+  padding: 0 4px;
+  background: var(--color-fill-3);
+  color: var(--advertising-color-text-secondary);
+  font-size: 10px;
+  line-height: 14px;
+  box-shadow: 0 0 0 1px var(--advertising-color-bg);
 }
 
 .advertising-campaign-thumb,
@@ -239,6 +276,10 @@
   color: var(--advertising-color-text-tertiary);
   font-size: 12px;
   box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+.advertising-campaign-thumb {
+  border-radius: 6px;
 }
 
 .advertising-campaign-image,
@@ -259,6 +300,10 @@
   gap: 2px;
 }
 
+.advertising-campaign-copy {
+  gap: 4px;
+}
+
 .advertising-link-button {
   display: inline-flex;
   max-width: 100%;
@@ -269,10 +314,20 @@
   color: var(--advertising-color-primary);
   cursor: pointer;
   font: inherit;
+  font-size: 14px;
   font-weight: 500;
+  line-height: 24px;
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.store-advertising-campaign-table:not(.is-auto-wrap) .advertising-link-button,
+.store-advertising-campaign-table:not(.is-auto-wrap) .advertising-campaign-meta {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .advertising-link-button:hover,
@@ -285,7 +340,7 @@
   min-width: 0;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .advertising-campaign-id,
@@ -301,6 +356,12 @@
   color: var(--advertising-color-text-tertiary);
   font-size: 12px;
   line-height: 18px;
+}
+
+.store-advertising-campaign-table:not(.is-auto-wrap) .advertising-campaign-id {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .advertising-status-pill {
@@ -698,15 +759,6 @@
 }
 
 @media (max-width: 1199px) {
-  .advertising-filter-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .advertising-filter-actions {
-    grid-column: 1 / -1;
-    justify-content: flex-start;
-  }
-
   .advertising-kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -733,7 +785,6 @@
 
 @media (max-width: 767px) {
   .advertising-page-header,
-  .advertising-activity-toolbar,
   .advertising-section-header,
   .advertising-expanded-toolbar,
   .advertising-cluster-filter-row {
@@ -742,7 +793,6 @@
   }
 
   .advertising-page-header-actions,
-  .advertising-toolbar-actions,
   .advertising-section-actions,
   .advertising-expanded-actions,
   .advertising-product-actions,
@@ -750,19 +800,9 @@
     justify-content: flex-start;
   }
 
-  .advertising-filter-row,
   .advertising-kpi-grid,
   .advertising-detail-budget-card {
     grid-template-columns: 1fr;
-  }
-
-  .advertising-toolbar-primary,
-  .advertising-toolbar-search,
-  .advertising-toolbar-date,
-  .advertising-scope-picker,
-  .advertising-scope-select {
-    width: 100%;
-    max-width: none;
   }
 
   .advertising-statistics-filter,

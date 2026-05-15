@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { Message } from '@arco-design/web-vue'
-import { IconPlus, IconRefresh, IconSettings } from '@arco-design/web-vue/es/icon'
+import { IconPlus, IconSettings } from '@arco-design/web-vue/es/icon'
 import { useRouter } from 'vue-router'
 import type { ConfigurableTableColumn } from '../../data/configurableTable'
 import ConfigurableDataTable from '../common/ConfigurableDataTable.vue'
+import QueryActionBar from '../common/QueryActionBar.vue'
+import QueryFilterItem from '../common/QueryFilterItem.vue'
+import QueryFilterPanel from '../common/QueryFilterPanel.vue'
 import {
   advertisingPlatformOptions,
   budgetStatusOptions,
@@ -18,7 +21,6 @@ import {
   getAdvertisingStoreOptions,
   getCampaignStatusClass,
   getCampaignStatusLabel,
-  resolveAdvertisingScopeLabel,
   type AdvertisingCampaign,
   type AdvertisingCampaignType,
   type AdvertisingPlatform,
@@ -46,14 +48,18 @@ const loading = ref(false)
 const settingsVisible = ref(false)
 const createVisible = ref(false)
 const selectedRowKeys = ref<(string | number)[]>([])
+const currentPage = ref(1)
+const pageSize = ref(10)
 const createForm = ref<{
   platform?: AdvertisingPlatform
   campaignType?: AdvertisingCampaignType
 }>({})
 
 const filteredRows = computed(() => filterAdvertisingCampaigns(allRows.value, filters.value))
+const pagedRows = computed(() =>
+  filteredRows.value.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value)
+)
 const storeOptions = computed(() => getAdvertisingStoreOptions(filters.value.platforms))
-const scopeLabel = computed(() => resolveAdvertisingScopeLabel(filters.value.platforms, filters.value.storeIds))
 
 const defaultVisibleKeys: AdvertisingCampaignColumnKey[] = [
   'campaign',
@@ -80,7 +86,7 @@ const campaignRowSelection = {
 }
 
 const columns: AdvertisingCampaignTableColumn[] = [
-  { settingsKey: 'campaign', title: '活动', dataIndex: 'campaign', slotName: 'campaign', width: 280, minWidth: 260, align: 'left' },
+  { settingsKey: 'campaign', title: '活动', dataIndex: 'campaign', slotName: 'campaign', width: 320, minWidth: 300, align: 'left' },
   { settingsKey: 'platform', title: '平台', dataIndex: 'platform', width: 132, minWidth: 120, align: 'center' },
   { settingsKey: 'store', title: '店铺', dataIndex: 'store', slotName: 'store', width: 180, minWidth: 168, align: 'left' },
   { settingsKey: 'campaignType', title: '活动类型', dataIndex: 'campaignType', width: 104, minWidth: 96, align: 'center' },
@@ -105,18 +111,13 @@ const getCtr = (record: AdvertisingCampaign) =>
 const getSpendRatio = (record: AdvertisingCampaign) =>
   record.budget > 0 ? `${(record.spend / record.budget * 100).toFixed(1)}%` : '0.0%'
 
-const handleSearch = () => {}
+const handleSearch = () => {
+  currentPage.value = 1
+}
 
 const resetFilters = () => {
   filters.value = createDefaultAdvertisingFilters()
   handleSearch()
-}
-
-const refreshData = () => {
-  loading.value = true
-  allRows.value = createAdvertisingCampaignRows()
-  selectedRowKeys.value = []
-  loading.value = false
 }
 
 const isCampaignStatusEditable = (status: AdvertisingCampaign['status']) =>
@@ -130,11 +131,6 @@ const toggleStatus = (record: AdvertisingCampaign) => {
       ? { ...row, status: row.status === 'active' ? 'paused' : 'active' }
       : row
   )
-}
-
-const filterActiveCampaigns = () => {
-  filters.value = { ...filters.value, statuses: ['active'] }
-  handleSearch()
 }
 
 const clearCampaignSelection = () => {
@@ -188,6 +184,11 @@ watch(() => filters.value.platforms, () => {
 watch(filteredRows, (rows) => {
   const rowKeySet = new Set(rows.map((row) => row.id))
   selectedRowKeys.value = selectedRowKeys.value.filter((rowKey) => rowKeySet.has(String(rowKey)))
+  currentPage.value = Math.min(currentPage.value, Math.max(1, Math.ceil(rows.length / pageSize.value)))
+})
+
+watch(pageSize, () => {
+  currentPage.value = 1
 })
 </script>
 
@@ -196,75 +197,55 @@ watch(filteredRows, (rows) => {
     <section class="advertising-page-header">
       <div class="advertising-page-header-copy">
         <h1>广告推广</h1>
-        <p>统一查看多平台、多店铺广告活动、预算消耗与转化表现。</p>
       </div>
 
       <div class="advertising-page-header-actions">
-        <label class="advertising-scope-picker">
-          <span>广告范围</span>
-          <a-select
-            v-model="filters.storeIds"
-            multiple
-            allow-clear
-            :max-tag-count="1"
-            :placeholder="scopeLabel"
-            class="advertising-scope-select"
-            @change="handleSearch"
-          >
-            <a-option v-for="option in storeOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </a-option>
-          </a-select>
-        </label>
         <a-button type="primary" class="advertising-create-button" @click="createVisible = true">
           <template #icon>
             <icon-plus />
           </template>
           创建活动
         </a-button>
-        <a-button :loading="loading" @click="refreshData">
-          <template #icon>
-            <icon-refresh />
-          </template>
-          刷新
-        </a-button>
       </div>
     </section>
 
-    <section class="advertising-activity-toolbar">
-      <div class="advertising-toolbar-primary">
+    <QueryFilterPanel class="advertising-filter-panel">
+      <QueryFilterItem label="关键词" width="420px" min-width="320px">
         <a-input-search
           v-model="filters.keyword"
           allow-clear
-          class="advertising-toolbar-search"
           placeholder="通过活动ID或名称搜索"
           @search="handleSearch"
           @press-enter="handleSearch"
           @clear="handleSearch"
         />
-      </div>
+      </QueryFilterItem>
 
-      <div class="advertising-toolbar-actions">
+      <QueryFilterItem label="店铺" width="240px" min-width="200px">
+        <a-select
+          v-model="filters.storeIds"
+          multiple
+          allow-clear
+          :max-tag-count="1"
+          placeholder="全部店铺"
+          @change="handleSearch"
+        >
+          <a-option v-for="option in storeOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </a-option>
+        </a-select>
+      </QueryFilterItem>
+
+      <QueryFilterItem label="日期" width="300px" min-width="260px">
         <a-range-picker
           v-model="filters.dateRange"
           value-format="YYYY-MM-DD"
           :placeholder="['开始日期', '结束日期']"
-          class="advertising-toolbar-date"
           @change="handleSearch"
         />
-        <a-tooltip content="定制列">
-          <a-button class="icon-button" size="small" aria-label="定制列" @click="settingsVisible = true">
-            <template #icon>
-              <icon-settings />
-            </template>
-          </a-button>
-        </a-tooltip>
-      </div>
-    </section>
+      </QueryFilterItem>
 
-    <section class="advertising-filter-row">
-      <label class="advertising-filter-field">
-        <span>活动状态</span>
+      <QueryFilterItem label="活动状态" width="220px" min-width="190px">
         <a-select
           v-model="filters.statuses"
           multiple
@@ -277,10 +258,9 @@ watch(filteredRows, (rows) => {
             {{ option.label }}
           </a-option>
         </a-select>
-      </label>
+      </QueryFilterItem>
 
-      <label class="advertising-filter-field">
-        <span>活动类型</span>
+      <QueryFilterItem label="活动类型" width="220px" min-width="190px">
         <a-select
           v-model="filters.campaignTypes"
           multiple
@@ -293,10 +273,9 @@ watch(filteredRows, (rows) => {
             {{ option.label }}
           </a-option>
         </a-select>
-      </label>
+      </QueryFilterItem>
 
-      <label class="advertising-filter-field">
-        <span>预算状态</span>
+      <QueryFilterItem label="预算状态" width="220px" min-width="190px">
         <a-select
           v-model="filters.budgetStatuses"
           multiple
@@ -309,34 +288,20 @@ watch(filteredRows, (rows) => {
             {{ option.label }}
           </a-option>
         </a-select>
-      </label>
+      </QueryFilterItem>
 
-      <div class="advertising-filter-actions">
+      <QueryActionBar>
         <a-button type="primary" class="action-button" @click="handleSearch">查询</a-button>
         <a-button class="action-button" @click="resetFilters">重置</a-button>
-        <a-button class="action-button" @click="filterActiveCampaigns">投放中</a-button>
-      </div>
-    </section>
-
-    <section v-if="selectedRowKeys.length" class="advertising-bulk-action-bar">
-      <span class="advertising-bulk-selected-count">
-        已选 <span>{{ selectedRowKeys.length }}</span> / {{ filteredRows.length }} 条
-      </span>
-      <div class="advertising-bulk-actions">
-        <span
-          class="arco-link advertising-bulk-cancel"
-          role="button"
-          tabindex="0"
-          @click="clearCampaignSelection"
-          @keydown.enter.prevent="clearCampaignSelection"
-          @keydown.space.prevent="clearCampaignSelection"
-        >
-          取消选择
-        </span>
-        <a-button status="danger" @click="bulkUpdateSelectedCampaigns('paused')">批量关闭</a-button>
-        <a-button type="primary" @click="bulkUpdateSelectedCampaigns('active')">批量开启</a-button>
-      </div>
-    </section>
+        <a-tooltip content="定制列">
+          <a-button size="small" class="icon-button" aria-label="定制列" @click="settingsVisible = true">
+            <template #icon>
+              <icon-settings />
+            </template>
+          </a-button>
+        </a-tooltip>
+      </QueryActionBar>
+    </QueryFilterPanel>
 
     <ConfigurableDataTable
       v-model:selected-keys="selectedRowKeys"
@@ -346,7 +311,7 @@ watch(filteredRows, (rows) => {
       :required-keys="requiredKeys"
       :pinned-column-keys="pinnedColumnKeys"
       :default-freeze-last-column="true"
-      :data="filteredRows"
+      :data="pagedRows"
       :row-selection="campaignRowSelection"
       row-key="id"
       :pagination="false"
@@ -362,15 +327,15 @@ watch(filteredRows, (rows) => {
             :disabled="!isCampaignStatusEditable(record.status)"
             @change="() => toggleStatus(record)"
           />
-          <span class="advertising-campaign-thumb">
-            <img
-              v-if="record.products[0]?.image"
-              :src="record.products[0].image"
-              :alt="record.products[0].name"
-              class="advertising-campaign-image"
-            />
-            <span v-else>{{ record.platform.slice(0, 2) }}</span>
-          </span>
+          <a-badge :count="record.products.length" class="advertising-campaign-thumb-badge">
+            <span class="advertising-campaign-thumb">
+              <img
+                :src="record.products[0]?.image"
+                :alt="record.products[0]?.name || record.campaignName"
+                class="advertising-campaign-image"
+              />
+            </span>
+          </a-badge>
           <span class="advertising-campaign-copy">
             <button type="button" class="advertising-link-button" @click="openDetail(record)">
               {{ record.campaignName }}
@@ -421,6 +386,40 @@ watch(filteredRows, (rows) => {
           <a-button type="text" size="small" @click="openStatistics(record)">统计</a-button>
           <a-button type="text" size="small" @click="openDetail(record)">详情</a-button>
         </a-space>
+      </template>
+
+      <template #footer>
+        <div class="advertising-table-footer-row">
+          <div v-if="selectedRowKeys.length" class="advertising-bulk-action-bar">
+            <span class="advertising-bulk-selected-count">
+              已选 <span>{{ selectedRowKeys.length }}</span> / {{ filteredRows.length }} 条
+            </span>
+            <span
+              class="arco-link advertising-bulk-cancel"
+              role="button"
+              tabindex="0"
+              @click="clearCampaignSelection"
+              @keydown.enter.prevent="clearCampaignSelection"
+              @keydown.space.prevent="clearCampaignSelection"
+            >
+              取消选择
+            </span>
+            <a-button @click="bulkUpdateSelectedCampaigns('paused')">批量关闭</a-button>
+            <a-button @click="bulkUpdateSelectedCampaigns('active')">批量开启</a-button>
+          </div>
+          <span v-else class="advertising-bulk-action-placeholder" aria-hidden="true" />
+
+          <a-pagination
+            v-model:current="currentPage"
+            v-model:page-size="pageSize"
+            class="advertising-pagination"
+            :total="filteredRows.length"
+            :page-size-options="[10, 20, 50]"
+            show-total
+            show-jumper
+            show-page-size
+          />
+        </div>
       </template>
     </ConfigurableDataTable>
 

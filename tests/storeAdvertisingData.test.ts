@@ -32,6 +32,12 @@ describe('storeAdvertising data contract', () => {
     expect(largestClusterCount).toBeGreaterThanOrEqual(4)
   })
 
+  it('provides sample product images for campaign thumbnails', () => {
+    const rows = createAdvertisingCampaignRows()
+
+    expect(rows.every((row) => row.products[0]?.image?.startsWith('data:image/svg+xml,'))).toBe(true)
+  })
+
   it('exposes the supported platform options in display order', () => {
     expect(advertisingPlatformOptions.map((option) => option.value)).toEqual([
       'Wildberries',
