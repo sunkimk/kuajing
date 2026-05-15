@@ -54,7 +54,8 @@
 .advertising-expanded-actions,
 .advertising-product-actions,
 .advertising-toolbar-actions,
-.advertising-filter-actions {
+.advertising-filter-actions,
+.advertising-bulk-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -62,27 +63,21 @@
   flex-wrap: wrap;
 }
 
-.advertising-scope-chip {
+.advertising-scope-picker {
   display: inline-flex;
-  height: 32px;
-  max-width: 320px;
   align-items: center;
   gap: 8px;
-  padding: 0 12px;
-  border: 1px solid var(--advertising-color-border);
-  border-radius: 6px;
-  background: var(--advertising-color-bg);
   color: var(--advertising-color-text-secondary);
   font-size: 12px;
   line-height: 20px;
 }
 
-.advertising-scope-chip strong {
-  overflow: hidden;
-  color: var(--advertising-color-text);
-  font-weight: 600;
-  text-overflow: ellipsis;
+.advertising-scope-picker > span {
   white-space: nowrap;
+}
+
+.advertising-scope-select {
+  width: 220px;
 }
 
 .advertising-back-button {
@@ -94,9 +89,9 @@
   line-height: 20px;
 }
 
-.advertising-scope-bar,
 .advertising-filter-row,
 .advertising-activity-toolbar,
+.advertising-bulk-action-bar,
 .advertising-detail-budget-card,
 .advertising-statistics-section,
 .advertising-products-section,
@@ -106,24 +101,6 @@
   border: 1px solid var(--advertising-color-border);
   border-radius: var(--advertising-radius);
   background: var(--advertising-color-bg);
-}
-
-.advertising-scope-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  font-size: 13px;
-  line-height: 20px;
-}
-
-.advertising-scope-bar span {
-  color: var(--advertising-color-text-secondary);
-}
-
-.advertising-scope-bar strong {
-  color: var(--advertising-color-text);
-  font-weight: 600;
 }
 
 .advertising-activity-toolbar {
@@ -161,7 +138,7 @@
 
 .advertising-filter-row {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
   gap: 12px 16px;
   align-items: end;
   padding: 12px;
@@ -182,6 +159,32 @@
 
 .advertising-filter-actions {
   align-self: end;
+}
+
+.advertising-bulk-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+.advertising-bulk-selected-count {
+  color: var(--advertising-color-text-secondary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.advertising-bulk-selected-count span {
+  color: var(--advertising-color-primary);
+  font-weight: 600;
+}
+
+.advertising-bulk-cancel {
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 20px;
+  user-select: none;
 }
 
 .advertising-statistics-filter {
@@ -756,7 +759,8 @@
   .advertising-toolbar-primary,
   .advertising-toolbar-search,
   .advertising-toolbar-date,
-  .advertising-scope-chip {
+  .advertising-scope-picker,
+  .advertising-scope-select {
     width: 100%;
     max-width: none;
   }

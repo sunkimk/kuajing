@@ -76,16 +76,37 @@ describe('store advertising source contracts', () => {
   })
 
   it('uses a reference-style advertising activity toolbar on the homepage', () => {
-    expect(workbenchSource).toContain('class="advertising-scope-chip"')
-    expect(workbenchSource).toMatch(/class="advertising-page-header-actions"[\s\S]*?广告范围[\s\S]*?scopeLabel[\s\S]*?<icon-refresh/)
+    expect(workbenchSource).toContain('class="advertising-scope-picker"')
+    expect(workbenchSource).toContain('class="advertising-scope-select"')
+    expect(workbenchSource).toContain('v-model="filters.storeIds"')
+    expect(workbenchSource).toContain('v-for="option in storeOptions"')
+    expect(workbenchSource).toMatch(/class="advertising-page-header-actions"[\s\S]*?广告范围[\s\S]*?创建活动[\s\S]*?<icon-refresh/)
     expect(workbenchSource).not.toContain('<section class="advertising-scope-bar">')
     expect(workbenchSource).not.toContain('<MetricSummaryStrip')
     expect(workbenchSource).toContain('class="advertising-activity-toolbar"')
     expect(workbenchSource).not.toContain('<h2>活动</h2>')
+    expect(workbenchSource).not.toMatch(/class="advertising-toolbar-primary"[\s\S]*?<a-button type="primary" class="advertising-create-button"/)
     expect(workbenchSource).toContain('通过活动ID或名称搜索')
     expect(workbenchSource).toContain('class="advertising-toolbar-search"')
     expect(workbenchSource).toContain('class="advertising-toolbar-date"')
-    expect(workbenchSource).toContain('筛选器')
+    expect(workbenchSource).not.toContain('筛选器')
+    expect(workbenchSource).not.toContain('IconFilter')
+    expect(workbenchSource).not.toContain('advancedFiltersVisible')
+    expect(workbenchSource).toMatch(/class="advertising-filter-row"[\s\S]*?<span>活动状态<\/span>[\s\S]*?<span>活动类型<\/span>[\s\S]*?<span>预算状态<\/span>/)
+  })
+
+  it('supports advertising campaign bulk selection actions', () => {
+    expect(workbenchSource).toContain('const selectedRowKeys = ref')
+    expect(workbenchSource).toContain('const campaignRowSelection = {')
+    expect(workbenchSource).toContain('v-model:selected-keys="selectedRowKeys"')
+    expect(workbenchSource).toContain(':row-selection="campaignRowSelection"')
+    expect(workbenchSource).toContain('class="advertising-bulk-action-bar"')
+    expect(workbenchSource).toContain('已选 <span>{{ selectedRowKeys.length }}</span> / {{ filteredRows.length }} 条')
+    expect(workbenchSource).toContain('取消选择')
+    expect(workbenchSource).toContain('批量关闭')
+    expect(workbenchSource).toContain('批量开启')
+    expect(workbenchSource).toContain("bulkUpdateSelectedCampaigns('paused')")
+    expect(workbenchSource).toContain("bulkUpdateSelectedCampaigns('active')")
   })
 
   it('renders the advertising detail shell', () => {
@@ -111,8 +132,10 @@ describe('store advertising source contracts', () => {
     [
       '.store-advertising-workbench',
       '.advertising-page-header',
-      '.advertising-scope-chip',
+      '.advertising-scope-picker',
+      '.advertising-scope-select',
       '.advertising-activity-toolbar',
+      '.advertising-bulk-action-bar',
       '.store-advertising-table',
       '.advertising-detail-budget-card',
       '.advertising-product-expanded',

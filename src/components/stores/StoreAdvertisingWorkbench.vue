@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { IconFilter, IconPlus, IconRefresh, IconSettings } from '@arco-design/web-vue/es/icon'
+import { Message } from '@arco-design/web-vue'
+import { IconPlus, IconRefresh, IconSettings } from '@arco-design/web-vue/es/icon'
 import { useRouter } from 'vue-router'
 import type { ConfigurableTableColumn } from '../../data/configurableTable'
 import ConfigurableDataTable from '../common/ConfigurableDataTable.vue'
@@ -44,7 +45,7 @@ const allRows = ref(createAdvertisingCampaignRows())
 const loading = ref(false)
 const settingsVisible = ref(false)
 const createVisible = ref(false)
-const advancedFiltersVisible = ref(false)
+const selectedRowKeys = ref<(string | number)[]>([])
 const createForm = ref<{
   platform?: AdvertisingPlatform
   campaignType?: AdvertisingCampaignType
@@ -69,6 +70,14 @@ const defaultVisibleKeys: AdvertisingCampaignColumnKey[] = [
 
 const requiredKeys: AdvertisingCampaignColumnKey[] = ['campaign']
 const pinnedColumnKeys: AdvertisingCampaignColumnKey[] = ['campaign']
+
+const campaignRowSelection = {
+  type: 'checkbox' as const,
+  showCheckedAll: true,
+  onlyCurrent: true,
+  fixed: true,
+  width: 48,
+}
 
 const columns: AdvertisingCampaignTableColumn[] = [
   { settingsKey: 'campaign', title: '活动', dataIndex: 'campaign', slotName: 'campaign', width: 280, minWidth: 260, align: 'left' },
@@ -106,11 +115,15 @@ const resetFilters = () => {
 const refreshData = () => {
   loading.value = true
   allRows.value = createAdvertisingCampaignRows()
+  selectedRowKeys.value = []
   loading.value = false
 }
 
+const isCampaignStatusEditable = (status: AdvertisingCampaign['status']) =>
+  status === 'active' || status === 'paused'
+
 const toggleStatus = (record: AdvertisingCampaign) => {
-  if (!['active', 'paused'].includes(record.status)) return
+  if (!isCampaignStatusEditable(record.status)) return
 
   allRows.value = allRows.value.map((row) =>
     row.id === record.id
@@ -122,6 +135,33 @@ const toggleStatus = (record: AdvertisingCampaign) => {
 const filterActiveCampaigns = () => {
   filters.value = { ...filters.value, statuses: ['active'] }
   handleSearch()
+}
+
+const clearCampaignSelection = () => {
+  selectedRowKeys.value = []
+}
+
+const bulkUpdateSelectedCampaigns = (status: Extract<AdvertisingCampaign['status'], 'active' | 'paused'>) => {
+  const selectedKeys = new Set(selectedRowKeys.value.map(String))
+  if (selectedKeys.size === 0) return
+
+  let updatedCount = 0
+  allRows.value = allRows.value.map((row) => {
+    if (!selectedKeys.has(row.id) || !isCampaignStatusEditable(row.status) || row.status === status) {
+      return row
+    }
+
+    updatedCount += 1
+    return { ...row, status }
+  })
+
+  if (updatedCount > 0) {
+    Message.success(`已${status === 'active' ? '开启' : '关闭'} ${updatedCount} 个活动`)
+  } else {
+    Message.info('所选活动无需调整')
+  }
+
+  clearCampaignSelection()
 }
 
 const openDetail = (record: AdvertisingCampaign) => {
@@ -144,6 +184,11 @@ watch(() => filters.value.platforms, () => {
     filters.value = { ...filters.value, storeIds: nextStoreIds }
   }
 })
+
+watch(filteredRows, (rows) => {
+  const rowKeySet = new Set(rows.map((row) => row.id))
+  selectedRowKeys.value = selectedRowKeys.value.filter((rowKey) => rowKeySet.has(String(rowKey)))
+})
 </script>
 
 <template>
@@ -155,10 +200,28 @@ watch(() => filters.value.platforms, () => {
       </div>
 
       <div class="advertising-page-header-actions">
-        <div class="advertising-scope-chip">
+        <label class="advertising-scope-picker">
           <span>广告范围</span>
-          <strong>{{ scopeLabel }}</strong>
-        </div>
+          <a-select
+            v-model="filters.storeIds"
+            multiple
+            allow-clear
+            :max-tag-count="1"
+            :placeholder="scopeLabel"
+            class="advertising-scope-select"
+            @change="handleSearch"
+          >
+            <a-option v-for="option in storeOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </a-option>
+          </a-select>
+        </label>
+        <a-button type="primary" class="advertising-create-button" @click="createVisible = true">
+          <template #icon>
+            <icon-plus />
+          </template>
+          创建活动
+        </a-button>
         <a-button :loading="loading" @click="refreshData">
           <template #icon>
             <icon-refresh />
@@ -170,12 +233,6 @@ watch(() => filters.value.platforms, () => {
 
     <section class="advertising-activity-toolbar">
       <div class="advertising-toolbar-primary">
-        <a-button type="primary" class="advertising-create-button" @click="createVisible = true">
-          <template #icon>
-            <icon-plus />
-          </template>
-          创建活动
-        </a-button>
         <a-input-search
           v-model="filters.keyword"
           allow-clear
@@ -195,12 +252,6 @@ watch(() => filters.value.platforms, () => {
           class="advertising-toolbar-date"
           @change="handleSearch"
         />
-        <a-button @click="advancedFiltersVisible = !advancedFiltersVisible">
-          <template #icon>
-            <icon-filter />
-          </template>
-          筛选器
-        </a-button>
         <a-tooltip content="定制列">
           <a-button class="icon-button" size="small" aria-label="定制列" @click="settingsVisible = true">
             <template #icon>
@@ -211,39 +262,7 @@ watch(() => filters.value.platforms, () => {
       </div>
     </section>
 
-    <section v-if="advancedFiltersVisible" class="advertising-filter-row">
-      <label class="advertising-filter-field">
-        <span>平台</span>
-        <a-select
-          v-model="filters.platforms"
-          multiple
-          allow-clear
-          :max-tag-count="1"
-          placeholder="全部平台"
-          @change="handleSearch"
-        >
-          <a-option v-for="option in advertisingPlatformOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </a-option>
-        </a-select>
-      </label>
-
-      <label class="advertising-filter-field">
-        <span>店铺</span>
-        <a-select
-          v-model="filters.storeIds"
-          multiple
-          allow-clear
-          :max-tag-count="1"
-          placeholder="全部店铺"
-          @change="handleSearch"
-        >
-          <a-option v-for="option in storeOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </a-option>
-        </a-select>
-      </label>
-
+    <section class="advertising-filter-row">
       <label class="advertising-filter-field">
         <span>活动状态</span>
         <a-select
@@ -299,7 +318,28 @@ watch(() => filters.value.platforms, () => {
       </div>
     </section>
 
+    <section v-if="selectedRowKeys.length" class="advertising-bulk-action-bar">
+      <span class="advertising-bulk-selected-count">
+        已选 <span>{{ selectedRowKeys.length }}</span> / {{ filteredRows.length }} 条
+      </span>
+      <div class="advertising-bulk-actions">
+        <span
+          class="arco-link advertising-bulk-cancel"
+          role="button"
+          tabindex="0"
+          @click="clearCampaignSelection"
+          @keydown.enter.prevent="clearCampaignSelection"
+          @keydown.space.prevent="clearCampaignSelection"
+        >
+          取消选择
+        </span>
+        <a-button status="danger" @click="bulkUpdateSelectedCampaigns('paused')">批量关闭</a-button>
+        <a-button type="primary" @click="bulkUpdateSelectedCampaigns('active')">批量开启</a-button>
+      </div>
+    </section>
+
     <ConfigurableDataTable
+      v-model:selected-keys="selectedRowKeys"
       v-model:settings-visible="settingsVisible"
       :columns="columns"
       :default-visible-keys="defaultVisibleKeys"
@@ -307,6 +347,7 @@ watch(() => filters.value.platforms, () => {
       :pinned-column-keys="pinnedColumnKeys"
       :default-freeze-last-column="true"
       :data="filteredRows"
+      :row-selection="campaignRowSelection"
       row-key="id"
       :pagination="false"
       :loading="loading"
@@ -318,7 +359,7 @@ watch(() => filters.value.platforms, () => {
           <a-switch
             size="small"
             :model-value="record.status === 'active'"
-            :disabled="!['active', 'paused'].includes(record.status)"
+            :disabled="!isCampaignStatusEditable(record.status)"
             @change="() => toggleStatus(record)"
           />
           <span class="advertising-campaign-thumb">
