@@ -1,12 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { IconRefresh, IconSettings } from '@arco-design/web-vue/es/icon'
+import { IconFilter, IconPlus, IconRefresh, IconSettings } from '@arco-design/web-vue/es/icon'
 import { useRouter } from 'vue-router'
 import type { ConfigurableTableColumn } from '../../data/configurableTable'
-import MetricSummaryStrip from '../common/MetricSummaryStrip.vue'
-import QueryActionBar from '../common/QueryActionBar.vue'
-import QueryFilterItem from '../common/QueryFilterItem.vue'
-import QueryFilterPanel from '../common/QueryFilterPanel.vue'
 import ConfigurableDataTable from '../common/ConfigurableDataTable.vue'
 import {
   advertisingPlatformOptions,
@@ -14,7 +10,6 @@ import {
   campaignStatusOptions,
   campaignTypeOptions,
   createAdvertisingCampaignRows,
-  createAdvertisingSummaryCards,
   createDefaultAdvertisingFilters,
   filterAdvertisingCampaigns,
   formatAdvertisingMoney,
@@ -49,13 +44,13 @@ const allRows = ref(createAdvertisingCampaignRows())
 const loading = ref(false)
 const settingsVisible = ref(false)
 const createVisible = ref(false)
+const advancedFiltersVisible = ref(false)
 const createForm = ref<{
   platform?: AdvertisingPlatform
   campaignType?: AdvertisingCampaignType
 }>({})
 
 const filteredRows = computed(() => filterAdvertisingCampaigns(allRows.value, filters.value))
-const summaryCards = computed(() => createAdvertisingSummaryCards(filteredRows.value))
 const storeOptions = computed(() => getAdvertisingStoreOptions(filters.value.platforms))
 const scopeLabel = computed(() => resolveAdvertisingScopeLabel(filters.value.platforms, filters.value.storeIds))
 
@@ -160,23 +155,66 @@ watch(() => filters.value.platforms, () => {
       </div>
 
       <div class="advertising-page-header-actions">
+        <div class="advertising-scope-chip">
+          <span>广告范围</span>
+          <strong>{{ scopeLabel }}</strong>
+        </div>
         <a-button :loading="loading" @click="refreshData">
           <template #icon>
             <icon-refresh />
           </template>
           刷新
         </a-button>
-        <a-button type="primary" @click="createVisible = true">创建活动</a-button>
       </div>
     </section>
 
-    <section class="advertising-scope-bar">
-      <span>当前范围</span>
-      <strong>{{ scopeLabel }}</strong>
+    <section class="advertising-activity-toolbar">
+      <div class="advertising-toolbar-primary">
+        <h2>活动</h2>
+        <a-button type="primary" class="advertising-create-button" @click="createVisible = true">
+          <template #icon>
+            <icon-plus />
+          </template>
+          创建活动
+        </a-button>
+        <a-input-search
+          v-model="filters.keyword"
+          allow-clear
+          class="advertising-toolbar-search"
+          placeholder="通过活动ID或名称搜索"
+          @search="handleSearch"
+          @press-enter="handleSearch"
+          @clear="handleSearch"
+        />
+      </div>
+
+      <div class="advertising-toolbar-actions">
+        <a-range-picker
+          v-model="filters.dateRange"
+          value-format="YYYY-MM-DD"
+          :placeholder="['开始日期', '结束日期']"
+          class="advertising-toolbar-date"
+          @change="handleSearch"
+        />
+        <a-button @click="advancedFiltersVisible = !advancedFiltersVisible">
+          <template #icon>
+            <icon-filter />
+          </template>
+          筛选器
+        </a-button>
+        <a-tooltip content="定制列">
+          <a-button class="icon-button" size="small" aria-label="定制列" @click="settingsVisible = true">
+            <template #icon>
+              <icon-settings />
+            </template>
+          </a-button>
+        </a-tooltip>
+      </div>
     </section>
 
-    <section class="advertising-filter-row">
-      <QueryFilterItem label="平台" width="320px" min-width="280px">
+    <section v-if="advancedFiltersVisible" class="advertising-filter-row">
+      <label class="advertising-filter-field">
+        <span>平台</span>
         <a-select
           v-model="filters.platforms"
           multiple
@@ -189,9 +227,10 @@ watch(() => filters.value.platforms, () => {
             {{ option.label }}
           </a-option>
         </a-select>
-      </QueryFilterItem>
+      </label>
 
-      <QueryFilterItem label="店铺" width="320px" min-width="280px">
+      <label class="advertising-filter-field">
+        <span>店铺</span>
         <a-select
           v-model="filters.storeIds"
           multiple
@@ -204,33 +243,10 @@ watch(() => filters.value.platforms, () => {
             {{ option.label }}
           </a-option>
         </a-select>
-      </QueryFilterItem>
+      </label>
 
-      <QueryFilterItem label="日期范围" width="340px" min-width="320px">
-        <a-range-picker
-          v-model="filters.dateRange"
-          value-format="YYYY-MM-DD"
-          :placeholder="['开始日期', '结束日期']"
-          @change="handleSearch"
-        />
-      </QueryFilterItem>
-    </section>
-
-    <MetricSummaryStrip :cards="summaryCards" :columns="4" />
-
-    <QueryFilterPanel>
-      <QueryFilterItem label="关键词" width="360px" min-width="320px">
-        <a-input-search
-          v-model="filters.keyword"
-          allow-clear
-          placeholder="搜索活动 / 店铺 / 商品 / 词集"
-          @search="handleSearch"
-          @press-enter="handleSearch"
-          @clear="handleSearch"
-        />
-      </QueryFilterItem>
-
-      <QueryFilterItem label="活动状态">
+      <label class="advertising-filter-field">
+        <span>活动状态</span>
         <a-select
           v-model="filters.statuses"
           multiple
@@ -243,9 +259,10 @@ watch(() => filters.value.platforms, () => {
             {{ option.label }}
           </a-option>
         </a-select>
-      </QueryFilterItem>
+      </label>
 
-      <QueryFilterItem label="活动类型">
+      <label class="advertising-filter-field">
+        <span>活动类型</span>
         <a-select
           v-model="filters.campaignTypes"
           multiple
@@ -258,9 +275,10 @@ watch(() => filters.value.platforms, () => {
             {{ option.label }}
           </a-option>
         </a-select>
-      </QueryFilterItem>
+      </label>
 
-      <QueryFilterItem label="预算状态">
+      <label class="advertising-filter-field">
+        <span>预算状态</span>
         <a-select
           v-model="filters.budgetStatuses"
           multiple
@@ -273,28 +291,14 @@ watch(() => filters.value.platforms, () => {
             {{ option.label }}
           </a-option>
         </a-select>
-      </QueryFilterItem>
+      </label>
 
-      <QueryActionBar>
+      <div class="advertising-filter-actions">
         <a-button type="primary" class="action-button" @click="handleSearch">查询</a-button>
         <a-button class="action-button" @click="resetFilters">重置</a-button>
         <a-button class="action-button" @click="filterActiveCampaigns">投放中</a-button>
-        <a-tooltip content="定制列">
-          <a-button class="icon-button" size="small" aria-label="定制列" @click="settingsVisible = true">
-            <template #icon>
-              <icon-settings />
-            </template>
-          </a-button>
-        </a-tooltip>
-        <a-tooltip content="刷新">
-          <a-button class="icon-button" size="small" aria-label="刷新" :loading="loading" @click="refreshData">
-            <template #icon>
-              <icon-refresh />
-            </template>
-          </a-button>
-        </a-tooltip>
-      </QueryActionBar>
-    </QueryFilterPanel>
+      </div>
+    </section>
 
     <ConfigurableDataTable
       v-model:settings-visible="settingsVisible"

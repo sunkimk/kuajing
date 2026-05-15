@@ -70,10 +70,22 @@ describe('store advertising source contracts', () => {
     expect(workbenchSource).toContain('店铺')
     expect(workbenchSource).toContain('scopeLabel')
     expect(workbenchSource).toContain('ConfigurableDataTable')
-    expect(workbenchSource).toContain('createAdvertisingSummaryCards')
     expect(workbenchSource).toContain('router.push(`/stores/ads/${record.id}`)')
     expect(workbenchSource).toContain('router.push(`/stores/ads/${record.id}/statistics`)')
     expect(workbenchSource).toContain('创建活动')
+  })
+
+  it('uses a reference-style advertising activity toolbar on the homepage', () => {
+    expect(workbenchSource).toContain('class="advertising-scope-chip"')
+    expect(workbenchSource).toMatch(/class="advertising-page-header-actions"[\s\S]*?广告范围[\s\S]*?scopeLabel[\s\S]*?<icon-refresh/)
+    expect(workbenchSource).not.toContain('<section class="advertising-scope-bar">')
+    expect(workbenchSource).not.toContain('<MetricSummaryStrip')
+    expect(workbenchSource).toContain('class="advertising-activity-toolbar"')
+    expect(workbenchSource).toContain('<h2>活动</h2>')
+    expect(workbenchSource).toContain('通过活动ID或名称搜索')
+    expect(workbenchSource).toContain('class="advertising-toolbar-search"')
+    expect(workbenchSource).toContain('class="advertising-toolbar-date"')
+    expect(workbenchSource).toContain('筛选器')
   })
 
   it('renders the advertising detail shell', () => {
@@ -99,7 +111,8 @@ describe('store advertising source contracts', () => {
     [
       '.store-advertising-workbench',
       '.advertising-page-header',
-      '.advertising-scope-bar',
+      '.advertising-scope-chip',
+      '.advertising-activity-toolbar',
       '.store-advertising-table',
       '.advertising-detail-budget-card',
       '.advertising-product-expanded',
