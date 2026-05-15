@@ -1,95 +1,416 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { IconRefresh, IconSettings } from '@arco-design/web-vue/es/icon'
 import { useRouter } from 'vue-router'
-import ConfigurableDataTable from '../common/ConfigurableDataTable.vue'
 import type { ConfigurableTableColumn } from '../../data/configurableTable'
-import type { AdvertisingCampaign } from '../../data/storeAdvertising'
+import MetricSummaryStrip from '../common/MetricSummaryStrip.vue'
+import QueryActionBar from '../common/QueryActionBar.vue'
+import QueryFilterItem from '../common/QueryFilterItem.vue'
+import QueryFilterPanel from '../common/QueryFilterPanel.vue'
+import ConfigurableDataTable from '../common/ConfigurableDataTable.vue'
 import {
+  advertisingPlatformOptions,
+  budgetStatusOptions,
+  campaignStatusOptions,
+  campaignTypeOptions,
   createAdvertisingCampaignRows,
   createAdvertisingSummaryCards,
+  createDefaultAdvertisingFilters,
+  filterAdvertisingCampaigns,
   formatAdvertisingMoney,
+  formatAdvertisingNumber,
+  getAdvertisingStoreOptions,
+  getCampaignStatusClass,
   getCampaignStatusLabel,
   resolveAdvertisingScopeLabel,
+  type AdvertisingCampaign,
+  type AdvertisingCampaignType,
+  type AdvertisingPlatform,
 } from '../../data/storeAdvertising'
 import './storeAdvertising.css'
 
-const router = useRouter()
-const rows = ref(createAdvertisingCampaignRows())
-const selectedPlatforms = ref([])
-const selectedStoreIds = ref([])
-const summaryCards = computed(() => createAdvertisingSummaryCards(rows.value))
-const scopeLabel = computed(() => resolveAdvertisingScopeLabel(selectedPlatforms.value, selectedStoreIds.value))
+type AdvertisingCampaignColumnKey =
+  | 'campaign'
+  | 'platform'
+  | 'store'
+  | 'campaignType'
+  | 'budgetBalance'
+  | 'todaySpend'
+  | 'impressions'
+  | 'ctr'
+  | 'orders'
+  | 'spendRatio'
 
-const columns: ConfigurableTableColumn[] = [
-  { title: '活动名称', dataIndex: 'campaignName', settingsKey: 'campaignName', slotName: 'campaignName', width: 220 },
-  { title: '平台', dataIndex: 'platform', settingsKey: 'platform', width: 140 },
-  { title: '店铺', dataIndex: 'storeName', settingsKey: 'storeName', width: 180 },
-  { title: '状态', dataIndex: 'status', settingsKey: 'status', slotName: 'status', width: 120 },
-  { title: '预算', dataIndex: 'budget', settingsKey: 'budget', slotName: 'budget', width: 140 },
-  { title: '操作', dataIndex: 'operations', settingsKey: 'operations', slotName: 'operations', width: 180 },
+type AdvertisingCampaignTableColumn = ConfigurableTableColumn<AdvertisingCampaignColumnKey> & { title: string }
+
+const router = useRouter()
+const filters = ref(createDefaultAdvertisingFilters())
+const allRows = ref(createAdvertisingCampaignRows())
+const loading = ref(false)
+const settingsVisible = ref(false)
+const createVisible = ref(false)
+const createForm = ref<{
+  platform?: AdvertisingPlatform
+  campaignType?: AdvertisingCampaignType
+}>({})
+
+const filteredRows = computed(() => filterAdvertisingCampaigns(allRows.value, filters.value))
+const summaryCards = computed(() => createAdvertisingSummaryCards(filteredRows.value))
+const storeOptions = computed(() => getAdvertisingStoreOptions(filters.value.platforms))
+const scopeLabel = computed(() => resolveAdvertisingScopeLabel(filters.value.platforms, filters.value.storeIds))
+
+const defaultVisibleKeys: AdvertisingCampaignColumnKey[] = [
+  'campaign',
+  'platform',
+  'store',
+  'campaignType',
+  'budgetBalance',
+  'todaySpend',
+  'impressions',
+  'ctr',
+  'orders',
+  'spendRatio',
 ]
 
-const defaultVisibleKeys = ['campaignName', 'platform', 'storeName', 'status', 'budget', 'operations']
+const requiredKeys: AdvertisingCampaignColumnKey[] = ['campaign']
+const pinnedColumnKeys: AdvertisingCampaignColumnKey[] = ['campaign']
 
-const handleCreateCampaign = () => {}
+const columns: AdvertisingCampaignTableColumn[] = [
+  { settingsKey: 'campaign', title: '活动', dataIndex: 'campaign', slotName: 'campaign', width: 280, minWidth: 260, align: 'left' },
+  { settingsKey: 'platform', title: '平台', dataIndex: 'platform', width: 132, minWidth: 120, align: 'center' },
+  { settingsKey: 'store', title: '店铺', dataIndex: 'store', slotName: 'store', width: 180, minWidth: 168, align: 'left' },
+  { settingsKey: 'campaignType', title: '活动类型', dataIndex: 'campaignType', width: 104, minWidth: 96, align: 'center' },
+  { settingsKey: 'budgetBalance', title: '预算余额', dataIndex: 'budgetBalance', slotName: 'budgetBalance', width: 132, minWidth: 124, align: 'right' },
+  { settingsKey: 'todaySpend', title: '今日消耗', dataIndex: 'todaySpend', slotName: 'todaySpend', width: 132, minWidth: 124, align: 'right' },
+  { settingsKey: 'impressions', title: '曝光', dataIndex: 'impressions', slotName: 'impressions', width: 124, minWidth: 116, align: 'right' },
+  { settingsKey: 'ctr', title: 'CTR', dataIndex: 'ctr', slotName: 'ctr', width: 92, minWidth: 84, align: 'right' },
+  { settingsKey: 'orders', title: '订单', dataIndex: 'orders', width: 88, minWidth: 80, align: 'right' },
+  { settingsKey: 'spendRatio', title: '消耗占比', dataIndex: 'spendRatio', slotName: 'spendRatio', width: 112, minWidth: 104, align: 'right' },
+  { title: '操作', slotName: 'operation', width: 112, align: 'center' },
+]
 
-const openCampaignDetail = (record: AdvertisingCampaign) => {
+const getBudgetBalance = (record: AdvertisingCampaign) =>
+  Math.max(record.budget - record.spend, 0)
+
+const getTodaySpend = (record: AdvertisingCampaign) =>
+  record.statistics.at(-1)?.spend ?? 0
+
+const getCtr = (record: AdvertisingCampaign) =>
+  record.impressions > 0 ? `${(record.clicks / record.impressions * 100).toFixed(1)}%` : '0.0%'
+
+const getSpendRatio = (record: AdvertisingCampaign) =>
+  record.budget > 0 ? `${(record.spend / record.budget * 100).toFixed(1)}%` : '0.0%'
+
+const handleSearch = () => {}
+
+const resetFilters = () => {
+  filters.value = createDefaultAdvertisingFilters()
+  handleSearch()
+}
+
+const refreshData = () => {
+  loading.value = true
+  allRows.value = createAdvertisingCampaignRows()
+  loading.value = false
+}
+
+const toggleStatus = (record: AdvertisingCampaign) => {
+  if (!['active', 'paused'].includes(record.status)) return
+
+  allRows.value = allRows.value.map((row) =>
+    row.id === record.id
+      ? { ...row, status: row.status === 'active' ? 'paused' : 'active' }
+      : row
+  )
+}
+
+const filterActiveCampaigns = () => {
+  filters.value = { ...filters.value, statuses: ['active'] }
+  handleSearch()
+}
+
+const openDetail = (record: AdvertisingCampaign) => {
   router.push(`/stores/ads/${record.id}`)
 }
 
-const openCampaignStatistics = (record: AdvertisingCampaign) => {
+const openStatistics = (record: AdvertisingCampaign) => {
   router.push(`/stores/ads/${record.id}/statistics`)
 }
+
+const confirmCreate = () => {
+  createVisible.value = false
+}
+
+watch(() => filters.value.platforms, () => {
+  const allowedStoreIds = new Set(storeOptions.value.map((option) => option.value))
+  const nextStoreIds = filters.value.storeIds.filter((storeId) => allowedStoreIds.has(storeId))
+
+  if (nextStoreIds.length !== filters.value.storeIds.length) {
+    filters.value = { ...filters.value, storeIds: nextStoreIds }
+  }
+})
 </script>
 
 <template>
   <div class="store-advertising-workbench">
     <section class="advertising-page-header">
-      <div>
+      <div class="advertising-page-header-copy">
         <h1>广告推广</h1>
-        <p>{{ scopeLabel }}</p>
+        <p>统一查看多平台、多店铺广告活动、预算消耗与转化表现。</p>
       </div>
-      <a-button type="primary" @click="handleCreateCampaign">创建活动</a-button>
+
+      <div class="advertising-page-header-actions">
+        <a-button :loading="loading" @click="refreshData">
+          <template #icon>
+            <icon-refresh />
+          </template>
+          刷新
+        </a-button>
+        <a-button type="primary" @click="createVisible = true">创建活动</a-button>
+      </div>
+    </section>
+
+    <section class="advertising-scope-bar">
+      <span>当前范围</span>
+      <strong>{{ scopeLabel }}</strong>
     </section>
 
     <section class="advertising-filter-row">
-      <span>平台</span>
-      <span>店铺</span>
+      <QueryFilterItem label="平台" width="320px" min-width="280px">
+        <a-select
+          v-model="filters.platforms"
+          multiple
+          allow-clear
+          :max-tag-count="1"
+          placeholder="全部平台"
+          @change="handleSearch"
+        >
+          <a-option v-for="option in advertisingPlatformOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </a-option>
+        </a-select>
+      </QueryFilterItem>
+
+      <QueryFilterItem label="店铺" width="320px" min-width="280px">
+        <a-select
+          v-model="filters.storeIds"
+          multiple
+          allow-clear
+          :max-tag-count="1"
+          placeholder="全部店铺"
+          @change="handleSearch"
+        >
+          <a-option v-for="option in storeOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </a-option>
+        </a-select>
+      </QueryFilterItem>
+
+      <QueryFilterItem label="日期范围" width="340px" min-width="320px">
+        <a-range-picker
+          v-model="filters.dateRange"
+          value-format="YYYY-MM-DD"
+          :placeholder="['开始日期', '结束日期']"
+          @change="handleSearch"
+        />
+      </QueryFilterItem>
     </section>
 
-    <section class="advertising-summary-grid">
-      <div v-for="card in summaryCards" :key="card.label" class="advertising-summary-card">
-        <span>{{ card.label }}</span>
-        <strong>{{ card.value }}</strong>
-        <small>{{ card.note }}</small>
-      </div>
-    </section>
+    <MetricSummaryStrip :cards="summaryCards" :columns="4" />
+
+    <QueryFilterPanel>
+      <QueryFilterItem label="关键词" width="360px" min-width="320px">
+        <a-input-search
+          v-model="filters.keyword"
+          allow-clear
+          placeholder="搜索活动 / 店铺 / 商品 / 词集"
+          @search="handleSearch"
+          @press-enter="handleSearch"
+          @clear="handleSearch"
+        />
+      </QueryFilterItem>
+
+      <QueryFilterItem label="活动状态">
+        <a-select
+          v-model="filters.statuses"
+          multiple
+          allow-clear
+          :max-tag-count="1"
+          placeholder="全部状态"
+          @change="handleSearch"
+        >
+          <a-option v-for="option in campaignStatusOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </a-option>
+        </a-select>
+      </QueryFilterItem>
+
+      <QueryFilterItem label="活动类型">
+        <a-select
+          v-model="filters.campaignTypes"
+          multiple
+          allow-clear
+          :max-tag-count="1"
+          placeholder="全部类型"
+          @change="handleSearch"
+        >
+          <a-option v-for="option in campaignTypeOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </a-option>
+        </a-select>
+      </QueryFilterItem>
+
+      <QueryFilterItem label="预算状态">
+        <a-select
+          v-model="filters.budgetStatuses"
+          multiple
+          allow-clear
+          :max-tag-count="1"
+          placeholder="全部预算"
+          @change="handleSearch"
+        >
+          <a-option v-for="option in budgetStatusOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </a-option>
+        </a-select>
+      </QueryFilterItem>
+
+      <QueryActionBar>
+        <a-button type="primary" class="action-button" @click="handleSearch">查询</a-button>
+        <a-button class="action-button" @click="resetFilters">重置</a-button>
+        <a-button class="action-button" @click="filterActiveCampaigns">投放中</a-button>
+        <a-tooltip content="定制列">
+          <a-button class="icon-button" size="small" aria-label="定制列" @click="settingsVisible = true">
+            <template #icon>
+              <icon-settings />
+            </template>
+          </a-button>
+        </a-tooltip>
+        <a-tooltip content="刷新">
+          <a-button class="icon-button" size="small" aria-label="刷新" :loading="loading" @click="refreshData">
+            <template #icon>
+              <icon-refresh />
+            </template>
+          </a-button>
+        </a-tooltip>
+      </QueryActionBar>
+    </QueryFilterPanel>
 
     <ConfigurableDataTable
+      v-model:settings-visible="settingsVisible"
       :columns="columns"
       :default-visible-keys="defaultVisibleKeys"
-      :data="rows"
+      :required-keys="requiredKeys"
+      :pinned-column-keys="pinnedColumnKeys"
+      :default-freeze-last-column="true"
+      :data="filteredRows"
       row-key="id"
       :pagination="false"
+      :loading="loading"
       wrapper-class="store-advertising-table"
+      table-class="store-advertising-campaign-table"
     >
-      <template #campaignName="{ record }">
-        <button type="button" class="advertising-link-button" @click="openCampaignDetail(record)">
-          {{ record.campaignName }}
-        </button>
+      <template #campaign="{ record }">
+        <div class="advertising-campaign-cell">
+          <a-switch
+            size="small"
+            :model-value="record.status === 'active'"
+            :disabled="!['active', 'paused'].includes(record.status)"
+            @change="() => toggleStatus(record)"
+          />
+          <span class="advertising-campaign-thumb">
+            <img
+              v-if="record.products[0]?.image"
+              :src="record.products[0].image"
+              :alt="record.products[0].name"
+              class="advertising-campaign-image"
+            />
+            <span v-else>{{ record.platform.slice(0, 2) }}</span>
+          </span>
+          <span class="advertising-campaign-copy">
+            <button type="button" class="advertising-link-button" @click="openDetail(record)">
+              {{ record.campaignName }}
+            </button>
+            <span class="advertising-campaign-meta">
+              <span class="advertising-status-pill" :class="getCampaignStatusClass(record.status)">
+                {{ getCampaignStatusLabel(record.status) }}
+              </span>
+              <span class="advertising-campaign-id">{{ record.id }}</span>
+            </span>
+          </span>
+        </div>
       </template>
-      <template #status="{ record }">
-        {{ getCampaignStatusLabel(record.status) }}
+
+      <template #store="{ record }">
+        <div class="advertising-store-cell">
+          <strong>{{ record.storeName }}</strong>
+          <span>{{ record.region }}</span>
+        </div>
       </template>
-      <template #budget="{ record }">
-        {{ formatAdvertisingMoney(record.budget, record.currencySymbol) }}
+
+      <template #budgetBalance="{ record }">
+        <span class="advertising-number-cell">
+          {{ formatAdvertisingMoney(getBudgetBalance(record), record.currencySymbol) }}
+        </span>
       </template>
-      <template #operations="{ record }">
+
+      <template #todaySpend="{ record }">
+        <span class="advertising-number-cell">
+          {{ formatAdvertisingMoney(getTodaySpend(record), record.currencySymbol) }}
+        </span>
+      </template>
+
+      <template #impressions="{ record }">
+        <span class="advertising-number-cell">{{ formatAdvertisingNumber(record.impressions) }}</span>
+      </template>
+
+      <template #ctr="{ record }">
+        <span class="advertising-number-cell">{{ getCtr(record) }}</span>
+      </template>
+
+      <template #spendRatio="{ record }">
+        <span class="advertising-number-cell">{{ getSpendRatio(record) }}</span>
+      </template>
+
+      <template #operation="{ record }">
         <a-space>
-          <a-button size="mini" @click="openCampaignDetail(record)">详情</a-button>
-          <a-button size="mini" @click="openCampaignStatistics(record)">统计</a-button>
+          <a-button type="text" size="small" @click="openStatistics(record)">统计</a-button>
+          <a-button type="text" size="small" @click="openDetail(record)">详情</a-button>
         </a-space>
       </template>
     </ConfigurableDataTable>
+
+    <a-modal
+      v-model:visible="createVisible"
+      title="创建活动"
+      width="600px"
+      simple
+      align-center
+      title-align="start"
+    >
+      <a-form :model="createForm" layout="vertical" class="advertising-create-form">
+        <a-form-item label="平台">
+          <a-select v-model="createForm.platform" placeholder="请选择平台">
+            <a-option v-for="option in advertisingPlatformOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </a-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="活动类型">
+          <a-select v-model="createForm.campaignType" placeholder="请选择活动类型">
+            <a-option v-for="option in campaignTypeOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </a-option>
+          </a-select>
+        </a-form-item>
+      </a-form>
+
+      <template #footer>
+        <a-space>
+          <a-button @click="createVisible = false">取消</a-button>
+          <a-button type="primary" @click="confirmCreate">确认</a-button>
+        </a-space>
+      </template>
+    </a-modal>
   </div>
 </template>
