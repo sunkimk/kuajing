@@ -57,7 +57,6 @@
   text-decoration: underline;
 }
 
-.sales-product-cell,
 .sales-shop-cell,
 .sales-stack-cell {
   display: flex;
@@ -67,27 +66,6 @@
   text-align: left;
 }
 
-.sales-product-media {
-  display: inline-flex;
-  width: 42px;
-  height: 42px;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  border-radius: 10px;
-  overflow: hidden;
-  background: var(--color-fill-2);
-  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
-}
-
-.sales-product-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.sales-product-copy,
 .sales-shop-copy,
 .sales-stack-copy {
   display: flex;
@@ -96,7 +74,6 @@
   gap: 2px;
 }
 
-.sales-product-copy strong,
 .sales-shop-copy strong,
 .sales-stack-copy strong {
   overflow: hidden;
@@ -108,7 +85,6 @@
   white-space: nowrap;
 }
 
-.sales-product-copy span,
 .sales-shop-copy span,
 .sales-stack-copy span {
   overflow: hidden;

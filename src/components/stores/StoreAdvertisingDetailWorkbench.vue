@@ -9,8 +9,8 @@ import {
   findAdvertisingCampaignById,
   formatAdvertisingMoney,
   formatAdvertisingNumber,
-  getCampaignStatusClass,
   getCampaignStatusLabel,
+  getCampaignStatusTagColor,
   type AdvertisingSearchCluster,
 } from '../../data/storeAdvertising'
 import './storeAdvertising.css'
@@ -121,9 +121,9 @@ const goStatistics = () => {
           </a-button>
           <div class="advertising-detail-title-row">
             <h1>{{ campaign.campaignName }}</h1>
-            <span class="advertising-status-pill" :class="getCampaignStatusClass(campaign.status)">
+            <a-tag :color="getCampaignStatusTagColor(campaign.status)">
               {{ getCampaignStatusLabel(campaign.status) }}
-            </span>
+            </a-tag>
           </div>
           <div class="advertising-detail-meta">
             <span>{{ campaign.platform }}</span>
@@ -193,7 +193,7 @@ const goStatistics = () => {
         </div>
 
         <div class="advertising-chart-card">
-          <svg viewBox="0 0 720 220" role="img" aria-label="展示次数趋势">
+          <svg class="advertising-chart-svg" viewBox="0 0 720 220" role="img" aria-label="展示次数趋势">
             <polyline
               :points="summaryLine"
               fill="none"

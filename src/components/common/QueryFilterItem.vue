@@ -41,6 +41,7 @@ const itemClass = computed(() => attrs.class as HTMLAttributes['class'])
 
 <style scoped>
 .query-filter-item {
+  --query-filter-radius: var(--workspace-filter-radius, var(--border-radius-medium, 4px));
   display: flex;
   max-width: none;
   align-items: stretch;
@@ -48,6 +49,8 @@ const itemClass = computed(() => attrs.class as HTMLAttributes['class'])
 
 .query-filter-item:hover :deep(.arco-select-view-single),
 .query-filter-item:focus-within :deep(.arco-select-view-single),
+.query-filter-item:hover :deep(.arco-select-view-multiple),
+.query-filter-item:focus-within :deep(.arco-select-view-multiple),
 .query-filter-item:hover :deep(.arco-input-wrapper),
 .query-filter-item:focus-within :deep(.arco-input-wrapper),
 .query-filter-item:hover :deep(.arco-input-number),
@@ -66,7 +69,7 @@ const itemClass = computed(() => attrs.class as HTMLAttributes['class'])
   padding: 0 16px;
   border: 1px solid var(--workspace-color-control-border, var(--color-border-2));
   border-right: 0;
-  border-radius: var(--workspace-radius, var(--border-radius-medium)) 0 0 var(--workspace-radius, var(--border-radius-medium));
+  border-radius: var(--query-filter-radius) 0 0 var(--query-filter-radius);
   background: var(--workspace-color-bg, var(--color-bg-2));
   color: var(--workspace-color-text-secondary, var(--color-text-2));
   font-size: 14px;
@@ -89,20 +92,76 @@ const itemClass = computed(() => attrs.class as HTMLAttributes['class'])
 }
 
 .query-filter-item :deep(.arco-select-view-single),
+.query-filter-item :deep(.arco-select-view-multiple),
 .query-filter-item :deep(.arco-input-wrapper),
 .query-filter-item :deep(.arco-input-number),
 .query-filter-item :deep(.arco-picker) {
   height: var(--workspace-control-height, var(--size-default, 32px));
+  min-height: var(--workspace-control-height, var(--size-default, 32px));
+  align-items: center;
   border-color: var(--workspace-color-control-border, var(--color-border-2));
-  border-radius: 0 var(--workspace-radius, var(--border-radius-medium)) var(--workspace-radius, var(--border-radius-medium)) 0;
+  border-radius: 0 var(--query-filter-radius) var(--query-filter-radius) 0;
   background: var(--workspace-color-bg, var(--color-bg-2));
   box-shadow: none;
 }
 
 .query-filter-item :deep(.arco-select-view-single),
+.query-filter-item :deep(.arco-select-view-multiple),
 .query-filter-item :deep(.arco-input-wrapper),
 .query-filter-item :deep(.arco-picker) {
   margin-left: -1px;
+}
+
+.query-filter-item :deep(.arco-select-view-multiple .arco-select-view-inner) {
+  display: flex;
+  height: 100%;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.query-filter-item :deep(.arco-select-view-inner.arco-select-view-nowrap) {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.query-filter-item :deep(.arco-select-view-multiple .arco-select-view-tag),
+.query-filter-item :deep(.arco-select-view-multiple .arco-select-view-input) {
+  height: 22px;
+  min-height: 22px;
+  flex-shrink: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.query-filter-item :deep(.arco-select-view-multiple .arco-select-view-tag) {
+  max-width: 120px;
+  overflow: hidden;
+}
+
+.query-filter-item :deep(.arco-select-view-multiple .arco-select-view-tag:first-child) {
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.query-filter-item :deep(.arco-select-view-multiple .arco-select-view-input) {
+  width: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.query-filter-item :deep(.arco-select-view-multiple .arco-tag-content) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .query-filter-item :deep(.arco-select-view-value),

@@ -327,13 +327,13 @@ watch(() => props.pageKey, (pageKey) => {
       </template>
 
       <template #product="{ record }">
-        <div class="sales-product-cell">
-          <span class="sales-product-media">
-            <img :src="record.productImage" :alt="record.productName" class="sales-product-image" />
+        <div class="configurable-table-media-cell">
+          <span class="configurable-table-media-frame">
+            <img :src="record.productImage" :alt="record.productName" class="configurable-table-media-image" />
           </span>
-          <div class="sales-product-copy">
-            <strong>{{ record.productName }}</strong>
-            <span class="sales-mono">{{ record.sku }}</span>
+          <div class="configurable-table-media-copy">
+            <strong class="configurable-table-media-title">{{ record.productName }}</strong>
+            <span class="configurable-table-media-description sales-mono">{{ record.sku }}</span>
           </div>
         </div>
       </template>

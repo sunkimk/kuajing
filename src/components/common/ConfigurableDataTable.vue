@@ -757,6 +757,66 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
+.configurable-data-table :deep(.configurable-table-media-cell) {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.configurable-data-table :deep(.configurable-table-media-frame) {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--workspace-color-hover-bg, var(--color-fill-2));
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+.configurable-data-table :deep(.configurable-table-media-image) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.configurable-data-table :deep(.configurable-table-media-copy) {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.configurable-data-table :deep(.configurable-table-media-title),
+.configurable-data-table :deep(.configurable-table-media-description) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.configurable-data-table :deep(.configurable-table-media-title) {
+  color: var(--workspace-color-text, var(--color-text-1));
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
+.configurable-data-table :deep(.configurable-table-media-description) {
+  color: var(--workspace-color-text-tertiary, var(--color-text-3));
+  font-size: 12px;
+  line-height: 18px;
+}
+
 .configurable-data-table-footer {
   display: flex;
   justify-content: flex-end;

@@ -88,60 +88,6 @@
   min-width: 112px;
 }
 
-.advertising-filter-panel .arco-select-view-multiple {
-  height: var(--workspace-control-height, var(--size-default, 32px));
-  min-height: var(--workspace-control-height, var(--size-default, 32px));
-  align-items: center;
-  margin-left: -1px;
-  border-color: var(--workspace-color-control-border, var(--color-border-2));
-  border-radius: 0 var(--workspace-radius, var(--border-radius-medium)) var(--workspace-radius, var(--border-radius-medium)) 0;
-  background: var(--workspace-color-bg, var(--color-bg-2));
-  box-shadow: none;
-}
-
-.advertising-filter-panel .arco-select-view-multiple:hover,
-.advertising-filter-panel .arco-select-view-multiple:focus-within,
-.advertising-filter-panel .arco-select-view-multiple.arco-select-view-focus {
-  border-color: var(--workspace-color-primary, rgb(var(--primary-6)));
-  background: var(--workspace-color-bg, var(--color-bg-2));
-  box-shadow: 0 4px 10px rgba(var(--primary-6), 0.12);
-}
-
-.advertising-filter-panel .arco-select-view-multiple .arco-select-view-inner {
-  min-width: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-.advertising-filter-panel .arco-select-view-inner.arco-select-view-nowrap {
-  display: flex;
-  height: 100%;
-  align-items: center;
-  flex-wrap: nowrap;
-  overflow: hidden;
-}
-
-.advertising-filter-panel .arco-select-view-multiple .arco-select-view-tag,
-.advertising-filter-panel .arco-select-view-multiple .arco-select-view-input {
-  height: 22px;
-  min-height: 22px;
-  margin-top: 0;
-  margin-bottom: 0;
-  line-height: 20px;
-  white-space: nowrap;
-}
-
-.advertising-filter-panel .arco-select-view-multiple .arco-select-view-tag {
-  max-width: 96px;
-  overflow: hidden;
-}
-
-.advertising-filter-panel .arco-select-view-multiple .arco-tag-content {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .advertising-table-footer-row {
   display: flex;
   width: 100%;
@@ -185,7 +131,7 @@
   display: inline-flex;
   height: var(--workspace-control-height, var(--size-default, 32px));
   align-items: center;
-  border-radius: var(--advertising-radius);
+  border-radius: var(--border-radius-medium);
   padding: 0 15px;
 }
 
@@ -235,16 +181,29 @@
   white-space: nowrap;
 }
 
+.advertising-status-toggle-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.advertising-status-toggle-cell .arco-switch {
+  flex: 0 0 auto;
+}
+
 .advertising-campaign-cell {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 14px;
   text-align: left;
 }
 
-.advertising-campaign-cell .arco-switch {
-  flex: 0 0 auto;
+.advertising-campaign-main {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 14px;
 }
 
 .advertising-campaign-thumb-badge {
@@ -364,41 +323,6 @@
   white-space: nowrap;
 }
 
-.advertising-status-pill {
-  display: inline-flex;
-  min-height: 22px;
-  align-items: center;
-  justify-content: center;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: rgba(78, 89, 105, 0.12);
-  color: #4e5969;
-  font-size: 12px;
-  line-height: 22px;
-  white-space: nowrap;
-}
-
-.advertising-status-pill.is-active {
-  background: rgba(var(--primary-6), 0.12);
-  color: var(--advertising-color-primary);
-}
-
-.advertising-status-pill.is-paused {
-  background: rgba(255, 125, 0, 0.14);
-  color: #ff7d00;
-}
-
-.advertising-status-pill.is-ended {
-  background: rgba(78, 89, 105, 0.12);
-  color: #4e5969;
-}
-
-.advertising-status-pill.is-draft,
-.advertising-status-pill.is-unknown {
-  background: var(--advertising-color-fill);
-  color: var(--advertising-color-text-secondary);
-}
-
 .advertising-store-cell strong,
 .advertising-product-main strong,
 .advertising-statistics-product-name strong {
@@ -419,6 +343,12 @@
 
 .advertising-create-form {
   padding-top: 4px;
+}
+
+.advertising-create-modal-footer {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
 }
 
 .advertising-detail-workbench,
@@ -532,8 +462,7 @@
   color: var(--advertising-color-primary);
 }
 
-.advertising-chart-card svg,
-.advertising-statistics-chart svg {
+.advertising-chart-svg {
   display: block;
   width: 100%;
   height: 220px;
@@ -832,8 +761,7 @@
     grid-column: 1 / -1;
   }
 
-  .advertising-chart-card svg,
-  .advertising-statistics-chart svg {
+  .advertising-chart-svg {
     height: 180px;
   }
 }

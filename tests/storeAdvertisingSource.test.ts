@@ -98,6 +98,13 @@ describe('store advertising source contracts', () => {
     expect(workbenchSource).toContain('<QueryFilterItem label="活动状态"')
     expect(workbenchSource).toContain('<QueryFilterItem label="活动类型"')
     expect(workbenchSource).toContain('<QueryFilterItem label="预算状态"')
+    expect(workbenchSource).toMatch(/<QueryFilterItem label="关键词"[\s\S]*?<QueryFilterItem label="店铺" width="320px" min-width="300px"[\s\S]*?<QueryFilterItem label="活动状态" width="280px" min-width="260px"[\s\S]*?<QueryFilterItem label="活动类型" width="260px" min-width="240px"[\s\S]*?<QueryFilterItem label="预算状态" width="320px" min-width="300px"[\s\S]*?<QueryFilterItem label="日期" width="300px" min-width="260px"[\s\S]*?<QueryActionBar>/)
+    expect(workbenchSource).toContain('const filterSelectWidths = ref')
+    expect(workbenchSource).toContain('const resolveFilterMaxTagCount = (selectedLabels: string[], availableWidth: number)')
+    expect(workbenchSource).toContain('ResizeObserver')
+    expect(workbenchSource).toMatch(/<QueryFilterItem label="店铺"[\s\S]*?data-filter-key="storeIds"[\s\S]*?:max-tag-count="storeFilterMaxTagCount"[\s\S]*?<QueryFilterItem label="活动状态"[\s\S]*?data-filter-key="statuses"[\s\S]*?:max-tag-count="statusFilterMaxTagCount"[\s\S]*?<QueryFilterItem label="活动类型"[\s\S]*?data-filter-key="campaignTypes"[\s\S]*?:max-tag-count="campaignTypeFilterMaxTagCount"[\s\S]*?<QueryFilterItem label="预算状态"[\s\S]*?data-filter-key="budgetStatuses"[\s\S]*?:max-tag-count="budgetStatusFilterMaxTagCount"/)
+    expect(workbenchSource).not.toContain(':max-tag-count="1"')
+    expect(workbenchSource).not.toContain(':max-tag-count="2"')
     expect(workbenchSource).toContain('<QueryActionBar>')
     expect(workbenchSource).not.toContain('@click="filterActiveCampaigns"')
     expect(workbenchSource).not.toContain('const filterActiveCampaigns')
@@ -115,10 +122,29 @@ describe('store advertising source contracts', () => {
   it('shows campaign sample images with product count badges', () => {
     expect(workbenchSource).toContain('<a-badge')
     expect(workbenchSource).toContain(':count="record.products.length"')
+    expect(workbenchSource).toContain('class="advertising-campaign-main"')
     expect(workbenchSource).toContain('class="advertising-campaign-thumb-badge"')
     expect(workbenchSource).toContain('class="advertising-campaign-image"')
     expect(workbenchSource).toContain(':src="record.products[0]?.image"')
     expect(workbenchSource).not.toContain("record.platform.slice(0, 2)")
+  })
+
+  it('renders campaign statuses with Arco tags', () => {
+    expect(workbenchSource).toContain('<a-tag :color="getCampaignStatusTagColor(record.status)">')
+    expect(detailWorkbenchSource).toContain('<a-tag :color="getCampaignStatusTagColor(campaign.status)">')
+    expect(statisticsWorkbenchSource).toContain('<a-tag :color="getCampaignStatusTagColor(campaign.status)">')
+    expect(workbenchSource).toContain('getCampaignStatusTagColor')
+    expect(detailWorkbenchSource).toContain('getCampaignStatusTagColor')
+    expect(statisticsWorkbenchSource).toContain('getCampaignStatusTagColor')
+    expect(workbenchSource).not.toContain('class="advertising-status-pill"')
+    expect(detailWorkbenchSource).not.toContain('class="advertising-status-pill"')
+    expect(statisticsWorkbenchSource).not.toContain('class="advertising-status-pill"')
+    expect(workbenchSource).not.toContain('getCampaignStatusClass')
+    expect(detailWorkbenchSource).not.toContain('getCampaignStatusClass')
+    expect(statisticsWorkbenchSource).not.toContain('getCampaignStatusClass')
+    expect(workbenchSource).not.toContain('<span class="advertising-status-pill"')
+    expect(detailWorkbenchSource).not.toContain('<span class="advertising-status-pill"')
+    expect(statisticsWorkbenchSource).not.toContain('<span class="advertising-status-pill"')
   })
 
   it('supports advertising campaign bulk selection actions', () => {
@@ -150,6 +176,19 @@ describe('store advertising source contracts', () => {
     expect(workbenchSource).not.toContain('<section v-if="selectedRowKeys.length" class="advertising-bulk-action-bar">')
   })
 
+  it('keeps the campaign status switch in a standalone table column', () => {
+    expect(workbenchSource).toContain("{ title: '', slotName: 'statusToggle', width: 64, minWidth: 56, align: 'center', fixed: 'left' }")
+    expect(workbenchSource).toContain('<template #statusToggle="{ record }">')
+    expect(workbenchSource).toContain('class="advertising-status-toggle-cell"')
+    expect(workbenchSource).not.toMatch(/<template #campaign="\{ record \}">[\s\S]*?<a-switch/)
+  })
+
+  it('right aligns the create campaign modal footer actions', () => {
+    expect(workbenchSource).toMatch(/<template #footer>[\s\S]*?class="advertising-create-modal-footer"/)
+    expect(styleSource).toContain('.advertising-create-modal-footer')
+    expect(styleSource).toMatch(/\.advertising-create-modal-footer\s*{[^}]*justify-content: flex-end;/)
+  })
+
   it('renders the advertising detail shell', () => {
     expect(detailWorkbenchSource).toContain('预算余额')
     expect(detailWorkbenchSource).toContain('自动补充预算')
@@ -169,14 +208,23 @@ describe('store advertising source contracts', () => {
     expect(statisticsWorkbenchSource).toContain('扩展统计')
   })
 
+  it('scopes chart svg sizing away from table and checkbox icons', () => {
+    expect(detailWorkbenchSource).toContain('class="advertising-chart-svg"')
+    expect(statisticsWorkbenchSource).toContain('class="advertising-chart-svg"')
+    expect(styleSource).toContain('.advertising-chart-svg')
+    expect(styleSource).not.toContain('.advertising-chart-card svg')
+    expect(styleSource).not.toContain('.advertising-statistics-chart svg')
+  })
+
   it('adds advertising styles', () => {
     [
       '.store-advertising-workbench',
       '.advertising-page-header',
+      '.advertising-status-toggle-cell',
+      '.advertising-status-toggle-cell .arco-switch',
+      '.advertising-campaign-main',
       '.advertising-campaign-thumb-badge',
       '.advertising-campaign-thumb-badge .arco-badge-number',
-      '.advertising-filter-panel .arco-select-view-multiple',
-      '.advertising-filter-panel .arco-select-view-inner.arco-select-view-nowrap',
       '.advertising-table-footer-row',
       '.advertising-bulk-action-bar',
       '.advertising-bulk-action-placeholder',
@@ -200,12 +248,13 @@ describe('store advertising source contracts', () => {
     expect(styleSource).toContain('font-size: 10px')
     expect(styleSource).toContain('height: 14px')
     expect(styleSource).toContain('flex-wrap: nowrap')
-    expect(styleSource).toMatch(/\.advertising-campaign-cell\s*{[^}]*gap: 14px;/)
+    expect(styleSource).toMatch(/\.advertising-status-toggle-cell\s*{[^}]*justify-content: center;/)
+    expect(styleSource).toMatch(/\.advertising-campaign-main\s*{[^}]*gap: 14px;/)
+    expect(styleSource).toMatch(/\.advertising-bulk-action-bar \.arco-btn\s*{[^}]*height: var\(--workspace-control-height, var\(--size-default, 32px\)\);[^}]*border-radius: var\(--border-radius-medium\);[^}]*padding: 0 15px;/)
     expect(styleSource).toMatch(/\.store-advertising-campaign-table \.arco-table-th\s*{[^}]*font-size: 13px;[^}]*font-weight: 600;/)
     expect(styleSource).toMatch(/\.store-advertising-campaign-table \.arco-table-td\s*{[^}]*font-size: 13px;[^}]*white-space: nowrap;/)
     expect(styleSource).toMatch(/\.advertising-link-button\s*{[^}]*font-size: 14px;[^}]*line-height: 24px;/)
-    expect(styleSource).toContain('.advertising-status-pill.is-active')
-    expect(styleSource).toContain('.advertising-status-pill.is-unknown')
+    expect(styleSource).not.toContain('.advertising-status-pill')
     expect(styleSource).toContain('.advertising-chart-grid line')
     expect(styleSource).toContain('@media (max-width: 1199px)')
     expect(styleSource).toContain('@media (max-width: 767px)')

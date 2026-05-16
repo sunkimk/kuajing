@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { IconPlus, IconSettings } from '@arco-design/web-vue/es/icon'
 import { useRouter } from 'vue-router'
@@ -19,8 +19,8 @@ import {
   formatAdvertisingMoney,
   formatAdvertisingNumber,
   getAdvertisingStoreOptions,
-  getCampaignStatusClass,
   getCampaignStatusLabel,
+  getCampaignStatusTagColor,
   type AdvertisingCampaign,
   type AdvertisingCampaignType,
   type AdvertisingPlatform,
@@ -40,6 +40,11 @@ type AdvertisingCampaignColumnKey =
   | 'spendRatio'
 
 type AdvertisingCampaignTableColumn = ConfigurableTableColumn<AdvertisingCampaignColumnKey> & { title: string }
+type AdvertisingFilterSelectKey = 'storeIds' | 'statuses' | 'campaignTypes' | 'budgetStatuses'
+type AdvertisingFilterOption = {
+  label: string
+  value: string
+}
 
 const router = useRouter()
 const filters = ref(createDefaultAdvertisingFilters())
@@ -60,6 +65,114 @@ const pagedRows = computed(() =>
   filteredRows.value.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value)
 )
 const storeOptions = computed(() => getAdvertisingStoreOptions(filters.value.platforms))
+const filterSelectKeys: AdvertisingFilterSelectKey[] = ['storeIds', 'statuses', 'campaignTypes', 'budgetStatuses']
+const filterSelectWidths = ref<Record<AdvertisingFilterSelectKey, number>>({
+  storeIds: 0,
+  statuses: 0,
+  campaignTypes: 0,
+  budgetStatuses: 0,
+})
+let filterResizeObserver: ResizeObserver | undefined
+let textMeasureContext: CanvasRenderingContext2D | null | undefined
+
+const measureFilterTextWidth = (text: string) => {
+  if (typeof document === 'undefined') return text.length * 12
+
+  if (textMeasureContext === undefined) {
+    textMeasureContext = document.createElement('canvas').getContext('2d')
+  }
+
+  if (!textMeasureContext) return text.length * 12
+
+  textMeasureContext.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
+  return Math.ceil(textMeasureContext.measureText(text).width)
+}
+
+const getFilterTagWidth = (label: string) =>
+  Math.min(120, Math.max(42, measureFilterTextWidth(label) + 30))
+
+const getFilterOverflowTagWidth = (overflowCount: number) =>
+  Math.max(42, measureFilterTextWidth(`+${overflowCount}...`) + 22)
+
+const resolveFilterMaxTagCount = (selectedLabels: string[], availableWidth: number) => {
+  if (selectedLabels.length <= 1) return 1
+  if (availableWidth <= 0) return 1
+
+  const visibleLabels = selectedLabels.slice(0, 2)
+  const overflowCount = Math.max(selectedLabels.length - visibleLabels.length, 0)
+  const gapWidth = 4
+  const twoTagWidth = visibleLabels.reduce((total, label) => total + getFilterTagWidth(label), 0)
+    + (visibleLabels.length - 1) * gapWidth
+    + (overflowCount > 0 ? getFilterOverflowTagWidth(overflowCount) + gapWidth : 0)
+
+  return twoTagWidth <= availableWidth - 8 ? 2 : 1
+}
+
+const getSelectedOptionLabels = (values: string[], options: AdvertisingFilterOption[]) => {
+  const labelByValue = new Map(options.map((option) => [option.value, option.label]))
+  return values.map((value) => labelByValue.get(value) ?? value)
+}
+
+const storeFilterMaxTagCount = computed(() =>
+  resolveFilterMaxTagCount(
+    getSelectedOptionLabels(filters.value.storeIds, storeOptions.value),
+    filterSelectWidths.value.storeIds
+  )
+)
+
+const statusFilterMaxTagCount = computed(() =>
+  resolveFilterMaxTagCount(
+    getSelectedOptionLabels(filters.value.statuses, campaignStatusOptions),
+    filterSelectWidths.value.statuses
+  )
+)
+
+const campaignTypeFilterMaxTagCount = computed(() =>
+  resolveFilterMaxTagCount(
+    getSelectedOptionLabels(filters.value.campaignTypes, campaignTypeOptions),
+    filterSelectWidths.value.campaignTypes
+  )
+)
+
+const budgetStatusFilterMaxTagCount = computed(() =>
+  resolveFilterMaxTagCount(
+    getSelectedOptionLabels(filters.value.budgetStatuses, budgetStatusOptions),
+    filterSelectWidths.value.budgetStatuses
+  )
+)
+
+const updateFilterSelectWidths = () => {
+  if (typeof document === 'undefined') return
+
+  const nextWidths = { ...filterSelectWidths.value }
+  filterSelectKeys.forEach((key) => {
+    const selectInner = document.querySelector<HTMLElement>(
+      `.advertising-filter-panel [data-filter-key="${key}"] .arco-select-view-multiple .arco-select-view-inner`
+    )
+    nextWidths[key] = Math.floor(selectInner?.getBoundingClientRect().width ?? 0)
+  })
+  filterSelectWidths.value = nextWidths
+}
+
+onMounted(() => {
+  nextTick(() => {
+    updateFilterSelectWidths()
+
+    if (typeof ResizeObserver === 'undefined') return
+
+    filterResizeObserver = new ResizeObserver(updateFilterSelectWidths)
+    filterSelectKeys.forEach((key) => {
+      const selectInner = document.querySelector<HTMLElement>(
+        `.advertising-filter-panel [data-filter-key="${key}"] .arco-select-view-multiple .arco-select-view-inner`
+      )
+      if (selectInner) filterResizeObserver?.observe(selectInner)
+    })
+  })
+})
+
+onBeforeUnmount(() => {
+  filterResizeObserver?.disconnect()
+})
 
 const defaultVisibleKeys: AdvertisingCampaignColumnKey[] = [
   'campaign',
@@ -86,6 +199,7 @@ const campaignRowSelection = {
 }
 
 const columns: AdvertisingCampaignTableColumn[] = [
+  { title: '', slotName: 'statusToggle', width: 64, minWidth: 56, align: 'center', fixed: 'left' },
   { settingsKey: 'campaign', title: '活动', dataIndex: 'campaign', slotName: 'campaign', width: 320, minWidth: 300, align: 'left' },
   { settingsKey: 'platform', title: '平台', dataIndex: 'platform', width: 132, minWidth: 120, align: 'center' },
   { settingsKey: 'store', title: '店铺', dataIndex: 'store', slotName: 'store', width: 180, minWidth: 168, align: 'left' },
@@ -221,16 +335,61 @@ watch(pageSize, () => {
         />
       </QueryFilterItem>
 
-      <QueryFilterItem label="店铺" width="240px" min-width="200px">
+      <QueryFilterItem label="店铺" width="320px" min-width="300px" data-filter-key="storeIds">
         <a-select
           v-model="filters.storeIds"
           multiple
           allow-clear
-          :max-tag-count="1"
+          :max-tag-count="storeFilterMaxTagCount"
           placeholder="全部店铺"
           @change="handleSearch"
         >
           <a-option v-for="option in storeOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </a-option>
+        </a-select>
+      </QueryFilterItem>
+
+      <QueryFilterItem label="活动状态" width="280px" min-width="260px" data-filter-key="statuses">
+        <a-select
+          v-model="filters.statuses"
+          multiple
+          allow-clear
+          :max-tag-count="statusFilterMaxTagCount"
+          placeholder="全部状态"
+          @change="handleSearch"
+        >
+          <a-option v-for="option in campaignStatusOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </a-option>
+        </a-select>
+      </QueryFilterItem>
+
+      <QueryFilterItem label="活动类型" width="260px" min-width="240px" data-filter-key="campaignTypes">
+        <a-select
+          v-model="filters.campaignTypes"
+          multiple
+          allow-clear
+          :max-tag-count="campaignTypeFilterMaxTagCount"
+          placeholder="全部类型"
+          @change="handleSearch"
+        >
+          <a-option v-for="option in campaignTypeOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </a-option>
+        </a-select>
+      </QueryFilterItem>
+
+      <QueryFilterItem label="预算状态" width="320px" min-width="300px" data-filter-key="budgetStatuses">
+        <a-select
+          v-model="filters.budgetStatuses"
+          multiple
+          allow-clear
+          :max-tag-count="budgetStatusFilterMaxTagCount"
+          placeholder="全部预算"
+          @change="handleSearch"
+        >
+          <a-option v-for="option in budgetStatusOptions" :key="option.value" :value="option.value">
             {{ option.label }}
           </a-option>
         </a-select>
@@ -243,51 +402,6 @@ watch(pageSize, () => {
           :placeholder="['开始日期', '结束日期']"
           @change="handleSearch"
         />
-      </QueryFilterItem>
-
-      <QueryFilterItem label="活动状态" width="220px" min-width="190px">
-        <a-select
-          v-model="filters.statuses"
-          multiple
-          allow-clear
-          :max-tag-count="1"
-          placeholder="全部状态"
-          @change="handleSearch"
-        >
-          <a-option v-for="option in campaignStatusOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </a-option>
-        </a-select>
-      </QueryFilterItem>
-
-      <QueryFilterItem label="活动类型" width="220px" min-width="190px">
-        <a-select
-          v-model="filters.campaignTypes"
-          multiple
-          allow-clear
-          :max-tag-count="1"
-          placeholder="全部类型"
-          @change="handleSearch"
-        >
-          <a-option v-for="option in campaignTypeOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </a-option>
-        </a-select>
-      </QueryFilterItem>
-
-      <QueryFilterItem label="预算状态" width="220px" min-width="190px">
-        <a-select
-          v-model="filters.budgetStatuses"
-          multiple
-          allow-clear
-          :max-tag-count="1"
-          placeholder="全部预算"
-          @change="handleSearch"
-        >
-          <a-option v-for="option in budgetStatusOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </a-option>
-        </a-select>
       </QueryFilterItem>
 
       <QueryActionBar>
@@ -319,32 +433,39 @@ watch(pageSize, () => {
       wrapper-class="store-advertising-table"
       table-class="store-advertising-campaign-table"
     >
-      <template #campaign="{ record }">
-        <div class="advertising-campaign-cell">
+      <template #statusToggle="{ record }">
+        <div class="advertising-status-toggle-cell">
           <a-switch
             size="small"
             :model-value="record.status === 'active'"
             :disabled="!isCampaignStatusEditable(record.status)"
             @change="() => toggleStatus(record)"
           />
-          <a-badge :count="record.products.length" class="advertising-campaign-thumb-badge">
-            <span class="advertising-campaign-thumb">
-              <img
-                :src="record.products[0]?.image"
-                :alt="record.products[0]?.name || record.campaignName"
-                class="advertising-campaign-image"
-              />
-            </span>
-          </a-badge>
-          <span class="advertising-campaign-copy">
-            <button type="button" class="advertising-link-button" @click="openDetail(record)">
-              {{ record.campaignName }}
-            </button>
-            <span class="advertising-campaign-meta">
-              <span class="advertising-status-pill" :class="getCampaignStatusClass(record.status)">
-                {{ getCampaignStatusLabel(record.status) }}
+        </div>
+      </template>
+
+      <template #campaign="{ record }">
+        <div class="advertising-campaign-cell">
+          <span class="advertising-campaign-main">
+            <a-badge :count="record.products.length" class="advertising-campaign-thumb-badge">
+              <span class="advertising-campaign-thumb">
+                <img
+                  :src="record.products[0]?.image"
+                  :alt="record.products[0]?.name || record.campaignName"
+                  class="advertising-campaign-image"
+                />
               </span>
-              <span class="advertising-campaign-id">{{ record.id }}</span>
+            </a-badge>
+            <span class="advertising-campaign-copy">
+              <button type="button" class="advertising-link-button" @click="openDetail(record)">
+                {{ record.campaignName }}
+              </button>
+              <span class="advertising-campaign-meta">
+                <a-tag :color="getCampaignStatusTagColor(record.status)">
+                  {{ getCampaignStatusLabel(record.status) }}
+                </a-tag>
+                <span class="advertising-campaign-id">{{ record.id }}</span>
+              </span>
             </span>
           </span>
         </div>
@@ -449,10 +570,12 @@ watch(pageSize, () => {
       </a-form>
 
       <template #footer>
-        <a-space>
-          <a-button @click="createVisible = false">取消</a-button>
-          <a-button type="primary" @click="confirmCreate">确认</a-button>
-        </a-space>
+        <div class="advertising-create-modal-footer">
+          <a-space>
+            <a-button @click="createVisible = false">取消</a-button>
+            <a-button type="primary" @click="confirmCreate">确认</a-button>
+          </a-space>
+        </div>
       </template>
     </a-modal>
   </div>

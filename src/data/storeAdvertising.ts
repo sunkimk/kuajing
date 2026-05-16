@@ -92,11 +92,11 @@ type Option<T extends string> = {
   value: T
 }
 
-const statusMeta: Record<AdvertisingCampaignStatus, { label: string, className: string }> = {
-  active: { label: '投放中', className: 'is-active' },
-  paused: { label: '已暂停', className: 'is-paused' },
-  ended: { label: '已结束', className: 'is-ended' },
-  draft: { label: '草稿', className: 'is-draft' },
+const statusMeta: Record<AdvertisingCampaignStatus, { label: string, tagColor: string }> = {
+  active: { label: '投放中', tagColor: 'green' },
+  paused: { label: '已暂停', tagColor: 'orange' },
+  ended: { label: '已结束', tagColor: 'gray' },
+  draft: { label: '草稿', tagColor: 'arcoblue' },
 }
 
 export const advertisingStores: AdvertisingStore[] = [
@@ -149,11 +149,81 @@ const createClusters = (productId: string, queries: string[]): AdvertisingSearch
     orders: 45 - index * 4,
   }))
 
+const createProductPhotoDataUrl = (accent: string, bg: string, productMarkup: string) => {
+  const svg = `
+    <svg class="product-photo" xmlns="http://www.w3.org/2000/svg" width="112" height="112" viewBox="0 0 112 112">
+      <rect width="112" height="112" rx="18" fill="${bg}"/>
+      <ellipse cx="56" cy="91" rx="34" ry="8" fill="#1d2129" opacity="0.08"/>
+      <rect x="14" y="12" width="84" height="84" rx="18" fill="#fff" opacity="0.72"/>
+      <rect x="18" y="16" width="76" height="76" rx="16" fill="#fff" opacity="0.86"/>
+      <circle cx="88" cy="24" r="8" fill="${accent}" opacity="0.12"/>
+      ${productMarkup}
+    </svg>
+  `
+
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`
+}
+
 const productSampleImages = [
-  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2284%22 height=%2284%22 viewBox=%220 0 84 84%22%3E%3Crect width=%2284%22 height=%2284%22 rx=%2218%22 fill=%22%23eaf4ff%22/%3E%3Crect x=%2228%22 y=%2212%22 width=%2228%22 height=%2260%22 rx=%228%22 fill=%22%232563eb%22/%3E%3Crect x=%2232%22 y=%2218%22 width=%2220%22 height=%2248%22 rx=%224%22 fill=%22%23dbeafe%22/%3E%3Ccircle cx=%2242%22 cy=%2261%22 r=%222%22 fill=%22%232563eb%22/%3E%3C/svg%3E',
-  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2284%22 height=%2284%22 viewBox=%220 0 84 84%22%3E%3Crect width=%2284%22 height=%2284%22 rx=%2218%22 fill=%22%23ecfdf5%22/%3E%3Cpath d=%22M22 38h40v18a8 8 0 0 1-8 8H30a8 8 0 0 1-8-8V38Z%22 fill=%22%2310b981%22/%3E%3Cpath d=%22M29 31a13 13 0 0 1 26 0v7h-6v-7a7 7 0 0 0-14 0v7h-6v-7Z%22 fill=%22%23047857%22/%3E%3Ccircle cx=%2242%22 cy=%2251%22 r=%225%22 fill=%22%23d1fae5%22/%3E%3C/svg%3E',
-  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2284%22 height=%2284%22 viewBox=%220 0 84 84%22%3E%3Crect width=%2284%22 height=%2284%22 rx=%2218%22 fill=%22%23fff7ed%22/%3E%3Cpath d=%22M23 34c0-9 7-16 16-16h6c9 0 16 7 16 16v16c0 9-7 16-16 16h-6c-9 0-16-7-16-16V34Z%22 fill=%22%23f97316%22/%3E%3Cpath d=%22M32 34h20v18H32z%22 fill=%22%23fed7aa%22/%3E%3Cpath d=%22M33 28h18%22 stroke=%22%23fff7ed%22 stroke-width=%224%22 stroke-linecap=%22round%22/%3E%3C/svg%3E',
-  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2284%22 height=%2284%22 viewBox=%220 0 84 84%22%3E%3Crect width=%2284%22 height=%2284%22 rx=%2218%22 fill=%22%23f5f3ff%22/%3E%3Cpath d=%22M25 26h34v32H25z%22 fill=%22%238b5cf6%22/%3E%3Cpath d=%22M31 32h22v20H31z%22 fill=%22%23ddd6fe%22/%3E%3Cpath d=%22M36 64h12%22 stroke=%22%236d28d9%22 stroke-width=%225%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M42 58v7%22 stroke=%22%236d28d9%22 stroke-width=%225%22/%3E%3C/svg%3E',
+  createProductPhotoDataUrl('#2563eb', '#eef5ff', `
+    <rect x="38" y="20" width="36" height="70" rx="11" fill="#1d2129"/>
+    <rect x="42" y="27" width="28" height="54" rx="6" fill="#f8fbff"/>
+    <rect x="47" y="34" width="18" height="3" rx="1.5" fill="#93c5fd"/>
+    <circle cx="56" cy="78" r="2.4" fill="#2563eb"/>
+    <rect x="36" y="18" width="40" height="74" rx="13" fill="none" stroke="#60a5fa" stroke-width="3" opacity="0.9"/>
+  `),
+  createProductPhotoDataUrl('#10b981', '#eefcf6', `
+    <path d="M30 34c10-10 32-10 42 0" fill="none" stroke="#10b981" stroke-width="6" stroke-linecap="round"/>
+    <path d="M35 42c11-9 31-9 42 1" fill="none" stroke="#34d399" stroke-width="5" stroke-linecap="round"/>
+    <rect x="20" y="61" width="18" height="12" rx="4" fill="#064e3b"/>
+    <rect x="74" y="52" width="18" height="12" rx="4" fill="#064e3b"/>
+    <rect x="24" y="64" width="9" height="3" rx="1.5" fill="#d1fae5"/>
+    <rect x="78" y="55" width="9" height="3" rx="1.5" fill="#d1fae5"/>
+  `),
+  createProductPhotoDataUrl('#f97316', '#fff7ed', `
+    <path d="M38 22h36l6 16-8 49H40l-8-49 6-16Z" fill="#fb923c"/>
+    <path d="M43 31h26l4 9-5 39H45l-5-39 3-9Z" fill="#fed7aa"/>
+    <path d="M44 48h25" stroke="#ea580c" stroke-width="4" stroke-linecap="round"/>
+    <path d="M47 58h19" stroke="#fff7ed" stroke-width="4" stroke-linecap="round"/>
+  `),
+  createProductPhotoDataUrl('#8b5cf6', '#f6f3ff', `
+    <rect x="28" y="27" width="56" height="35" rx="10" fill="#6d28d9"/>
+    <rect x="34" y="33" width="44" height="22" rx="5" fill="#ddd6fe"/>
+    <rect x="45" y="67" width="22" height="8" rx="4" fill="#8b5cf6"/>
+    <path d="M38 81h36" stroke="#6d28d9" stroke-width="6" stroke-linecap="round"/>
+    <path d="M56 62v17" stroke="#6d28d9" stroke-width="6" stroke-linecap="round"/>
+  `),
+  createProductPhotoDataUrl('#0ea5e9', '#eef9ff', `
+    <rect x="34" y="28" width="44" height="54" rx="10" fill="#0f172a"/>
+    <rect x="39" y="34" width="34" height="32" rx="6" fill="#e0f2fe"/>
+    <path d="M44 72h24" stroke="#38bdf8" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="68" cy="42" r="3" fill="#0ea5e9"/>
+    <rect x="28" y="23" width="56" height="64" rx="14" fill="none" stroke="#bae6fd" stroke-width="4"/>
+  `),
+  createProductPhotoDataUrl('#64748b', '#f8fafc', `
+    <rect x="30" y="24" width="52" height="64" rx="8" fill="#e5e7eb"/>
+    <rect x="36" y="31" width="40" height="50" rx="5" fill="#fff"/>
+    <path d="M40 38h32" stroke="#94a3b8" stroke-width="4" stroke-linecap="round"/>
+    <path d="M40 49h24" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+    <rect x="42" y="60" width="28" height="13" rx="3" fill="#dbeafe"/>
+  `),
+  createProductPhotoDataUrl('#ef4444', '#fff1f2', `
+    <rect x="32" y="39" width="48" height="25" rx="8" fill="#111827"/>
+    <circle cx="43" cy="51" r="11" fill="#ef4444"/>
+    <circle cx="69" cy="51" r="11" fill="#ef4444"/>
+    <path d="M41 66h30v13H41z" fill="#374151"/>
+    <path d="M48 79h16" stroke="#111827" stroke-width="5" stroke-linecap="round"/>
+    <rect x="38" y="44" width="10" height="4" rx="2" fill="#fecaca"/>
+    <rect x="64" y="44" width="10" height="4" rx="2" fill="#fecaca"/>
+  `),
+  createProductPhotoDataUrl('#7c3aed', '#f5f3ff', `
+    <rect x="35" y="21" width="42" height="64" rx="9" fill="#f9fafb" stroke="#c4b5fd" stroke-width="3"/>
+    <rect x="42" y="28" width="28" height="13" rx="4" fill="#ede9fe"/>
+    <circle cx="46" cy="58" r="7" fill="#7c3aed"/>
+    <circle cx="66" cy="58" r="7" fill="#7c3aed"/>
+    <path d="M46 58h20" stroke="#7c3aed" stroke-width="5" stroke-linecap="round"/>
+    <path d="M43 74h26" stroke="#ddd6fe" stroke-width="4" stroke-linecap="round"/>
+  `),
 ]
 
 const flagshipProducts: AdvertisingCampaignProduct[] = [
@@ -194,28 +264,28 @@ const flagshipProducts: AdvertisingCampaignProduct[] = [
     id: 'wb-powerbank',
     sku: 'WB-PB-20K',
     name: '20000mAh 移动电源',
-    image: productSampleImages[0],
+    image: productSampleImages[4],
     searchClusters: createClusters('wb-powerbank', ['power bank', 'portable charger']),
   },
   {
     id: 'wb-screen',
     sku: 'WB-SCREEN-IP',
     name: '高清钢化膜',
-    image: productSampleImages[1],
+    image: productSampleImages[5],
     searchClusters: createClusters('wb-screen', ['screen protector', 'tempered glass']),
   },
   {
     id: 'wb-car-holder',
     sku: 'WB-CAR-HOLDER',
     name: '车载磁吸支架',
-    image: productSampleImages[2],
+    image: productSampleImages[6],
     searchClusters: createClusters('wb-car-holder', ['car phone holder', 'magnetic holder']),
   },
   {
     id: 'wb-charger',
     sku: 'WB-GAN-65',
     name: '65W GaN 充电器',
-    image: productSampleImages[3],
+    image: productSampleImages[7],
     searchClusters: createClusters('wb-charger', ['gan charger', '65w charger']),
   },
 ]
@@ -237,6 +307,12 @@ const createStatistics = (base: number, spendBase: number): AdvertisingMetricPoi
   }))
 }
 
+const getRotatedCampaignProducts = (id: string) => {
+  const numericId = Number(id.match(/\d+$/)?.[0] ?? 0)
+  const offset = numericId % flagshipProducts.length
+  return [...flagshipProducts.slice(offset), ...flagshipProducts.slice(0, offset)].slice(0, 2)
+}
+
 const createCampaign = (
   id: string,
   storeId: string,
@@ -251,9 +327,10 @@ const createCampaign = (
   impressions: number,
   clicks: number,
   orders: number,
-  products: AdvertisingCampaignProduct[] = flagshipProducts.slice(0, 2)
+  products?: AdvertisingCampaignProduct[]
 ): AdvertisingCampaign => {
   const store = advertisingStores.find((item) => item.id === storeId) ?? advertisingStores[0]
+  const campaignProducts = products ?? getRotatedCampaignProducts(id)
 
   return {
     id,
@@ -272,7 +349,7 @@ const createCampaign = (
     clicks,
     orders,
     currencySymbol: store.currencySymbol,
-    products,
+    products: campaignProducts,
     statistics: createStatistics(Math.round(impressions / 12), Math.round(spend / 12)),
   }
 }
@@ -338,8 +415,8 @@ export const getAdvertisingStoreOptions = (platforms: AdvertisingPlatform[] = []
 export const getCampaignStatusLabel = (status: AdvertisingCampaignStatus | string) =>
   statusMeta[status as AdvertisingCampaignStatus]?.label ?? status
 
-export const getCampaignStatusClass = (status: AdvertisingCampaignStatus | string) =>
-  statusMeta[status as AdvertisingCampaignStatus]?.className ?? 'is-unknown'
+export const getCampaignStatusTagColor = (status: AdvertisingCampaignStatus | string) =>
+  statusMeta[status as AdvertisingCampaignStatus]?.tagColor ?? 'gray'
 
 export const formatAdvertisingMoney = (value: number, currencySymbol = '¥') =>
   `${currencySymbol}${value.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}`

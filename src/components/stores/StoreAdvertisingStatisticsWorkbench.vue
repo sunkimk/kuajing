@@ -7,8 +7,8 @@ import {
   findAdvertisingCampaignById,
   formatAdvertisingMoney,
   formatAdvertisingNumber,
-  getCampaignStatusClass,
   getCampaignStatusLabel,
+  getCampaignStatusTagColor,
   getStatisticsMetricOptions,
   type AdvertisingStatisticsMetricKey,
 } from '../../data/storeAdvertising'
@@ -131,9 +131,9 @@ const getLastDataText = () => {
           </a-button>
           <div class="advertising-detail-title-row">
             <h1>活动统计</h1>
-            <span class="advertising-status-pill" :class="getCampaignStatusClass(campaign.status)">
+            <a-tag :color="getCampaignStatusTagColor(campaign.status)">
               {{ getCampaignStatusLabel(campaign.status) }}
-            </span>
+            </a-tag>
           </div>
           <p>{{ campaign.campaignName }}</p>
           <div class="advertising-detail-meta">
@@ -190,7 +190,7 @@ const getLastDataText = () => {
         </div>
 
         <template v-if="chartMode === 'linear'">
-          <svg viewBox="0 0 720 220" role="img" aria-label="广告活动的基本统计">
+          <svg class="advertising-chart-svg" viewBox="0 0 720 220" role="img" aria-label="广告活动的基本统计">
             <g class="advertising-chart-grid">
               <line x1="0" y1="0" x2="720" y2="0" />
               <line x1="0" y1="55" x2="720" y2="55" />

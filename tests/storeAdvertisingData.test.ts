@@ -10,6 +10,7 @@ import {
   formatAdvertisingMoney,
   getAdvertisingStoreOptions,
   getCampaignStatusLabel,
+  getCampaignStatusTagColor,
   getStatisticsMetricOptions,
   resolveAdvertisingScopeLabel,
   type AdvertisingFilterState,
@@ -34,8 +35,12 @@ describe('storeAdvertising data contract', () => {
 
   it('provides sample product images for campaign thumbnails', () => {
     const rows = createAdvertisingCampaignRows()
+    const images = rows.flatMap((row) => row.products.map((product) => product.image ?? ''))
 
     expect(rows.every((row) => row.products[0]?.image?.startsWith('data:image/svg+xml,'))).toBe(true)
+    expect(new Set(images).size).toBeGreaterThanOrEqual(8)
+    expect(new Set(rows.map((row) => row.products[0]?.image)).size).toBeGreaterThanOrEqual(6)
+    expect(images.every((image) => decodeURIComponent(image).includes('product-photo'))).toBe(true)
   })
 
   it('exposes the supported platform options in display order', () => {
@@ -91,6 +96,9 @@ describe('storeAdvertising data contract', () => {
 
     expect(campaign?.storeName).toBe('WB 旗舰店')
     expect(getCampaignStatusLabel(campaign?.status ?? '')).toBe('投放中')
+    expect(getCampaignStatusTagColor(campaign?.status ?? '')).toBe('green')
+    expect(getCampaignStatusTagColor('paused')).toBe('orange')
+    expect(getCampaignStatusTagColor('unknown')).toBe('gray')
     expect(formatAdvertisingMoney(campaign?.spend ?? 0, campaign?.currencySymbol ?? '')).toMatch(/^₽/)
   })
 

@@ -40,4 +40,22 @@ describe('ConfigurableDataTable styles', () => {
     expect(handleStyle).toContain('width: 6px')
     expect(componentSource).toContain("v-if=\"(resizingColumnKey || hoveredResizeColumnKey) && columnResizeGuideLeft !== undefined\"")
   })
+
+  it('defines a shared media cell field style for image, title and description columns', () => {
+    for (const className of [
+      '.configurable-table-media-cell',
+      '.configurable-table-media-frame',
+      '.configurable-table-media-image',
+      '.configurable-table-media-copy',
+      '.configurable-table-media-title',
+      '.configurable-table-media-description',
+    ]) {
+      expect(componentSource).toContain(className)
+    }
+
+    expect(componentSource).toMatch(/\.configurable-data-table :deep\(\.configurable-table-media-cell\)\s*\{[^}]*gap:\s*12px;/s)
+    expect(componentSource).toMatch(/\.configurable-data-table :deep\(\.configurable-table-media-frame\)\s*\{[^}]*width:\s*42px;[^}]*height:\s*42px;[^}]*border-radius:\s*8px;/s)
+    expect(componentSource).toMatch(/\.configurable-data-table :deep\(\.configurable-table-media-title\)\s*\{[^}]*font-size:\s*14px;[^}]*line-height:\s*24px;/s)
+    expect(componentSource).toMatch(/\.configurable-data-table :deep\(\.configurable-table-media-description\)\s*\{[^}]*font-size:\s*12px;[^}]*line-height:\s*18px;/s)
+  })
 })
