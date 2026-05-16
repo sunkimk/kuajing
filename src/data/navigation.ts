@@ -39,6 +39,12 @@ export const navigationSections: NavSectionItem[] = [
     icon: IconHome,
   },
   {
+    key: 'chart-demo',
+    title: '图表 Demo',
+    path: '/chart-demo',
+    icon: IconBarChart,
+  },
+  {
     key: 'products',
     title: '商品管理',
     children: [

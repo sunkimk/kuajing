@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 import DashboardView from '../views/DashboardView.vue'
+import ChartDemoView from '../views/ChartDemoView.vue'
 import WarehouseInventoryView from '../views/WarehouseInventoryView.vue'
 import BatchInventoryView from '../views/BatchInventoryView.vue'
 import ProductListView from '../views/ProductListView.vue'
@@ -63,6 +64,16 @@ const router = createRouter({
             title: '运营看板',
             sectionKey: 'dashboard',
             sectionTitle: '运营看板',
+          },
+        },
+        {
+          path: 'chart-demo',
+          component: ChartDemoView,
+          meta: {
+            title: '图表 Demo',
+            sectionKey: 'chart-demo',
+            sectionTitle: '图表 Demo',
+            hideBreadcrumb: true,
           },
         },
         {
