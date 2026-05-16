@@ -24,42 +24,41 @@
 }
 
 .purchase-status-tabs {
-  display: flex;
   min-width: 0;
-  align-items: center;
-  overflow-x: auto;
-  border-bottom: 1px solid var(--workspace-color-border, var(--color-border-2));
-  padding: 0;
+  overflow: hidden;
 }
 
-.purchase-status-tab {
-  position: relative;
-  display: inline-flex;
+.purchase-status-tabs-wrapper {
+  min-width: 0;
+}
+
+.purchase-status-tabs .arco-tabs {
+  width: 100%;
+}
+
+.purchase-status-tabs .arco-tabs-content-hide {
+  display: none;
+}
+
+.purchase-status-tabs .arco-tabs-nav-type-card-gutter .arco-tabs-tab {
   min-height: 32px;
-  align-items: center;
-  gap: 6px;
-  flex: 0 0 auto;
-  border: 1px solid var(--workspace-color-border, var(--color-border-2));
-  border-bottom: 0;
-  border-radius: 4px 4px 0 0;
-  background: var(--color-fill-1);
-  color: var(--workspace-color-text-secondary, var(--color-text-2));
-  cursor: pointer;
   font-size: 13px;
   line-height: 20px;
-  margin-right: 4px;
   padding: 5px 14px;
 }
 
-.purchase-status-tab.is-active {
-  border-top: 2px solid var(--workspace-color-primary, rgb(var(--primary-6)));
-  background: var(--workspace-color-bg, var(--color-bg-2));
+.purchase-status-tabs .arco-tabs-nav-type-card-gutter .arco-tabs-tab-active {
   color: var(--workspace-color-primary, rgb(var(--primary-6)));
   font-weight: 600;
-  margin-bottom: -1px;
 }
 
-.purchase-status-tab small {
+.purchase-status-tab-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.purchase-status-tab-count {
   min-width: 20px;
   border-radius: 999px;
   background: var(--color-fill-2);

@@ -177,18 +177,31 @@ watch(() => props.pageKey, (pageKey) => {
 
     <MetricSummaryStrip :cards="summaryCards" :columns="4" />
 
-    <section class="purchase-status-tabs" aria-label="采购状态切换">
-      <button
-        v-for="tab in statusTabsWithCounts"
-        :key="tab.value"
-        type="button"
-        class="purchase-status-tab"
-        :class="{ 'is-active': activeStatus === tab.value }"
-        @click="setStatus(tab.value)"
-      >
-        <span>{{ tab.label }}</span>
-        <small>{{ tab.count }}</small>
-      </button>
+    <section
+      class="purchase-status-tabs c-m-detail-header-tabs"
+      data-testid="c-m-detail-header-tabs"
+      aria-label="采购状态切换"
+    >
+      <div class="purchase-status-tabs-wrapper c-m-detail-header-tabs-wrapper">
+        <a-tabs
+          :active-key="activeStatus"
+          type="card-gutter"
+          hide-content
+          @change="(key) => setStatus(String(key))"
+        >
+          <a-tab-pane
+            v-for="tab in statusTabsWithCounts"
+            :key="tab.value"
+          >
+            <template #title>
+              <span class="purchase-status-tab-title">
+                <span>{{ tab.label }}</span>
+                <small class="purchase-status-tab-count">{{ tab.count }}</small>
+              </span>
+            </template>
+          </a-tab-pane>
+        </a-tabs>
+      </div>
     </section>
 
     <QueryFilterPanel>
