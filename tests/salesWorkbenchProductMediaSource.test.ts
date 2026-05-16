@@ -24,4 +24,22 @@ describe('sales workbench product media source', () => {
       expect(source).not.toContain('record.sku.slice(0, 2)')
     }
   })
+
+  it('uses the shared configurable table media cell style in every sales workbench table', () => {
+    for (const source of [orderSource, secondarySource, returnSource]) {
+      for (const className of [
+        'configurable-table-media-cell',
+        'configurable-table-media-frame',
+        'configurable-table-media-image',
+        'configurable-table-media-copy',
+        'configurable-table-media-title',
+        'configurable-table-media-description',
+      ]) {
+        expect(source).toContain(className)
+      }
+
+      expect(source).not.toContain('sales-product-cell')
+      expect(source).not.toContain('sales-product-copy')
+    }
+  })
 })

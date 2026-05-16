@@ -107,4 +107,20 @@ describe('purchase workbench source', () => {
     expect(workbenchStyleSource).not.toContain(':deep(')
     expect(workbenchStyleSource).not.toContain('.purchase-status-tabs::after')
   })
+
+  it('uses the shared configurable table media cell style for product columns', () => {
+    for (const className of [
+      'configurable-table-media-cell',
+      'configurable-table-media-frame',
+      'configurable-table-media-image',
+      'configurable-table-media-copy',
+      'configurable-table-media-title',
+      'configurable-table-media-description',
+    ]) {
+      expect(workbenchSource).toContain(className)
+    }
+
+    expect(workbenchSource).not.toContain('sales-product-cell')
+    expect(workbenchSource).not.toContain('sales-product-copy')
+  })
 })

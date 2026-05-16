@@ -18,6 +18,9 @@ import SalesSecondaryView from '../views/SalesSecondaryView.vue'
 import SalesReturnView from '../views/SalesReturnView.vue'
 import StoreManagementHomeView from '../views/StoreManagementHomeView.vue'
 import StoreDetailView from '../views/StoreDetailView.vue'
+import StoreAdvertisingView from '../views/StoreAdvertisingView.vue'
+import StoreAdvertisingDetailView from '../views/StoreAdvertisingDetailView.vue'
+import StoreAdvertisingStatisticsView from '../views/StoreAdvertisingStatisticsView.vue'
 import FirstMileQuoteView from '../views/FirstMileQuoteView.vue'
 import { flattenNavigation } from '../data/navigation'
 
@@ -37,6 +40,7 @@ const placeholderRoutes = flattenNavigation()
     && item.path !== '/sales/upsell'
     && item.path !== '/sales/return'
     && item.path !== '/stores/list'
+    && item.path !== '/stores/ads'
     && item.path !== '/services/first-mile'
   )
   .map((item) => ({
@@ -234,6 +238,36 @@ const router = createRouter({
           component: StoreManagementHomeView,
           meta: {
             title: '店铺列表',
+            sectionKey: 'stores',
+            sectionTitle: '店铺管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'stores/ads',
+          component: StoreAdvertisingView,
+          meta: {
+            title: '广告推广',
+            sectionKey: 'stores',
+            sectionTitle: '店铺管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'stores/ads/:campaignId/statistics',
+          component: StoreAdvertisingStatisticsView,
+          meta: {
+            title: '活动统计',
+            sectionKey: 'stores',
+            sectionTitle: '店铺管理',
+            hideBreadcrumb: true,
+          },
+        },
+        {
+          path: 'stores/ads/:campaignId',
+          component: StoreAdvertisingDetailView,
+          meta: {
+            title: '活动详情',
             sectionKey: 'stores',
             sectionTitle: '店铺管理',
             hideBreadcrumb: true,
