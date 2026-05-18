@@ -55,6 +55,63 @@ const baseLineGrid = { top: 24, right: 24, bottom: 40, left: 42 }
 const legendBottomGrid = { top: 24, right: 24, bottom: 62, left: 42 }
 const chartExampleUrl = 'https://echarts.apache.org/examples/zh/index.html'
 
+type ChartTooltipParam = {
+  axisValueLabel?: string
+  data?: unknown
+  marker?: string
+  name?: string
+  seriesName?: string
+  value?: unknown
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null
+
+const formatTooltipValue = (value: unknown): string => {
+  if (Array.isArray(value)) return value.map(formatTooltipValue).join(' / ')
+  if (typeof value === 'number') return Number.isInteger(value) ? value.toLocaleString() : value.toFixed(2)
+  if (typeof value === 'string') return value
+  if (value == null) return '-'
+  if (isRecord(value) && 'value' in value) return formatTooltipValue(value.value)
+
+  return String(value)
+}
+
+const resolveTooltipName = (param: ChartTooltipParam) => {
+  const data = isRecord(param.data) ? param.data : {}
+  const linkName = typeof data.source === 'string' && typeof data.target === 'string'
+    ? `${data.source} → ${data.target}`
+    : ''
+  const itemName = param.name || (typeof data.name === 'string' ? data.name : '') || linkName
+
+  if (param.seriesName && itemName && param.seriesName !== itemName) return `${param.seriesName} · ${itemName}`
+
+  return itemName || param.seriesName || '数据'
+}
+
+const resolveTooltipValue = (param: ChartTooltipParam) => {
+  const data = isRecord(param.data) ? param.data : {}
+
+  return param.value ?? data.value ?? data.symbolSize
+}
+
+const formatTooltipParam = (param: ChartTooltipParam) => {
+  const value = resolveTooltipValue(param)
+  const valueText = value == null ? '' : `：${formatTooltipValue(value)}`
+
+  return `${param.marker ?? ''}${resolveTooltipName(param)}${valueText}`
+}
+
+const formatChartTooltip = (params: unknown) => {
+  const items = (Array.isArray(params) ? params : [params]).filter(isRecord) as ChartTooltipParam[]
+  const axisLabel = Array.isArray(params) ? items[0]?.axisValueLabel || items[0]?.name : ''
+
+  return [axisLabel, ...items.map(formatTooltipParam)].filter(Boolean).join('<br/>')
+}
+
+const axisTooltip = { trigger: 'axis', confine: true, formatter: formatChartTooltip } as const
+const itemTooltip = { trigger: 'item', confine: true, formatter: formatChartTooltip } as const
+
 const chartDemos: ChartDemo[] = [
   {
     id: 'line-trend',
@@ -64,7 +121,7 @@ const chartDemos: ChartDemo[] = [
     scene: '订单、错误数、访客数、销售额按时间变化',
     tags: ['时间序列', '单指标', '运营看板'],
     option: {
-      tooltip: { trigger: 'axis' },
+      tooltip: axisTooltip,
       grid: baseLineGrid,
       xAxis: { type: 'category', boundaryGap: false, data: monthLabels },
       yAxis: { type: 'value' },
@@ -79,7 +136,7 @@ const chartDemos: ChartDemo[] = [
     scene: '多平台、多店铺、多指标同屏趋势比较',
     tags: ['时间序列', '多指标', '平台对比'],
     option: {
-      tooltip: { trigger: 'axis' },
+      tooltip: axisTooltip,
       legend: { bottom: 0 },
       grid: legendBottomGrid,
       xAxis: { type: 'category', boundaryGap: false, data: monthLabels },
@@ -99,7 +156,7 @@ const chartDemos: ChartDemo[] = [
     scene: '销售额与广告 ROI、订单量与客单价联动查看',
     tags: ['双轴', '柱线组合', '广告分析'],
     option: {
-      tooltip: { trigger: 'axis' },
+      tooltip: axisTooltip,
       legend: { bottom: 0 },
       grid: legendBottomGrid,
       xAxis: { type: 'category', data: monthLabels },
@@ -121,7 +178,7 @@ const chartDemos: ChartDemo[] = [
     scene: '库存水位、广告消耗、GMV 累积趋势',
     tags: ['面积', '容量感', '水位'],
     option: {
-      tooltip: { trigger: 'axis' },
+      tooltip: axisTooltip,
       grid: baseLineGrid,
       xAxis: { type: 'category', boundaryGap: false, data: monthLabels },
       yAxis: { type: 'value' },
@@ -136,7 +193,7 @@ const chartDemos: ChartDemo[] = [
     scene: '收入来源、费用结构、库存占用随时间变化',
     tags: ['堆叠', '趋势构成', '费用'],
     option: {
-      tooltip: { trigger: 'axis' },
+      tooltip: axisTooltip,
       legend: { bottom: 0 },
       grid: legendBottomGrid,
       xAxis: { type: 'category', boundaryGap: false, data: monthLabels },
@@ -156,7 +213,7 @@ const chartDemos: ChartDemo[] = [
     scene: '平台、店铺、仓库、品类之间的横向比较',
     tags: ['柱状', '排行', '平台'],
     option: {
-      tooltip: { trigger: 'axis' },
+      tooltip: axisTooltip,
       grid: baseLineGrid,
       xAxis: { type: 'category', data: platformLabels },
       yAxis: { type: 'value' },
@@ -171,7 +228,7 @@ const chartDemos: ChartDemo[] = [
     scene: 'SKU 排名、仓库占用、供应商绩效排序',
     tags: ['排行', '长标签', '库存'],
     option: {
-      tooltip: { trigger: 'axis' },
+      tooltip: axisTooltip,
       grid: { top: 20, right: 24, bottom: 28, left: 86 },
       xAxis: { type: 'value' },
       yAxis: { type: 'category', data: ['蓝牙耳机', '折叠支架', '露营灯', '宠物梳', '收纳盒'] },
@@ -186,7 +243,7 @@ const chartDemos: ChartDemo[] = [
     scene: '订单状态、费用结构、库存构成',
     tags: ['堆叠', '状态构成', '履约'],
     option: {
-      tooltip: { trigger: 'axis' },
+      tooltip: axisTooltip,
       legend: { bottom: 0 },
       grid: legendBottomGrid,
       xAxis: { type: 'category', data: platformLabels },
@@ -206,7 +263,7 @@ const chartDemos: ChartDemo[] = [
     scene: '从收入拆到毛利、净利，展示费用扣减过程',
     tags: ['利润', '费用拆解', '财务'],
     option: {
-      tooltip: { trigger: 'axis' },
+      tooltip: axisTooltip,
       grid: baseLineGrid,
       xAxis: { type: 'category', data: ['收入', '成本', '平台费', '物流', '广告', '净利'] },
       yAxis: { type: 'value' },
@@ -224,7 +281,7 @@ const chartDemos: ChartDemo[] = [
     scene: '平台销售占比、费用占比、库存占比',
     tags: ['占比', '构成', '平台'],
     option: {
-      tooltip: { trigger: 'item' },
+      tooltip: itemTooltip,
       legend: { bottom: 0 },
       series: [
         {
@@ -250,7 +307,7 @@ const chartDemos: ChartDemo[] = [
     scene: '店铺贡献、品类贡献、流量来源差异更明显',
     tags: ['占比', '玫瑰图', '贡献'],
     option: {
-      tooltip: { trigger: 'item' },
+      tooltip: itemTooltip,
       legend: { bottom: 0 },
       series: [
         {
@@ -278,7 +335,7 @@ const chartDemos: ChartDemo[] = [
     scene: '品类库存、SKU 贡献、广告计划预算占比',
     tags: ['树图', '层级', '占比'],
     option: {
-      tooltip: { trigger: 'item' },
+      tooltip: itemTooltip,
       series: [
         {
           name: '品类',
@@ -303,7 +360,7 @@ const chartDemos: ChartDemo[] = [
     scene: '店铺健康度、供应商评分、产品竞争力',
     tags: ['评分', '多维度', '健康度'],
     option: {
-      tooltip: {},
+      tooltip: itemTooltip,
       radar: {
         radius: '64%',
         indicator: [
@@ -325,7 +382,7 @@ const chartDemos: ChartDemo[] = [
     scene: '曝光到下单、询价到成交、客服转化',
     tags: ['转化', '漏斗', '广告'],
     option: {
-      tooltip: { trigger: 'item' },
+      tooltip: itemTooltip,
       series: [
         {
           name: '转化',
@@ -374,7 +431,7 @@ const chartDemos: ChartDemo[] = [
     scene: '时段销量、异常密度、补货压力',
     tags: ['热力', '时段', '密度'],
     option: {
-      tooltip: { position: 'top' },
+      tooltip: { ...itemTooltip, position: 'top' },
       grid: { top: 24, right: 20, bottom: 36, left: 58 },
       xAxis: { type: 'category', data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'] },
       yAxis: { type: 'category', data: ['上午', '中午', '下午', '晚上'] },
@@ -402,7 +459,7 @@ const chartDemos: ChartDemo[] = [
     scene: '价格与销量、广告消耗与订单量的相关性',
     tags: ['相关性', '散点', '决策'],
     option: {
-      tooltip: { trigger: 'item' },
+      tooltip: itemTooltip,
       grid: baseLineGrid,
       xAxis: { type: 'value', name: '价格' },
       yAxis: { type: 'value', name: '销量' },
@@ -417,7 +474,7 @@ const chartDemos: ChartDemo[] = [
     scene: '消耗、转化率、订单量三个变量一起判断',
     tags: ['气泡', '三变量', '广告'],
     option: {
-      tooltip: { trigger: 'item' },
+      tooltip: itemTooltip,
       grid: baseLineGrid,
       xAxis: { type: 'value', name: '消耗' },
       yAxis: { type: 'value', name: 'ROI' },
@@ -439,7 +496,7 @@ const chartDemos: ChartDemo[] = [
     scene: '订单流向、物流节点、费用流转关系',
     tags: ['流向', '链路', '关系'],
     option: {
-      tooltip: { trigger: 'item' },
+      tooltip: itemTooltip,
       series: [
         {
           type: 'sankey',
@@ -468,7 +525,7 @@ const chartDemos: ChartDemo[] = [
     scene: '商品、店铺、供应商、广告计划的关联图',
     tags: ['网络', '关联', '实体'],
     option: {
-      tooltip: {},
+      tooltip: itemTooltip,
       series: [
         {
           type: 'graph',

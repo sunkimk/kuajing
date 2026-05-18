@@ -22,9 +22,11 @@ import {
   getCampaignStatusLabel,
   getCampaignStatusTagColor,
   type AdvertisingCampaign,
+  type AdvertisingCampaignProduct,
   type AdvertisingCampaignType,
   type AdvertisingPlatform,
 } from '../../data/storeAdvertising'
+import { useProductCatalogStore } from '../../data/productCatalog'
 import './storeAdvertising.css'
 
 type AdvertisingCampaignColumnKey =
@@ -47,6 +49,7 @@ type AdvertisingFilterOption = {
 }
 
 const router = useRouter()
+const catalogStore = useProductCatalogStore()
 const filters = ref(createDefaultAdvertisingFilters())
 const allRows = ref(createAdvertisingCampaignRows())
 const loading = ref(false)
@@ -60,9 +63,21 @@ const createForm = ref<{
   campaignType?: AdvertisingCampaignType
 }>({})
 
+const isCampaignStatusEditable = (status: AdvertisingCampaign['status']) =>
+  status === 'active' || status === 'paused'
+
 const filteredRows = computed(() => filterAdvertisingCampaigns(allRows.value, filters.value))
+const productBySku = computed(() =>
+  new Map(catalogStore.products.value.map((product) => [product.basicInfo.sku, product]))
+)
 const pagedRows = computed(() =>
   filteredRows.value.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value)
+)
+const selectablePagedRows = computed(() =>
+  pagedRows.value.map((row) => ({
+    ...row,
+    disabled: !isCampaignStatusEditable(row.status),
+  }))
 )
 const storeOptions = computed(() => getAdvertisingStoreOptions(filters.value.platforms))
 const filterSelectKeys: AdvertisingFilterSelectKey[] = ['storeIds', 'statuses', 'campaignTypes', 'budgetStatuses']
@@ -210,7 +225,7 @@ const columns: AdvertisingCampaignTableColumn[] = [
   { settingsKey: 'ctr', title: 'CTR', dataIndex: 'ctr', slotName: 'ctr', width: 92, minWidth: 84, align: 'right' },
   { settingsKey: 'orders', title: '订单', dataIndex: 'orders', width: 88, minWidth: 80, align: 'right' },
   { settingsKey: 'spendRatio', title: '消耗占比', dataIndex: 'spendRatio', slotName: 'spendRatio', width: 112, minWidth: 104, align: 'right' },
-  { title: '操作', slotName: 'operation', width: 112, align: 'center' },
+  { title: '操作', slotName: 'operation', width: 160, minWidth: 148, align: 'center' },
 ]
 
 const getBudgetBalance = (record: AdvertisingCampaign) =>
@@ -225,6 +240,15 @@ const getCtr = (record: AdvertisingCampaign) =>
 const getSpendRatio = (record: AdvertisingCampaign) =>
   record.budget > 0 ? `${(record.spend / record.budget * 100).toFixed(1)}%` : '0.0%'
 
+const getCatalogProduct = (product?: AdvertisingCampaignProduct) =>
+  product ? productBySku.value.get(product.sku) : undefined
+
+const getAdvertisingProductName = (product?: AdvertisingCampaignProduct) =>
+  getCatalogProduct(product)?.basicInfo.chineseName ?? product?.sku ?? ''
+
+const getAdvertisingProductImage = (product?: AdvertisingCampaignProduct) =>
+  getCatalogProduct(product)?.basicInfo.mainImage
+
 const handleSearch = () => {
   currentPage.value = 1
 }
@@ -233,9 +257,6 @@ const resetFilters = () => {
   filters.value = createDefaultAdvertisingFilters()
   handleSearch()
 }
-
-const isCampaignStatusEditable = (status: AdvertisingCampaign['status']) =>
-  status === 'active' || status === 'paused'
 
 const toggleStatus = (record: AdvertisingCampaign) => {
   if (!isCampaignStatusEditable(record.status)) return
@@ -296,8 +317,8 @@ watch(() => filters.value.platforms, () => {
 })
 
 watch(filteredRows, (rows) => {
-  const rowKeySet = new Set(rows.map((row) => row.id))
-  selectedRowKeys.value = selectedRowKeys.value.filter((rowKey) => rowKeySet.has(String(rowKey)))
+  const selectableRowKeySet = new Set(rows.filter((row) => isCampaignStatusEditable(row.status)).map((row) => row.id))
+  selectedRowKeys.value = selectedRowKeys.value.filter((rowKey) => selectableRowKeySet.has(String(rowKey)))
   currentPage.value = Math.min(currentPage.value, Math.max(1, Math.ceil(rows.length / pageSize.value)))
 })
 
@@ -425,7 +446,7 @@ watch(pageSize, () => {
       :required-keys="requiredKeys"
       :pinned-column-keys="pinnedColumnKeys"
       :default-freeze-last-column="true"
-      :data="pagedRows"
+      :data="selectablePagedRows"
       :row-selection="campaignRowSelection"
       row-key="id"
       :pagination="false"
@@ -450,10 +471,12 @@ watch(pageSize, () => {
             <a-badge :count="record.products.length" class="advertising-campaign-thumb-badge">
               <span class="advertising-campaign-thumb">
                 <img
-                  :src="record.products[0]?.image"
-                  :alt="record.products[0]?.name || record.campaignName"
+                  v-if="getAdvertisingProductImage(record.products[0])"
+                  :src="getAdvertisingProductImage(record.products[0])"
+                  :alt="getAdvertisingProductName(record.products[0]) || record.campaignName"
                   class="advertising-campaign-image"
                 />
+                <span v-else>{{ (getAdvertisingProductName(record.products[0]) || record.campaignName).slice(0, 1) }}</span>
               </span>
             </a-badge>
             <span class="advertising-campaign-copy">
@@ -503,7 +526,7 @@ watch(pageSize, () => {
       </template>
 
       <template #operation="{ record }">
-        <a-space>
+        <a-space class="advertising-operation-actions">
           <a-button type="text" size="small" @click="openStatistics(record)">统计</a-button>
           <a-button type="text" size="small" @click="openDetail(record)">详情</a-button>
         </a-space>

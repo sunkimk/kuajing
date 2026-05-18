@@ -347,6 +347,19 @@ export const getPurchaseStatusClass = (pageKey: PurchasePageKey, status: string)
   return `status-${tone}`
 }
 
+const purchaseStatusTagColorMap: Record<PurchaseStatusTone, string> = {
+  success: 'green',
+  warning: 'orange',
+  danger: 'red',
+  processing: 'arcoblue',
+  neutral: 'gray',
+}
+
+export const getPurchaseStatusTagColor = (pageKey: PurchasePageKey, status: string) => {
+  const tone = purchasePageConfigs[pageKey].statusTabs.find((tab) => tab.value === status)?.tone ?? 'neutral'
+  return purchaseStatusTagColorMap[tone]
+}
+
 export const createDefaultPurchaseFilters = (pageKey: PurchasePageKey): PurchaseFilters =>
   Object.fromEntries(purchasePageConfigs[pageKey].filters.map((filter) => [filter.key, filter.kind === 'dateRange' || filter.kind === 'multiSelect' ? [] : undefined]))
 

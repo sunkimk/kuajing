@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@arco-design/web-vue": "^2.58.0",
-    "@arco-themes/vue-kjerp": "^0.0.8",
+    "@arco-themes/vue-kjerp": "^0.0.9",
     "echarts": "^6.0.0",
     "vue": "^3.5.32",
     "vue-echarts": "^8.0.1",

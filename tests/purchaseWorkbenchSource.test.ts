@@ -56,8 +56,6 @@ describe('purchase workbench source', () => {
       'QueryActionBar',
       'ConfigurableDataTable',
       'purchase-status-tabs',
-      'purchase-view-mode',
-      'activeFilterChips',
       'settingsVisible',
       'IconRefresh',
       'IconSettings',
@@ -76,15 +74,21 @@ describe('purchase workbench source', () => {
     expect(workbenchStyleSource).toContain('grid-template-columns: 1fr')
   })
 
-  it('keeps the purchase filter controls compact instead of adding extra vertical rows', () => {
-    expect(workbenchSource).toContain('purchase-table-controls')
-    expect(workbenchSource).toContain('purchase-table-controls-left')
-    expect(workbenchSource).toContain('purchase-table-controls-right')
+  it('keeps the purchase filter controls compact and omits the extra table control strip', () => {
     expect(workbenchStyleSource).toContain('grid-column: 2 / -1')
     expect(workbenchStyleSource).toContain('align-self: end')
+    expect(workbenchSource).not.toContain('purchase-table-controls')
+    expect(workbenchSource).not.toContain('purchase-table-controls-left')
+    expect(workbenchSource).not.toContain('purchase-table-controls-right')
+    expect(workbenchSource).not.toContain('purchase-view-mode')
+    expect(workbenchSource).not.toContain('已选 0 项')
+    expect(workbenchStyleSource).not.toContain('.purchase-table-controls')
+    expect(workbenchStyleSource).not.toContain('.purchase-table-controls-left')
+    expect(workbenchStyleSource).not.toContain('.purchase-table-controls-right')
+    expect(workbenchStyleSource).not.toContain('.purchase-view-mode')
   })
 
-  it('uses Arco card-gutter tabs for purchase status switching', () => {
+  it('uses product detail inspired card tabs for purchase status switching', () => {
     expect(workbenchSource).toContain('class="purchase-status-tabs c-m-detail-header-tabs"')
     expect(workbenchSource).toContain('data-testid="c-m-detail-header-tabs"')
     expect(workbenchSource).toContain('class="purchase-status-tabs-wrapper c-m-detail-header-tabs-wrapper"')
@@ -104,8 +108,15 @@ describe('purchase workbench source', () => {
     expect(workbenchStyleSource).toContain('.purchase-status-tabs .arco-tabs')
     expect(workbenchStyleSource).toContain('.purchase-status-tabs .arco-tabs-content-hide')
     expect(workbenchStyleSource).toContain('.purchase-status-tabs .arco-tabs-nav-type-card-gutter')
+    expect(workbenchStyleSource).toContain('--workspace-radius-small: var(--border-radius-small)')
+    expect(workbenchStyleSource).toContain('--purchase-tabs-line-bleed: 28px')
+    expect(workbenchStyleSource).toContain('.purchase-status-tabs::before')
+    expect(workbenchStyleSource).toContain('right: calc(var(--purchase-tabs-line-bleed) * -1)')
+    expect(workbenchStyleSource).toContain('box-shadow:')
+    expect(workbenchStyleSource).toContain('inset 0 2px 0 var(--workspace-color-primary')
+    expect(workbenchStyleSource).toContain('border-radius: var(--workspace-radius-small) var(--workspace-radius-small) 0 0')
+    expect(workbenchStyleSource).toContain('.purchase-status-tabs .arco-tabs-tab-active .purchase-status-tab-count')
     expect(workbenchStyleSource).not.toContain(':deep(')
-    expect(workbenchStyleSource).not.toContain('.purchase-status-tabs::after')
   })
 
   it('uses the shared configurable table media cell style for product columns', () => {
@@ -122,5 +133,14 @@ describe('purchase workbench source', () => {
 
     expect(workbenchSource).not.toContain('sales-product-cell')
     expect(workbenchSource).not.toContain('sales-product-copy')
+  })
+
+  it('uses Arco tags instead of custom pills for purchase table status labels', () => {
+    expect(dataSource).toContain('getPurchaseStatusTagColor')
+    expect(workbenchSource).toContain('getPurchaseStatusTagColor')
+    expect(workbenchSource).toContain('<a-tag :color="getPurchaseStatusTagColor(props.pageKey, record.status)">')
+    expect(workbenchSource).toContain('{{ getPurchaseStatusLabel(props.pageKey, record.status) }}')
+    expect(workbenchSource).not.toContain('sales-status-pill')
+    expect(workbenchSource).not.toContain('getPurchaseStatusClass')
   })
 })

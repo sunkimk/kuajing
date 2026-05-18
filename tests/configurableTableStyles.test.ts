@@ -58,4 +58,13 @@ describe('ConfigurableDataTable styles', () => {
     expect(componentSource).toMatch(/\.configurable-data-table :deep\(\.configurable-table-media-title\)\s*\{[^}]*font-size:\s*14px;[^}]*line-height:\s*24px;/s)
     expect(componentSource).toMatch(/\.configurable-data-table :deep\(\.configurable-table-media-description\)\s*\{[^}]*font-size:\s*12px;[^}]*line-height:\s*18px;/s)
   })
+
+  it('keeps hover background continuous across fixed table columns', () => {
+    expect(componentSource).toMatch(/\.configurable-data-table :deep\(\.arco-table-tr:hover \.arco-table-td\),[\s\S]*?\.configurable-data-table :deep\(\.arco-table-tr-hover \.arco-table-td\)\s*\{[^}]*background:\s*var\(--workspace-color-hover-bg, var\(--color-fill-2\)\);/s)
+    expect(componentSource).toMatch(/\.configurable-data-table :deep\(\.arco-table-tr:hover \.arco-table-td\.arco-table-col-fixed-left::before\),[\s\S]*?\.configurable-data-table :deep\(\.arco-table-tr-hover \.arco-table-td\.arco-table-col-fixed-right::before\)\s*\{[^}]*background-color:\s*var\(--workspace-color-hover-bg, var\(--color-fill-2\)\);/s)
+    expect(componentSource).not.toMatch(/\.configurable-data-table :deep\(\.arco-table-tr:hover \.arco-table-td\.arco-table-col-fixed-left-last::after\),[\s\S]*?background-color:\s*var\(--workspace-color-hover-bg, var\(--color-fill-2\)\);/s)
+    expect(componentSource).not.toMatch(/\.configurable-data-table :deep\(\.arco-table-tr:hover \.arco-table-td\.arco-table-col-fixed-right-first::after\),[\s\S]*?background-color:\s*var\(--workspace-color-hover-bg, var\(--color-fill-2\)\);/s)
+    expect(componentSource).not.toContain('.arco-table-td-fixed-left')
+    expect(componentSource).not.toContain('.arco-table-td-fixed-right')
+  })
 })

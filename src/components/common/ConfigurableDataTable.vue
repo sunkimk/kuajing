@@ -36,6 +36,12 @@ type ScrollConfig = {
   minWidth?: string | number
   maxHeight?: string | number
 }
+type TableOperationConfig = {
+  width?: number
+}
+type TableDragOperationConfig = TableOperationConfig & {
+  type?: string
+}
 
 const COLUMN_RESIZE_EDGE_GUARD_WIDTH = 12
 
@@ -262,6 +268,26 @@ const tableScrollX = computed(() =>
   resolvedColumns.value.reduce((total, column) => total + (column.width ?? column.minWidth ?? 80), 0)
 )
 
+const isTableOperationConfig = (value: unknown): value is TableOperationConfig =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
+const isTableDragOperationConfig = (value: unknown): value is TableDragOperationConfig =>
+  isTableOperationConfig(value)
+
+const getTableOperationWidth = (value: unknown, defaultWidth: number) =>
+  isTableOperationConfig(value) ? value.width ?? defaultWidth : 0
+
+const getTableDragOperationWidth = (value: unknown) =>
+  isTableDragOperationConfig(value) && value.type === 'handle'
+    ? getTableOperationWidth(value, 40)
+    : 0
+
+const tableOperationScrollWidth = computed(() =>
+  getTableOperationWidth(attrs.rowSelection, 40)
+  + getTableOperationWidth(attrs.expandable, 40)
+  + getTableDragOperationWidth(attrs.draggable)
+)
+
 const attrScroll = computed(() => {
   const scroll = attrs.scroll
   return typeof scroll === 'object' && scroll !== null && !Array.isArray(scroll)
@@ -271,7 +297,7 @@ const attrScroll = computed(() => {
 
 const resolvedScroll = computed(() => ({
   ...attrScroll.value,
-  x: attrScroll.value.x ?? tableScrollX.value,
+  x: attrScroll.value.x ?? tableScrollX.value + tableOperationScrollWidth.value,
 }))
 
 const applyColumnSettings = (settings: ColumnSettingsPayload) => {
@@ -742,6 +768,25 @@ onBeforeUnmount(() => {
 
 .configurable-data-table :deep(.arco-table-td) {
   background: var(--workspace-color-bg, var(--color-bg-2));
+}
+
+.configurable-data-table :deep(.arco-table-tr:hover .arco-table-td),
+.configurable-data-table :deep(.arco-table-tr-hover .arco-table-td) {
+  background: var(--workspace-color-hover-bg, var(--color-fill-2));
+}
+
+.configurable-data-table :deep(.arco-table-tr:hover .arco-table-td.arco-table-col-fixed-left),
+.configurable-data-table :deep(.arco-table-tr:hover .arco-table-td.arco-table-col-fixed-right),
+.configurable-data-table :deep(.arco-table-tr-hover .arco-table-td.arco-table-col-fixed-left),
+.configurable-data-table :deep(.arco-table-tr-hover .arco-table-td.arco-table-col-fixed-right) {
+  background: var(--workspace-color-hover-bg, var(--color-fill-2));
+}
+
+.configurable-data-table :deep(.arco-table-tr:hover .arco-table-td.arco-table-col-fixed-left::before),
+.configurable-data-table :deep(.arco-table-tr:hover .arco-table-td.arco-table-col-fixed-right::before),
+.configurable-data-table :deep(.arco-table-tr-hover .arco-table-td.arco-table-col-fixed-left::before),
+.configurable-data-table :deep(.arco-table-tr-hover .arco-table-td.arco-table-col-fixed-right::before) {
+  background-color: var(--workspace-color-hover-bg, var(--color-fill-2));
 }
 
 .configurable-data-table :deep(.arco-table-th.configurable-table-drop-target) {

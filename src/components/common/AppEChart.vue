@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { CSSProperties } from 'vue'
-import type { EChartsOption } from 'echarts'
+import type { EChartsOption, SetOptionOpts } from 'echarts'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import {
@@ -51,6 +51,7 @@ use([
 const props = withDefaults(defineProps<{
   option: EChartsOption
   height?: number | string
+  updateOptions?: SetOptionOpts
 }>(), {
   height: 260,
 })
@@ -65,6 +66,7 @@ const chartStyle = computed<CSSProperties>(() => ({
     class="app-e-chart"
     :style="chartStyle"
     :option="option"
+    :update-options="updateOptions"
     autoresize
   />
 </template>

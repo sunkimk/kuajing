@@ -23,6 +23,9 @@ describe('chart demo source', () => {
 
     const componentSource = readFileSync(appEChartUrl, 'utf-8')
     expect(componentSource).toContain("import VChart from 'vue-echarts'")
+    expect(componentSource).toContain("import type { EChartsOption, SetOptionOpts } from 'echarts'")
+    expect(componentSource).toContain('updateOptions?: SetOptionOpts')
+    expect(componentSource).toContain(':update-options="updateOptions"')
     expect(componentSource).toContain('BarChart')
     expect(componentSource).toContain('PieChart')
     expect(componentSource).toContain('RadarChart')
@@ -95,5 +98,18 @@ describe('chart demo source', () => {
     expect(viewSource).toContain("id: 'sankey-flow'")
     expect(viewSource).toContain("id: 'graph-relation'")
     expect(viewSource).toContain('v-for="demo in filteredDemos"')
+  })
+
+  it('formats hover tooltips so chart nodes show their data', () => {
+    expect(existsSync(chartDemoViewUrl)).toBe(true)
+
+    const viewSource = readFileSync(chartDemoViewUrl, 'utf-8')
+    expect(viewSource).toContain('const formatTooltipValue = (value: unknown): string =>')
+    expect(viewSource).toContain('const formatChartTooltip = (params: unknown) =>')
+    expect(viewSource).toContain('const axisTooltip = { trigger: \'axis\', confine: true, formatter: formatChartTooltip }')
+    expect(viewSource).toContain('const itemTooltip = { trigger: \'item\', confine: true, formatter: formatChartTooltip }')
+    expect(viewSource).toContain('tooltip: axisTooltip')
+    expect(viewSource).toContain('tooltip: itemTooltip')
+    expect(viewSource).toContain('tooltip: { ...itemTooltip, position: \'top\' }')
   })
 })

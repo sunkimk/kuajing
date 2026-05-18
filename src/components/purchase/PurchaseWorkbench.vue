@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { IconRefresh, IconSettings } from '@arco-design/web-vue/es/icon'
-import type { PurchaseFilterConfig, PurchasePageKey, PurchaseRow, PurchaseViewMode } from '../../data/purchase'
+import type { PurchaseFilterConfig, PurchasePageKey, PurchaseRow } from '../../data/purchase'
 import ConfigurableDataTable from '../common/ConfigurableDataTable.vue'
 import MetricSummaryStrip from '../common/MetricSummaryStrip.vue'
 import QueryActionBar from '../common/QueryActionBar.vue'
@@ -12,8 +12,8 @@ import {
   createPurchaseRows,
   createPurchaseSummaryCards,
   filterPurchaseRows,
-  getPurchaseStatusClass,
   getPurchaseStatusLabel,
+  getPurchaseStatusTagColor,
   paginatePurchaseRows,
   purchasePageConfigs,
   type PurchaseFilters,
@@ -28,7 +28,6 @@ const props = defineProps<{
 
 const filters = ref<PurchaseFilters>(createDefaultPurchaseFilters(props.pageKey))
 const activeStatus = ref('all')
-const viewMode = ref<PurchaseViewMode>(purchasePageConfigs[props.pageKey].defaultViewMode ?? 'document')
 const pagination = ref<PurchasePagination>({ page: 1, pageSize: 10 })
 const allRows = ref<PurchaseRow[]>(createPurchaseRows(props.pageKey))
 const loading = ref(false)
@@ -62,25 +61,6 @@ const statusTabsWithCounts = computed(() =>
       ? rowsWithoutStatusFilter.value.length
       : rowsWithoutStatusFilter.value.filter((row) => row.status === tab.value).length,
   }))
-)
-
-const activeFilterChips = computed(() =>
-  config.value.filters.flatMap((filter) => {
-    const rawValue = filters.value[filter.key]
-    if (!rawValue || (Array.isArray(rawValue) && rawValue.length === 0)) return []
-
-    if (filter.kind === 'dateRange' && Array.isArray(rawValue) && rawValue.length === 2) {
-      return [{ key: filter.key, label: `${filter.label}: ${rawValue[0]} 至 ${rawValue[1]}` }]
-    }
-
-    if (Array.isArray(rawValue)) {
-      const labels = rawValue.map((value) => filter.options?.find((option) => option.value === value)?.label ?? value)
-      return [{ key: filter.key, label: `${filter.label}: ${labels.join('、')}` }]
-    }
-
-    const label = filter.options?.find((option) => option.value === rawValue)?.label ?? rawValue
-    return [{ key: filter.key, label: `${filter.label}: ${label}` }]
-  })
 )
 
 const getStringFilterValue = (key: string) => {
@@ -122,20 +102,6 @@ const resetFilters = () => {
   handleSearch()
 }
 
-const clearFilter = (key: string) => {
-  const filter = config.value.filters.find((item) => item.key === key)
-  filters.value = {
-    ...filters.value,
-    [key]: filter?.kind === 'dateRange' || filter?.kind === 'multiSelect' ? [] : undefined,
-  }
-  handleSearch()
-}
-
-const clearAllActiveFilters = () => {
-  filters.value = createDefaultPurchaseFilters(props.pageKey)
-  handleSearch()
-}
-
 const setStatus = (status: string) => {
   activeStatus.value = status
   handleSearch()
@@ -155,7 +121,6 @@ const renderFilter = (filter: PurchaseFilterConfig) => filter
 watch(() => props.pageKey, (pageKey) => {
   filters.value = createDefaultPurchaseFilters(pageKey)
   activeStatus.value = 'all'
-  viewMode.value = purchasePageConfigs[pageKey].defaultViewMode ?? 'document'
   allRows.value = createPurchaseRows(pageKey)
   pagination.value = { page: 1, pageSize: 10 }
 })
@@ -286,39 +251,6 @@ watch(() => props.pageKey, (pageKey) => {
       </QueryActionBar>
     </QueryFilterPanel>
 
-    <section class="purchase-table-controls">
-      <div class="purchase-table-controls-left">
-        <div v-if="activeFilterChips.length" class="purchase-active-filters">
-          <span class="purchase-active-filter-label">已筛选</span>
-          <button
-            v-for="chip in activeFilterChips"
-            :key="chip.key"
-            type="button"
-            class="purchase-active-filter-chip"
-            @click="clearFilter(chip.key)"
-          >
-            {{ chip.label }} ×
-          </button>
-          <button type="button" class="purchase-clear-filters" @click="clearAllActiveFilters">清除全部</button>
-        </div>
-      </div>
-
-      <div class="purchase-table-controls-right">
-        <a-radio-group
-          v-if="config.viewModes"
-          v-model="viewMode"
-          type="button"
-          size="small"
-          class="purchase-view-mode"
-        >
-          <a-radio v-for="mode in config.viewModes" :key="mode.value" :value="mode.value">
-            {{ mode.label }}
-          </a-radio>
-        </a-radio-group>
-        <span class="purchase-table-meta">已选 0 项 · 共 {{ filteredRows.length }} 条</span>
-      </div>
-    </section>
-
     <ConfigurableDataTable
       v-model:settings-visible="settingsVisible"
       :columns="config.tableColumns"
@@ -359,9 +291,9 @@ watch(() => props.pageKey, (pageKey) => {
       </template>
 
       <template #status="{ record }">
-        <span class="sales-status-pill" :class="getPurchaseStatusClass(props.pageKey, record.status)">
+        <a-tag :color="getPurchaseStatusTagColor(props.pageKey, record.status)">
           {{ getPurchaseStatusLabel(props.pageKey, record.status) }}
-        </span>
+        </a-tag>
       </template>
 
       <template #operation>

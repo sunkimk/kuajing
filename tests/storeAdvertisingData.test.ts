@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   advertisingPlatformOptions,
   calculateAdvertisingSummary,
+  createAdvertisingProductStatisticsRows,
   createAdvertisingCampaignRows,
   createStatisticPolylinePoints,
   filterAdvertisingCampaigns,
@@ -15,6 +16,7 @@ import {
   resolveAdvertisingScopeLabel,
   type AdvertisingFilterState,
 } from '../src/data/storeAdvertising'
+import { createMockProducts } from '../src/data/productCatalog'
 
 describe('storeAdvertising data contract', () => {
   it('creates a multi-platform advertising demo dataset', () => {
@@ -33,14 +35,14 @@ describe('storeAdvertising data contract', () => {
     expect(largestClusterCount).toBeGreaterThanOrEqual(4)
   })
 
-  it('provides sample product images for campaign thumbnails', () => {
+  it('links campaign products to core product catalog SKUs', () => {
     const rows = createAdvertisingCampaignRows()
-    const images = rows.flatMap((row) => row.products.map((product) => product.image ?? ''))
+    const productSkus = new Set(createMockProducts().map((product) => product.basicInfo.sku))
+    const linkedSkus = rows.flatMap((row) => row.products.map((product) => product.sku))
 
-    expect(rows.every((row) => row.products[0]?.image?.startsWith('data:image/svg+xml,'))).toBe(true)
-    expect(new Set(images).size).toBeGreaterThanOrEqual(8)
-    expect(new Set(rows.map((row) => row.products[0]?.image)).size).toBeGreaterThanOrEqual(6)
-    expect(images.every((image) => decodeURIComponent(image).includes('product-photo'))).toBe(true)
+    expect(rows[0]?.products[0]?.sku).toBe('SKU-BLEND-001')
+    expect(linkedSkus.every((sku) => productSkus.has(sku))).toBe(true)
+    expect(new Set(linkedSkus).size).toBeGreaterThanOrEqual(3)
   })
 
   it('exposes the supported platform options in display order', () => {
@@ -140,5 +142,25 @@ describe('storeAdvertising data contract', () => {
     )
 
     expect(new Set(lines).size).toBeGreaterThanOrEqual(4)
+  })
+
+  it('groups product statistics rows by SKU with expandable item totals', () => {
+    const campaign = findAdvertisingCampaignById('ad-cp-1001')
+    const rows = createAdvertisingProductStatisticsRows(campaign?.products ?? [])
+    const blendRow = rows.find((row) => row.sku === 'SKU-BLEND-001')
+
+    expect(rows.map((row) => row.sku)).toEqual([
+      'SKU-BLEND-001',
+      'SKU-KEYBOARD-003',
+      'SKU-STORAGE-008',
+    ])
+    expect(blendRow?.items).toHaveLength(3)
+    expect(blendRow?.productCount).toBe(3)
+    expect(blendRow?.statistics.impressions).toBe(
+      blendRow?.items.reduce((sum, item) => sum + item.statistics.impressions, 0)
+    )
+    expect(blendRow?.statistics.cartAdds).toBe(
+      blendRow?.items.reduce((sum, item) => sum + item.statistics.cartAdds, 0)
+    )
   })
 })

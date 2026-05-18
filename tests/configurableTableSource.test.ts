@@ -76,4 +76,13 @@ describe('ConfigurableDataTable source', () => {
     expect(componentSource).toContain('const configurableKeySet = computed(() => new Set(configurableColumnKeys.value))')
     expect(componentSource).not.toContain('const configurableKeySet = computed(() => new Set(props.defaultVisibleKeys))')
   })
+
+  it('includes Arco operation columns in horizontal scroll width so headers and cells stay aligned', () => {
+    expect(componentSource).toContain('type TableOperationConfig = {')
+    expect(componentSource).toContain('const tableOperationScrollWidth = computed(() =>')
+    expect(componentSource).toContain('getTableOperationWidth(attrs.rowSelection, 40)')
+    expect(componentSource).toContain('getTableOperationWidth(attrs.expandable, 40)')
+    expect(componentSource).toContain('getTableDragOperationWidth(attrs.draggable)')
+    expect(componentSource).toMatch(/x:\s*attrScroll\.value\.x \?\? tableScrollX\.value \+ tableOperationScrollWidth\.value/)
+  })
 })
